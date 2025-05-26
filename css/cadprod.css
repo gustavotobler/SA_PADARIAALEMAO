@@ -1,0 +1,174 @@
+/*css do cadastro de produtos*/
+* { margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+body { 
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #fcf6eb; color: #212529;
+    padding: 30px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh;
+}
+.page { 
+      max-width: 800px; 
+      width: 100%; 
+      background-color: #ffffff; 
+      padding: 30px; 
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+.form-box h2 {
+             text-align: center; 
+             margin-bottom: 24px; 
+             background-color: #dee2e6;
+             border-radius: 6px; 
+             padding: 8px; 
+             color: #343a40; 
+             font-size: 24px;
+}
+.form-box form { 
+               display: flex; 
+               flex-direction: column; 
+               gap: 20px; 
+               margin-top:10px;
+}
+.row { 
+     display: flex; 
+     gap: 20px; 
+     flex-wrap: wrap; 
+}
+.input-group { 
+             flex: 1; 
+             min-width: 250px; 
+             display: flex; 
+             flex-direction: column; 
+}
+.input-group label { 
+                  font-weight: 600; 
+                  margin-bottom: 6px; 
+                  color: #495057; 
+}
+.input-group input, .input-group select { 
+                                        padding: 10px 12px; 
+                                        border: 1px solid #ced4da;
+                                        border-radius: 6px; 
+                                        font-size: 15px; 
+                                        color: #495057; 
+                                        background-color: #ffffff; 
+                                        outline: none;
+}
+.input-group input:focus, .input-group select:focus { 
+                                                    outline: 2px solid #6666ff; 
+                                                    background-color: #f0f8ff; 
+}
+.btn-container { 
+               display: flex; 
+               justify-content: center; 
+}
+.btn-container button { 
+                      padding: 12px 32px; 
+                      font-size: 16px; 
+                      background-color: #6c757d;
+                      color: #ffffff; 
+                      border: none; 
+                      border-radius: 6px; 
+                      cursor: pointer; 
+                      transition: background-color 0.2s;
+}
+.btn-container button:hover { 
+                            background-color: #5a6268; 
+}
+.back-button {
+    position: relative;
+    margin-left: -279px;
+    margin-top: -40px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #333;
+  }
+/* Estilo de erro/modal */
+.mensagem-erro { 
+               position: fixed; 
+               top: 50%; 
+               left: 50%; 
+               transform: translate(-50%, -50%);
+               background-color: #ffffff; 
+               color: #6c757d; 
+               border: 1px solid #ffffff62;
+               padding: 20px 30px; 
+               border-radius: 8px; 
+               box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+               z-index: 9999; 
+               display: none; 
+               max-width: 400px; 
+               text-align: left; 
+               font-size: 15px;
+}
+.mensagem-erro strong { 
+                      display: block;
+                      margin-bottom: 10px; 
+                      font-size: 16px; 
+}
+.mensagem-erro button { 
+                      margin-top: 12px; 
+                      padding: 6px 12px; 
+                      border: none;
+                      background-color: #808d8b00; 
+                      color: rgb(255, 0, 0); 
+                      border-radius: 4px; 
+                      cursor: pointer;
+}
+/* modal de sucesso */
+#confirmacao { 
+             position: fixed; 
+             top: 0; 
+             left: 0; 
+             width: 100vw; 
+             height: 100vh;
+             background: rgba(0, 0, 0, 0.5); 
+             display: none; 
+             justify-content: center; 
+             align-items: center; 
+             z-index: 9998;
+}
+#confirmacao .box { 
+                  background: white; 
+                  padding: 40px; 
+                  border-radius: 10px;
+                  text-align: center; 
+                  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+#confirmacao h2 { 
+                color: #28a745; 
+                margin-bottom: 10px; 
+}
+#confirmacao p { 
+               color: #555; 
+               margin-bottom: 20px; 
+}
+#confirmacao button { 
+                    padding: 10px 24px; 
+                    background-color: #28a745; 
+                    color: white;
+                    border: none; 
+                    border-radius: 6px; 
+                    cursor: pointer; 
+                    font-size: 15px;
+}
+#confirmacao button:hover { 
+                          background-color: #218838; 
+}
+.section-subtitle {
+    text-align: center;
+    font-weight: bold;
+    padding: 8px;
+    margin-top: 20px;
+    background-color: #dee2e6;
+    border-radius: 6px;
+    color: #495057;
+  }

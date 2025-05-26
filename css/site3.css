@@ -247,4 +247,27 @@ td input[type="text"] {
 .material-icons {
     color: #000000 !important;
   }
+  .hidden { display: none !important; }
+  th.action-header, td.action-cell { transition: all 0.2s ease; }
   
+  /* Cor escura para a linha desativada */
+  .disabled-row {
+    background-color: #a9a9a9; /* Cor mais escura para indicar que foi desativada */
+    color: #666; /* Tornar o texto mais claro para contraste */
+  }
+  .disabled-row input {
+    background: #d3d3d3;
+    color: #aaa;
+    border: none;
+  }
+
+  /* Estilos para a seta de retorno */
+  .undo-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  .action-icons {
+    position: relative;
+  }
