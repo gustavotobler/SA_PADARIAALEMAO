@@ -10,7 +10,8 @@
 /* Corpo da página */
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #e0e0e0; /* Fundo cinza neutro */
+  background-color: #fcf6eb;
+  ; /* Fundo cinza neutro */
   color: #212529;
   padding: 30px;
 }

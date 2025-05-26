@@ -14,7 +14,7 @@
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #e0e0e0;
+      background-color: #fcf6eb;
       color: #212529;
       display: flex;
       justify-content: center;
@@ -306,8 +306,55 @@
     <button onclick="fecharErroCPF()">OK</button>
   </div>
   
+  <div class="mensagem-erro" id="erro-rg">
+    <strong>RG inválido!</strong>
+    <ul><li>O RG deve ter entre 7 e 10 dígitos numéricos.</li></ul>
+    <button onclick="fecharErroRG()">OK</button>
+  </div>
+
+  <div class="mensagem-erro" id="erro-telefone">
+    <strong>Telefone inválido!</strong>
+    <ul><li>O telefone deve ter entre 10 e 11 dígitos numéricos (com DDD).</li></ul>
+    <button onclick="fecharErroTelefone()">OK</button>
+  </div>
+  
+  <div class="mensagem-erro" id="erro-email">
+    <strong>Email inválido!</strong>
+    <ul><li>Digite um email válido no formato nome@dominio.com.</li></ul>
+    <button onclick="fecharErroEmail()">OK</button>
+  </div>
+  
+  
   
   <script>
+    
+    function validarEmail(email) {
+  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regexEmail.test(email);
+}
+
+function fecharErroEmail() {
+  document.getElementById('erro-email').style.display = 'none';
+}
+
+    function validarTelefone(telefone) {
+  telefone = telefone.replace(/\D/g, '');
+  return telefone.length >= 10 && telefone.length <= 11;
+}
+
+function fecharErroTelefone() {
+  document.getElementById('erro-telefone').style.display = 'none';
+}
+
+    function validarRG(rg) {
+  rg = rg.replace(/\D/g, '');
+  return rg.length >= 7 && rg.length <= 10;
+}
+
+function fecharErroRG() {
+  document.getElementById('erro-rg').style.display = 'none';
+}
+
     function fecharErroCPF() {
   document.getElementById('erro-cpf').style.display = 'none';
 }
@@ -365,43 +412,78 @@ function fecharSucesso() {
     }
   
     document.getElementById('cadastro-funcionario').addEventListener('submit', function(e) {
-      const inputCpf = document.getElementById('cpf');
-      const inputSenha = document.getElementById('senha');
-      const listaErros = document.getElementById('lista-erros');
-  
-      // Limpa erros anteriores
-      inputCpf.classList.remove('cpf-erro');
-      inputSenha.classList.remove('senha-erro');
-      listaErros.innerHTML = '';
-      document.getElementById('erro-senha').style.display = 'none';
-  
-      // Validação do CPF
-// Validação do CPF
-if (!validarCPF(inputCpf.value)) {
-  inputCpf.classList.add('cpf-erro');
-  document.getElementById('erro-cpf').style.display = 'block';
-  e.preventDefault();
-  return;
-}
+  const inputCpf = document.getElementById('cpf');
+  const inputSenha = document.getElementById('senha');
+  const listaErros = document.getElementById('lista-erros');
+  const inputRG = document.getElementById('rg');
+  const inputTelefone = document.getElementById('telefone');
+  const inputEmail = document.getElementById('email');
 
-  
-      // Validação da senha
-      const errosSenha = validarSenha(inputSenha.value);
-      if (errosSenha.length > 0) {
-        inputSenha.classList.add('senha-erro');
-        listaErros.innerHTML = errosSenha.map(e => `<li>${e}</li>`).join('');
-        document.getElementById('erro-senha').style.display = 'block';
-        e.preventDefault();
-        return;
-      }
-  
-      // Exibe mensagem de sucesso
-      e.preventDefault(); // Remova isso se for enviar ao backend
-      document.getElementById('sucesso-cadastro').style.display = 'block';
-      setTimeout(() => {
-        document.getElementById('sucesso-cadastro').style.display = 'none';
-      }, 3000);
-    });
+  // Limpa erros anteriores
+  inputTelefone.classList.remove('cpf-erro');
+  document.getElementById('erro-telefone').style.display = 'none';
+
+  inputRG.classList.remove('cpf-erro');
+  document.getElementById('erro-rg').style.display = 'none';
+
+  inputCpf.classList.remove('cpf-erro');
+  inputSenha.classList.remove('senha-erro');
+  listaErros.innerHTML = '';
+  document.getElementById('erro-senha').style.display = 'none';
+
+  inputEmail.classList.remove('cpf-erro');
+  document.getElementById('erro-email').style.display = 'none';
+
+  // CPF
+  if (!validarCPF(inputCpf.value)) {
+    inputCpf.classList.add('cpf-erro');
+    document.getElementById('erro-cpf').style.display = 'block';
+    e.preventDefault();
+    return;
+  }
+
+  // RG
+  if (!validarRG(inputRG.value)) {
+    inputRG.classList.add('cpf-erro');
+    document.getElementById('erro-rg').style.display = 'block';
+    e.preventDefault();
+    return;
+  }
+
+  // Telefone
+  if (!validarTelefone(inputTelefone.value)) {
+    inputTelefone.classList.add('cpf-erro');
+    document.getElementById('erro-telefone').style.display = 'block';
+    e.preventDefault();
+    return;
+  }
+
+  // Email
+  if (!validarEmail(inputEmail.value)) {
+    inputEmail.classList.add('cpf-erro');
+    document.getElementById('erro-email').style.display = 'block';
+    e.preventDefault();
+    return;
+  }
+
+  // Senha
+  const errosSenha = validarSenha(inputSenha.value);
+  if (errosSenha.length > 0) {
+    inputSenha.classList.add('senha-erro');
+    listaErros.innerHTML = errosSenha.map(e => `<li>${e}</li>`).join('');
+    document.getElementById('erro-senha').style.display = 'block';
+    e.preventDefault();
+    return;
+  }
+
+  // Sucesso
+  e.preventDefault();
+  document.getElementById('sucesso-cadastro').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('sucesso-cadastro').style.display = 'none';
+  }, 3000);
+});
+
   
     function formatCPF(input) {
       let v = input.value.replace(/\D/g, '').slice(0, 11);
@@ -439,7 +521,7 @@ if (!validarCPF(inputCpf.value)) {
         v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
       }
       input.value = v;
-    }
+    } 
   </script>
   
 </body>
