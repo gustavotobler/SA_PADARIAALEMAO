@@ -128,10 +128,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: nowrap;
 }
 
 /* Botões de quantidade */
 .qty-btn {
+  flex: none;  
   background: none;
   border: 1px solid #2a9d8f;
   border-radius: 4px;
@@ -143,9 +145,12 @@
 }
 
 .qty {
-  width: 24px;
+  flex: none;             
+  width: 36px;             /* largura suficiente para até 3 dígitos */
   text-align: center;
-  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-subtotal {
@@ -319,7 +324,7 @@
             <h4>Pão Francês</h4>
             <div class="info-footer">
               <span class="price">R$ 17,99 (kg)</span>
-              <button class="add-to-cart" data-name="Pão Francês (kg)" data-price="17.99">＋</button>
+              <button class="add-to-cart" data-name="Pão Francês (kg)" data-price="17.99" data-unit="kg">＋</button>
             </div>
           </div>
         </div>
@@ -330,7 +335,7 @@
             <h4>Pão Massinha</h4>
             <div class="info-footer">
               <span class="price">R$ 20,99 (kg)</span>
-              <button class="add-to-cart" data-name="Pão Massinha (kg)" data-price="20.99">＋</button>
+              <button class="add-to-cart" data-name="Pão Massinha (kg)" data-price="20.99" data-unit="kg">＋</button>
             </div>
           </div>
         </div>
@@ -518,7 +523,7 @@
   </div>
 
   <script>
-    // 1) Captura global de F1/F2 em modo de captura, antes de qualquer outro listener
+    // 1) Captura global de F1/F2
     window.addEventListener('keydown', function(e) {
       if (e.key === 'F1') {
         e.preventDefault();
@@ -548,12 +553,12 @@
         return 'R$ ' + v.toFixed(2).replace('.', ',');
       }
   
-      // ATUALIZA TODOS OS TOTAIS
+      // 3) ATUALIZA TODOS OS TOTAIS (agora suporta decimal)
       function updateTotals() {
         let sub = 0;
         cartItemsContainer.querySelectorAll('.cart-item').forEach(item => {
           const price = parseFloat(item.dataset.price);
-          const qty   = parseInt(item.querySelector('.qty').textContent, 10);
+          const qty   = parseFloat(item.querySelector('.qty').textContent);
           const itemSub = price * qty;
           item.querySelector('.item-subtotal').textContent = formatReal(itemSub);
           sub += itemSub;
@@ -571,8 +576,8 @@
         const term = searchInput.value.toLowerCase();
         const activeCat = document.querySelector('.category-hud button.active').dataset.cat;
         cards.forEach(card => {
-          const title   = card.querySelector('h4').textContent.toLowerCase();
-          const match   = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
+          const title = card.querySelector('h4').textContent.toLowerCase();
+          const match = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
           card.style.display = match ? '' : 'none';
         });
       });
@@ -586,61 +591,118 @@
         });
       });
   
-      // 3) CONTROLE DE +/− NA SIDEBAR
+      // 4) BOTÃO “＋” NOS CARDS (pede peso para produtos por kg)
+      document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const name  = btn.dataset.name;
+          const price = parseFloat(btn.dataset.price);
+          let qty     = 1;
+  
+          if (btn.dataset.unit === 'kg') {
+            const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
+            if (!input) return;
+            qty = parseFloat(input.replace(',', '.'));
+            if (isNaN(qty) || qty <= 0) {
+              alert('Peso inválido!');
+              return;
+            }
+          }
+  
+          let existing = Array.from(cartItemsContainer.children)
+            .find(el => el.querySelector('.item-name').textContent === name);
+  
+          if (existing) {
+            const qtyEl = existing.querySelector('.qty');
+            const newQty = parseFloat(qtyEl.textContent) + qty;
+            qtyEl.textContent = newQty.toFixed(2);
+          } else {
+            const div = document.createElement('div');
+            div.className     = 'cart-item';
+            div.dataset.price = price;
+            div.innerHTML = `
+              <div class="item-info">
+                <button class="qty-btn decrease">−</button>
+                <span class="qty">${qty.toFixed(2)}</span>
+                <button class="qty-btn increase">＋</button>
+                <span class="item-name">${name}</span>
+              </div>
+              <span class="item-subtotal">${formatReal(price * qty)}</span>
+            `;
+            cartItemsContainer.appendChild(div);
+          }
+  
+          updateTotals();
+        });
+      });
+  
+      // 5) CONTROLE DE +/− NA SIDEBAR
       cartItemsContainer.addEventListener('click', e => {
         const itemEl = e.target.closest('.cart-item');
         if (!itemEl) return;
   
         if (e.target.matches('.increase')) {
           const qtyEl = itemEl.querySelector('.qty');
-          qtyEl.textContent = parseInt(qtyEl.textContent, 10) + 1;
+          const newQty = parseFloat(qtyEl.textContent) + 1;
+          qtyEl.textContent = newQty.toFixed(2);
           updateTotals();
         }
         if (e.target.matches('.decrease')) {
           const qtyEl = itemEl.querySelector('.qty');
-          const q = parseInt(qtyEl.textContent, 10) - 1;
-          if (q <= 0) itemEl.remove();
-          else qtyEl.textContent = q;
+          const newQty = parseFloat(qtyEl.textContent) - 1;
+          if (newQty <= 0) itemEl.remove();
+          else qtyEl.textContent = newQty.toFixed(2);
           updateTotals();
         }
       });
   
-      // 4) BOTÃO “＋” NOS CARDS
-      document.querySelectorAll('.add-to-cart').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const name = btn.dataset.name;
-          const price = btn.dataset.price;
-          let existing = Array.from(cartItemsContainer.children)
-            .find(el => el.querySelector('.item-name').textContent === name);
+      // 6) INSERIR PRODUTO POR CÓDIGO ESCANEADO
+      document.getElementById('scan-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const code = e.target.value.trim();
   
-          if (existing) {
-            const qtyEl = existing.querySelector('.qty');
-            qtyEl.textContent = parseInt(qtyEl.textContent, 10) + 1;
-          } else {
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            div.dataset.price = price;
-            div.innerHTML = `
-              <div class="item-info">
-                <button class="qty-btn decrease">−</button>
-                <span class="qty">1</span>
-                <button class="qty-btn increase">＋</button>
-                <span class="item-name">${name}</span>
-              </div>
-              <span class="item-subtotal">${formatReal(parseFloat(price))}</span>
-            `;
-            cartItemsContainer.appendChild(div);
+          // Código para "Doritos"
+          if (code === '1234') {
+            const name = 'Doritos';
+            const price = 7.50;
+            const qty = 1;
+  
+            let existing = Array.from(cartItemsContainer.children)
+              .find(el => el.querySelector('.item-name').textContent === name);
+  
+            if (existing) {
+              const qtyEl = existing.querySelector('.qty');
+              const newQty = parseFloat(qtyEl.textContent) + qty;
+              qtyEl.textContent = newQty.toFixed(2);
+            } else {
+              const div = document.createElement('div');
+              div.className = 'cart-item';
+              div.dataset.price = price;
+              div.innerHTML = `
+                <div class="item-info">
+                  <button class="qty-btn decrease">−</button>
+                  <span class="qty">${qty.toFixed(2)}</span>
+                  <button class="qty-btn increase">＋</button>
+                  <span class="item-name">${name}</span>
+                </div>
+                <span class="item-subtotal">${formatReal(price * qty)}</span>
+              `;
+              cartItemsContainer.appendChild(div);
+            }
+  
+            updateTotals();
           }
-          updateTotals();
-        });
+  
+          // Limpa o campo para novo código
+          e.target.value = '';
+        }
       });
   
-      // Fecha modal ao clicar em “Cancelar”
+      // Fecha modal “Cancelar”
       document.getElementById('close-scan').addEventListener('click', () => {
         document.getElementById('scan-modal').classList.add('hidden');
       });
   
-      // 5) INICIALIZAÇÃO
+      // 7) INICIALIZAÇÃO
       updateTotals();
     });
-  </script>
+  </script>  
