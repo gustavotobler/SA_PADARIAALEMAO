@@ -191,9 +191,46 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
+.shortcut-hud {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: .5rem 1rem;
+      border-radius: 8px;
+      font-size: .9rem;
+      display: flex;
+      gap: 1rem;
+      z-index: 1000;
+    }
+    .shortcut-hud kbd {
+      background: #333;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: .9rem;
+    }
+
+    .hidden { display: none; }
+    #scan-modal .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    #scan-modal .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1001; width: 300px; text-align: center; }
+    #scan-modal input { width: 100%; padding: .5rem; margin: 1rem 0; border: 1px solid #ccc; border-radius: 4px; }
+    #scan-modal button { padding: .5rem 1rem; border: none; background: #2a9d8f; color: #fff; border-radius: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
+
+  <div id="scan-modal" class="hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <h2>Escaneie ou digite o código</h2>
+      <input type="text" id="scan-input" placeholder="Bipe o código de barras ou digite aqui" />
+      <button id="close-scan">Cancelar</button>
+    </div>
+  </div>
+
   <div class="container">
 
     <!-- Painel de Produtos -->
@@ -454,22 +491,42 @@
     </aside>
   </div>
 
+  <div class="shortcut-hud">
+    <div><kbd>F1</kbd> Bipar Produto</div>
+    <div><kbd>F2</kbd> Ir para Pagamento</div>
+  </div>
+
   <script>
+    // 1) Captura global de F1/F2 em modo de captura, antes de qualquer outro listener
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        document.getElementById('scan-modal').classList.remove('hidden');
+        document.getElementById('scan-input').focus();
+      }
+      if (e.key === 'F2') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.location.href = 'pagamento.html';
+      }
+    }, true);
+  
     document.addEventListener("DOMContentLoaded", () => {
       // ELEMENTOS
-      const searchInput         = document.querySelector('.controls input[type="text"]');
-      const cards               = document.querySelectorAll('.grid .card');
-      const hudButtons          = document.querySelectorAll('.category-hud button');
-      const cartItemsContainer  = document.querySelector('.cart-items');
-      const totalsSubtotalEl    = document.querySelector('.totals div:first-child span:last-child');
-      const totalsTaxEl         = document.querySelector('.totals div:nth-child(2) span:last-child');
-      const btnPay              = document.querySelector('.btn-pay');
-    
+      const searchInput        = document.querySelector('.controls input[type="text"]');
+      const cards              = document.querySelectorAll('.grid .card');
+      const hudButtons         = document.querySelectorAll('.category-hud button');
+      const cartItemsContainer = document.querySelector('.cart-items');
+      const totalsSubtotalEl   = document.querySelector('.totals div:first-child span:last-child');
+      const totalsTaxEl        = document.querySelector('.totals div:nth-child(2) span:last-child');
+      const btnPay             = document.querySelector('.btn-pay');
+  
       // FORMATAÇÃO DE MOEDA
       function formatReal(v) {
         return 'R$ ' + v.toFixed(2).replace('.', ',');
       }
-    
+  
       // ATUALIZA TODOS OS TOTAIS
       function updateTotals() {
         let sub = 0;
@@ -481,74 +538,64 @@
           sub += itemSub;
         });
         totalsSubtotalEl.textContent = formatReal(sub);
-    
-        // TAXA FIXA — ajuste ou remova conforme desejar
+  
         const tax = parseFloat(totalsTaxEl.dataset.tax || 0);
         totalsTaxEl.textContent = formatReal(tax);
-    
+  
         btnPay.textContent = `Ir para pagamento → (Total: ${formatReal(sub + tax)})`;
       }
-    
+  
       // 1) FILTRO DE BUSCA
       searchInput.addEventListener('input', () => {
         const term = searchInput.value.toLowerCase();
         const activeCat = document.querySelector('.category-hud button.active').dataset.cat;
         cards.forEach(card => {
-          const title    = card.querySelector('h4').textContent.toLowerCase();
-          const matchText = title.includes(term);
-          const matchCat  = (activeCat === 'all') || (card.dataset.category === activeCat);
-          card.style.display = (matchText && matchCat) ? '' : 'none';
+          const title   = card.querySelector('h4').textContent.toLowerCase();
+          const match   = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
+          card.style.display = match ? '' : 'none';
         });
       });
-    
+  
       // 2) FILTRO DE CATEGORIA
       hudButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           hudButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          // reaplica filtro de busca + categoria
           searchInput.dispatchEvent(new Event('input'));
         });
       });
-    
-      // 3) CONTROLE DE +/− NA SIDEBAR (delegation)
+  
+      // 3) CONTROLE DE +/− NA SIDEBAR
       cartItemsContainer.addEventListener('click', e => {
         const itemEl = e.target.closest('.cart-item');
         if (!itemEl) return;
-    
+  
         if (e.target.matches('.increase')) {
           const qtyEl = itemEl.querySelector('.qty');
           qtyEl.textContent = parseInt(qtyEl.textContent, 10) + 1;
           updateTotals();
         }
-    
         if (e.target.matches('.decrease')) {
           const qtyEl = itemEl.querySelector('.qty');
-          let q = parseInt(qtyEl.textContent, 10) - 1;
-          if (q <= 0) {
-            itemEl.remove();
-          } else {
-            qtyEl.textContent = q;
-          }
+          const q = parseInt(qtyEl.textContent, 10) - 1;
+          if (q <= 0) itemEl.remove();
+          else qtyEl.textContent = q;
           updateTotals();
         }
       });
-    
+  
       // 4) BOTÃO “＋” NOS CARDS
       document.querySelectorAll('.add-to-cart').forEach(btn => {
         btn.addEventListener('click', () => {
-          const name  = btn.dataset.name;
+          const name = btn.dataset.name;
           const price = btn.dataset.price;
-          // procura item já existente
           let existing = Array.from(cartItemsContainer.children)
             .find(el => el.querySelector('.item-name').textContent === name);
-    
+  
           if (existing) {
-            // incrementa só +1
             const qtyEl = existing.querySelector('.qty');
             qtyEl.textContent = parseInt(qtyEl.textContent, 10) + 1;
           } else {
-            // cria nova linha
             const div = document.createElement('div');
             div.className = 'cart-item';
             div.dataset.price = price;
@@ -563,14 +610,16 @@
             `;
             cartItemsContainer.appendChild(div);
           }
-    
           updateTotals();
         });
       });
-    
+  
+      // Fecha modal ao clicar em “Cancelar”
+      document.getElementById('close-scan').addEventListener('click', () => {
+        document.getElementById('scan-modal').classList.add('hidden');
+      });
+  
       // 5) INICIALIZAÇÃO
       updateTotals();
     });
-    </script>
-</body>
-</html>
+  </script>
