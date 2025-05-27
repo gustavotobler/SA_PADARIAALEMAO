@@ -1,121 +1,120 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  margin: 0; /* Remove margens padrão de todos os elementos */
+  padding: 0; /* Remove preenchimentos padrão de todos os elementos */
+  box-sizing: border-box; /* Faz com que padding e border sejam incluídos na largura/altura total dos elementos */
+}
 
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #fcf6eb;
-    color: #212529;
-    padding: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-  }
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Define fontes preferenciais do sistema e alternativas */
+  background-color: #fcf6eb; /* Cor de fundo clara e quente */
+  color: #212529; /* Cor de texto escura para contraste */
+  padding: 30px; /* Espaçamento interno do body */
+  display: flex; /* Define o body como flex container */
+  justify-content: center; /* Centraliza horizontalmente o conteúdo */
+  align-items: center; /* Centraliza verticalmente o conteúdo */
+  min-height: 100vh; /* Altura mínima do body igual à altura total da viewport */
+}
 
-  .page {
-    max-width: 800px;
-    width: 100%;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  }
+.page {
+  max-width: 800px; /* Largura máxima da caixa principal */
+  width: 100%; /* Ocupa toda a largura disponível até o máximo */
+  background-color: #ffffff; /* Fundo branco */
+  padding: 30px; /* Espaçamento interno */
+  border-radius: 12px; /* Cantos arredondados */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* Sombra suave para destaque */
+}
 
-  .form-box h2 {
-    text-align: center;
-    margin-bottom: 24px;
-    color: #343a40;
-    padding: 10px;
-    background-color: #dee2e6;
-    border-radius: 6px;
+.form-box h2 {
+  text-align: center; /* Centraliza o título */
+  margin-bottom: 24px; /* Espaço abaixo do título */
+  color: #343a40; /* Cor do texto do título */
+  padding: 10px; /* Espaçamento interno no título */
+  background-color: #dee2e6; /* Fundo cinza claro */
+  border-radius: 6px; /* Cantos arredondados no título */
+  font-size: 24px; /* Tamanho da fonte maior para título */
+}
 
-    font-size: 24px;
-  }
+.section-title {
+  background-color: #dee2e6; /* Fundo cinza claro para seções */
+  color: #343a40; /* Cor do texto */
+  font-weight: bold; /* Texto em negrito */
+  padding: 10px; /* Espaçamento interno */
+  border-radius: 6px; /* Cantos arredondados */
+  text-align: center; /* Centraliza texto */
+  margin-top: 20px; /* Espaço acima para separar da seção anterior */
+}
 
-  .section-title {
-    background-color: #dee2e6;
-    color: #343a40;
-    font-weight: bold;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    margin-top: 20px;
-  }
+.form-box form {
+  display: flex; /* Flex container para o formulário */
+  flex-direction: column; /* Itens do formulário empilhados verticalmente */
+  gap: 20px; /* Espaçamento entre os campos do formulário */
+  margin-top: 10px; /* Espaço acima do formulário */
+}
 
-  .form-box form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-top: 10px;
-  }
+.row {
+  display: flex; /* Flex container para organizar campos em linha */
+  gap: 20px; /* Espaçamento entre colunas */
+  flex-wrap: wrap; /* Permite que itens "quebrem" linha quando não cabem */
+}
 
-  .row {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
+.input-group {
+  flex: 1; /* Cada grupo de input ocupa espaço igual */
+  min-width: 250px; /* Largura mínima para não ficar muito estreito */
+  display: flex; /* Flex container para label e input */
+  flex-direction: column; /* Label em cima, input embaixo */
+}
 
-  .input-group {
-    flex: 1;
-    min-width: 250px;
-    display: flex;
-    flex-direction: column;
-  }
+.input-group label {
+  font-weight: 600; /* Label com peso médio */
+  margin-bottom: 6px; /* Espaço entre label e input */
+  color: #495057; /* Cor cinza escuro para label */
+}
 
-  .input-group label {
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #495057;
-  }
+.input-group input,
+.input-group select {
+  padding: 10px 12px; /* Espaçamento interno dos campos */
+  border: 1px solid #ced4da; /* Borda cinza clara */
+  border-radius: 6px; /* Cantos arredondados nos campos */
+  font-size: 15px; /* Tamanho da fonte do input */
+  color: #495057; /* Cor do texto dentro do input */
+  background-color: #ffffff; /* Fundo branco */
+  outline: none; /* Remove contorno padrão de foco */
+}
 
-  .input-group input,
-  .input-group select {
-    padding: 10px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-size: 15px;
-    color: #495057;
-    background-color: #ffffff;
-    outline: none;
-  }
+.input-group input:focus,
+.input-group select:focus {
+  outline: 2px solid #6666ff; /* Contorno azul claro ao focar */
+  background-color: #f0f8ff; /* Fundo azul clarinho ao focar */
+}
 
-  .input-group input:focus,
-  .input-group select:focus {
-    outline: 2px solid #6666ff;
-    background-color: #f0f8ff;
-  }
+.btn-container {
+  display: flex; /* Flex container para botões */
+  justify-content: center; /* Centraliza o(s) botão(ões) horizontalmente */
+}
 
-  .btn-container {
-    display: flex;
-    justify-content: center;
-  }
+.btn-container button {
+  padding: 12px 32px; /* Espaçamento interno do botão */
+  font-size: 16px; /* Tamanho da fonte do botão */
+  background-color: #6c757d; /* Cor cinza escuro */
+  color: #ffffff; /* Texto branco */
+  border: none; /* Remove borda padrão */
+  border-radius: 6px; /* Cantos arredondados */
+  cursor: pointer; /* Cursor em formato de mãozinha para indicar clicável */
+  transition: background-color 0.2s; /* Transição suave para mudança de cor */
+  margin-top: 12px; /* Espaço acima do botão */
+}
 
-  .btn-container button {
-    padding: 12px 32px;
-    font-size: 16px;
-    background-color: #6c757d;
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top:12px;
-  }
+.btn-container button:hover {
+  background-color: #5a6268; /* Escurece o botão ao passar o mouse */
+}
 
-  .btn-container button:hover {
-    background-color: #5a6268;
-  }
-
-  .back-button {
-    position: relative;
-    margin-left: -279px;
-    margin-top: -20px;
-    background: none;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-    color: #333;
-  }
+.back-button {
+  position: relative; /* Permite posicionamento com margens */
+  margin-left: -279px; /* Move o botão para a esquerda */
+  margin-top: -20px; /* Move o botão para cima */
+  background: none; /* Fundo transparente */
+  border: none; /* Sem borda */
+  font-size: 28px; /* Fonte grande para destaque */
+  cursor: pointer; /* Cursor em forma de mão */
+  color: #333; /* Cor cinza escuro */
+}

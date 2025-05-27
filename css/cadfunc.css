@@ -1,220 +1,120 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #fcf6eb;
-    color: #212529;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 30px;
-  }
-
-  .container {
-    max-width: 800px;
-    width: 100%;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  }
-
-  .header {
-    background-color: #dee2e6;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    position: relative;
-  }
-
-  .header h1 {
-    margin: 0 auto;
-    font-size: 24px;
-    color: #343a40;
-  }
-
-  .back-button {
-    position: relative;
-    margin-left: -279px;
-    margin-top: -40px;
-    background: none;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-    color: #333;
-  }
-
-  .section-title {
-    text-align: center;
-    font-weight: bold;
-    padding: 10px;
-    margin-top: -10px;
-    background-color: #dee2e6;
-    border-radius: 6px;
-    color: #495057;
-  }
-
-  .section-subtitle {
-    text-align: center;
-    font-weight: bold;
-    padding: 8px;
-    margin-top: 20px;
-    background-color: #dee2e6;
-    border-radius: 6px;
-    color: #495057;
-  }
-
-  .form-box {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .form-group {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .form-group input,
-  .form-group select,
-  .full-width {
-    flex: 1;
-    min-width: 250px;
-    padding: 10px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-size: 15px;
-    color: #495057;
-    background-color: #ffffff;
-    outline: none;
-  }
-
-  .form-group input:focus,
-  .form-group select:focus,
-  .full-width:focus {
-    outline: 2px solid #6666ff;
-    background-color: #f0f8ff;
-  }
-
-  .full-width {
-    width: 100%;
-  }
-
-  .center {
-    display: flex;
-    justify-content: center;
-  }
-
-  .submit-button {
-    padding: 12px 32px;
-    font-size: 16px;
-    background-color: #6c757d;
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .submit-button:hover {
-    background-color: #5a6268;
-  }
-
-  /* Indica erro no CPF */
-  .cpf-erro {
-    border-color: #e55353 !important;
-    background-color: #fee2e2;
-  }
-
-
-  .mensagem-erro {
-position: fixed;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-background-color: #ffffff;
-color: #6c757d;
-border: 1px solid #ffffff62;
-padding: 20px 30px;
-border-radius: 8px;
-box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-z-index: 9999;
-display: none;
-max-width: 400px;
-text-align: left;
-font-size: 15px;
+  margin: 0; /* Remove margens padrão de todos os elementos para evitar espaçamentos indesejados */
+  padding: 0; /* Remove preenchimentos padrão de todos os elementos */
+  box-sizing: border-box; /* Inclui padding e borda na largura e altura totais dos elementos */
 }
 
-.mensagem-erro strong {
-display: block;
-margin-bottom: 10px;
-font-size: 16px;
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Define uma pilha de fontes, priorizando fontes do sistema */
+  background-color: #fcf6eb; /* Cor de fundo suave, tons bege claro */
+  color: #212529; /* Cor padrão do texto, escura para bom contraste */
+  padding: 30px; /* Espaçamento interno para dar "respiro" nas bordas da página */
+  display: flex; /* Usado para centralizar o conteúdo da página */
+  justify-content: center; /* Centraliza horizontalmente o conteúdo */
+  align-items: center; /* Centraliza verticalmente o conteúdo */
+  min-height: 100vh; /* Altura mínima da página é 100% da viewport, garantindo centralização vertical */
 }
 
-.mensagem-erro ul {
-padding-left: 20px;
+.page {
+  max-width: 800px; /* Largura máxima da caixa para limitar sua expansão */
+  width: 100%; /* Faz a caixa ocupar toda a largura disponível até o limite */
+  background-color: #ffffff; /* Fundo branco para destacar o conteúdo */
+  padding: 30px; /* Espaçamento interno confortável */
+  border-radius: 12px; /* Bordas arredondadas para visual moderno */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* Sombra suave para dar profundidade */
 }
 
-.mensagem-erro button {
-margin-top: 12px;
-padding: 6px 12px;
-border: none;
-background-color: #808d8b00;
-color: rgb(255, 0, 0);
-border-radius: 4px;
-cursor: pointer;
+.form-box h2 {
+  text-align: center; /* Centraliza o texto do título */
+  margin-bottom: 24px; /* Espaço abaixo do título */
+  color: #343a40; /* Cor do texto do título */
+  padding: 10px; /* Espaçamento interno para destaque */
+  background-color: #dee2e6; /* Fundo cinza claro para separar visualmente o título */
+  border-radius: 6px; /* Cantos arredondados do título */
+  font-size: 24px; /* Tamanho da fonte aumentado para destaque */
 }
 
-.mensagem-sucesso {
-position: fixed;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-background-color: #ffffff;
-border-radius: 10px;
-box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-padding: 20px;
-z-index: 10000;
-display: none;
-animation: fadeInScale 0.4s ease-in-out;
+.section-title {
+  background-color: #dee2e6; /* Fundo cinza claro para cabeçalhos de seção */
+  color: #343a40; /* Cor do texto para contraste */
+  font-weight: bold; /* Texto em negrito para destaque */
+  padding: 10px; /* Espaçamento interno */
+  border-radius: 6px; /* Bordas arredondadas */
+  text-align: center; /* Centraliza o texto */
+  margin-top: 20px; /* Espaço acima para separar da seção anterior */
 }
 
-.mensagem-sucesso img {
-max-width: 100%;
-height: auto;
-display: block;
-border-radius: 8px;
+.form-box form {
+  display: flex; /* Layout flexível para o formulário */
+  flex-direction: column; /* Organiza os campos em coluna */
+  gap: 20px; /* Espaçamento vertical entre os campos do formulário */
+  margin-top: 10px; /* Espaço acima do formulário */
 }
 
-@keyframes fadeInScale {
-from {
-  opacity: 0;
-  transform: scale(0.8) translate(-50%, -50%);
-}
-to {
-  opacity: 1;
-  transform: scale(1) translate(-50%, -50%);
-}
-}
-.botao-ok {
-padding: 8px 16px;
-background-color: #28a745;
-color: white;
-border: none;
-border-radius: 6px;
-font-size: 15px;
-cursor: pointer;
-transition: background-color 0.2s;
+.row {
+  display: flex; /* Layout flexível para organizar inputs lado a lado */
+  gap: 20px; /* Espaçamento horizontal entre os inputs */
+  flex-wrap: wrap; /* Permite que os campos quebrem linha em telas menores */
 }
 
-.botao-ok:hover {
-background-color: #218838;
+.input-group {
+  flex: 1; /* Faz o input ocupar igualmente o espaço disponível */
+  min-width: 250px; /* Garante largura mínima para legibilidade */
+  display: flex; /* Flex container para label e input */
+  flex-direction: column; /* Label fica em cima e input embaixo */
+}
+
+.input-group label {
+  font-weight: 600; /* Fonte um pouco mais pesada para dar destaque */
+  margin-bottom: 6px; /* Espaço entre label e input */
+  color: #495057; /* Cor cinza escura para o texto do label */
+}
+
+.input-group input,
+.input-group select {
+  padding: 10px 12px; /* Espaçamento interno confortável */
+  border: 1px solid #ced4da; /* Borda cinza clara */
+  border-radius: 6px; /* Bordas arredondadas para os campos */
+  font-size: 15px; /* Tamanho da fonte legível */
+  color: #495057; /* Cor do texto dentro dos campos */
+  background-color: #ffffff; /* Fundo branco dos campos */
+  outline: none; /* Remove o contorno padrão do navegador ao focar */
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: 2px solid #6666ff; /* Contorno azul para foco, melhor acessibilidade */
+  background-color: #f0f8ff; /* Fundo azul claro para indicar foco */
+}
+
+.btn-container {
+  display: flex; /* Flex container para posicionar o botão */
+  justify-content: center; /* Centraliza horizontalmente o botão */
+}
+
+.btn-container button {
+  padding: 12px 32px; /* Espaçamento interno do botão */
+  font-size: 16px; /* Tamanho da fonte para legibilidade */
+  background-color: #6c757d; /* Cor cinza escuro padrão */
+  color: #ffffff; /* Texto branco no botão */
+  border: none; /* Sem bordas */
+  border-radius: 6px; /* Cantos arredondados do botão */
+  cursor: pointer; /* Cursor muda para indicar clicável */
+  transition: background-color 0.2s; /* Transição suave na cor ao passar o mouse */
+  margin-top: 12px; /* Espaço acima do botão */
+}
+
+.btn-container button:hover {
+  background-color: #5a6268; /* Escurece o botão no hover */
+}
+
+.back-button {
+  position: relative; /* Posicionamento relativo para permitir ajustes com margens */
+  margin-left: -279px; /* Move o botão para a esquerda (pode ser problemático em responsividade) */
+  margin-top: -20px; /* Move o botão para cima */
+  background: none; /* Fundo transparente */
+  border: none; /* Sem bordas */
+  font-size: 28px; /* Fonte maior para visibilidade */
+  cursor: pointer; /* Cursor pointer para indicar ação */
+  color: #333; /* Cor cinza escuro para o texto */
 }

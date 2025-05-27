@@ -4,15 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadastro de Fornecedor</title>
+
+  <!-- Ícones do Material Design -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Estilos personalizados -->
   <link href="css/cadforn.css" rel="stylesheet"/>
 </head>
 <body>
+
   <script>
-
-
-function formattelefone(input) {
-      let v = input.value.replace(/\D/g, '').slice(0,11);
+    // Função para formatar o telefone conforme o usuário digita
+    function formattelefone(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 11);
       if (v.length <= 10) {
         if (v.length > 6) {
           v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
@@ -25,76 +29,73 @@ function formattelefone(input) {
       input.value = v;
     }
 
-    // Bloqueia acesso se não for admin
+    // Restrição de acesso: apenas usuários com nível "admin" podem acessar
     const nivel = localStorage.getItem("nivel_usuario");
     if (nivel !== "admin") {
       alert("Acesso restrito! Apenas administradores podem acessar esta página.");
-      window.location.href = "inicial1.html"; // ou página de acesso negado
+      window.location.href = "inicial1.html";
     }
 
- src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/inputmask.min.js"
-    
-      // Aplica a máscara ao campo CNPJ
-  Inputmask("99.999.999/9999-99").mask(document.getElementById("cnpj"));
+    // Validação de CNPJ no envio do formulário
+    document.querySelector("form").addEventListener("submit", function (e) {
+      const cnpjInput = document.getElementById("cnpj");
+      const cnpj = cnpjInput.value;
 
-function validarcnpj(cnpj) {
-  cnpj = cnpj.replace(/[^\d]+/g, '');
+      if (!validarcnpj(cnpj)) {
+        e.preventDefault();
+        alert("CNPJ inválido. Por favor, verifique o número informado.");
+        cnpjInput.focus();
+      }
+    });
 
-  if (cnpj === '') return false;
-  if (cnpj.length !== 14) return false;
-  if (/^(\d)\1+$/.test(cnpj)) return false;
+    // Função para validar se um CNPJ é válido
+    function validarcnpj(cnpj) {
+      cnpj = cnpj.replace(/[^\d]+/g, '');
 
-  let tamanho = cnpj.length - 2;
-  let numeros = cnpj.substring(0, tamanho);
-  let digitos = cnpj.substring(tamanho);
-  let soma = 0;
-  let pos = tamanho - 7;
+      if (cnpj === '' || cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
 
-  for (let i = tamanho; i >= 1; i--) {
-    soma += numeros.charAt(tamanho - i) * pos--;
-    if (pos < 2) pos = 9;
-  }
+      let tamanho = cnpj.length - 2;
+      let numeros = cnpj.substring(0, tamanho);
+      let digitos = cnpj.substring(tamanho);
+      let soma = 0;
+      let pos = tamanho - 7;
 
-  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-  if (resultado !== parseInt(digitos.charAt(0))) return false;
+      for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+      }
 
-  tamanho += 1;
-  numeros = cnpj.substring(0, tamanho);
-  soma = 0;
-  pos = tamanho - 7;
+      let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+      if (resultado !== parseInt(digitos.charAt(0))) return false;
 
-  for (let i = tamanho; i >= 1; i--) {
-    soma += numeros.charAt(tamanho - i) * pos--;
-    if (pos < 2) pos = 9;
-  }
+      tamanho += 1;
+      numeros = cnpj.substring(0, tamanho);
+      soma = 0;
+      pos = tamanho - 7;
 
-  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-  return resultado === parseInt(digitos.charAt(1));
-}
+      for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+      }
 
-// Validação ao enviar o formulário
-document.querySelector("form").addEventListener("submit", function (e) {
-  const cnpjInput = document.getElementById("cnpj");
-  const cnpj = cnpjInput.value;
-
-  if (!validarcnpj(cnpj)) {
-    e.preventDefault();
-    alert("CNPJ inválido. Por favor, verifique o número informado.");
-    cnpjInput.focus();
-  }
-});
+      resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+      return resultado === parseInt(digitos.charAt(1));
+    }
   </script>
-  
+
   <div class="page">
+    <!-- Botão para voltar à página anterior -->
     <a href="fornecedores.html">
-    <button class="back-button"><span class="material-icons">arrow_back</span></button>
+      <button class="back-button"><span class="material-icons">arrow_back</span></button>
     </a>
+
     <div class="form-box">
       <h2>CADASTRO DE FORNECEDOR</h2>
 
       <div class="section-title">DADOS DA EMPRESA</div>
 
       <form>
+        <!-- Nome da empresa e CNPJ -->
         <div class="row">
           <div class="input-group">
             <label for="empresa">NOME DA EMPRESA</label>
@@ -103,8 +104,8 @@ document.querySelector("form").addEventListener("submit", function (e) {
           <div class="input-group">
             <label for="cnpj">CNPJ</label>
             <input type="text"
-                   id=cnpj
-                   name=cnpj
+                   id="cnpj"
+                   name="cnpj"
                    placeholder="CNPJ"
                    oninput="formatcnpj(this)"
                    maxlength="18"
@@ -112,15 +113,15 @@ document.querySelector("form").addEventListener("submit", function (e) {
           </div>
         </div>
 
+        <!-- Data de fundação -->
         <div class="row">
           <div class="input-group">
             <label for="fundacao">DATA DE FUNDAÇÃO</label>
             <input type="date" id="fundacao" name="fundacao">
           </div>
-            </select>
-          </div>
         </div>
 
+        <!-- Endereço -->
         <div class="row">
           <div class="input-group" style="flex: 1 1 100%">
             <label for="endereco">ENDEREÇO</label>
@@ -130,122 +131,107 @@ document.querySelector("form").addEventListener("submit", function (e) {
 
         <div class="section-title">FORMAS DE CONTATO</div>
 
-<div class="row">
-  <div class="input-group">
-    <label for="email">E-mail</label>
-    <input type="email" id="email" name="email" placeholder="Digite o e-mail" required>
-  </div>
-  <div class="input-group">
-    <label for="telefone">Telefone</label>
-    <input type="text"
-           id="telefone"
-           name="telefone"
-           placeholder="Telefone"
-           oninput="formattelefone(this)"
-           maxlength="15"
-           required>
-  </div>
-</div>
-<!-- Importa a biblioteca Inputmask -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const cnpjInput = document.getElementById("cnpj");
+        <!-- E-mail e telefone -->
+        <div class="row">
+          <div class="input-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="Digite o e-mail" required>
+          </div>
+          <div class="input-group">
+            <label for="telefone">Telefone</label>
+            <input type="text"
+                   id="telefone"
+                   name="telefone"
+                   placeholder="Telefone"
+                   oninput="formattelefone(this)"
+                   maxlength="15"
+                   required>
+          </div>
+        </div>
 
-    // ✅ Aplica a máscara enquanto o usuário digita
-    cnpjInput.addEventListener("input", function () {
-      formatarCNPJ(this);
-    });
-
-    // ✅ Valida o CNPJ ao enviar o formulário
-    document.querySelector("form").addEventListener("submit", function (e) {
-      const cnpj = cnpjInput.value;
-
-      if (!validarCNPJ(cnpj)) {
-        e.preventDefault();
-        alert("CNPJ inválido. Por favor, verifique o número informado.");
-        cnpjInput.focus();
-      }
-    });
-  });
-
-  // 🧠 Máscara de CNPJ (formatação)
-  function formatarCNPJ(input) {
-    let cnpj = input.value.replace(/\D/g, '').slice(0, 14); // apenas números, máximo 14 dígitos
-
-    if (cnpj.length >= 3) {
-      cnpj = cnpj.replace(/^(\d{2})(\d)/, "$1.$2");
-    }
-    if (cnpj.length >= 6) {
-      cnpj = cnpj.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
-    }
-    if (cnpj.length >= 9) {
-      cnpj = cnpj.replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3/$4");
-    }
-    if (cnpj.length >= 13) {
-      cnpj = cnpj.replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, "$1.$2.$3/$4-$5");
-    }
-
-    input.value = cnpj;
-  }
-
-  // 🧠 Validação do CNPJ (dígitos verificadores)
-  function validarCNPJ(cnpj) {
-    cnpj = cnpj.replace(/[^\d]+/g, '');
-
-    if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
-
-    let tamanho = 12;
-    let numeros = cnpj.substring(0, tamanho);
-    let digitos = cnpj.substring(tamanho);
-    let soma = 0;
-    let pos = tamanho - 7;
-
-    for (let i = tamanho; i >= 1; i--) {
-      soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
-      if (pos < 2) pos = 9;
-    }
-
-    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-    if (resultado !== parseInt(digitos.charAt(0))) return false;
-
-    tamanho += 1;
-    numeros = cnpj.substring(0, tamanho);
-    soma = 0;
-    pos = tamanho - 7;
-
-    for (let i = tamanho; i >= 1; i--) {
-      soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
-      if (pos < 2) pos = 9;
-    }
-
-    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-    return resultado === parseInt(digitos.charAt(1));
-  }
-
-
-
-  // Função de formatação de telefone (mantida)
-  function formattelefone(input) {
-    let v = input.value.replace(/\D/g, '').slice(0, 11);
-    if (v.length <= 10) {
-      if (v.length > 6) {
-        v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-      } else if (v.length > 2) {
-        v = v.replace(/(\d{2})(\d{0,4})/, '($1) $2');
-      }
-    } else {
-      v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-    }
-    input.value = v;
-  }
-</script>
-
-
+        <!-- Botão de envio -->
         <div class="btn-container">
           <button type="submit">CADASTRAR</button>
         </div>
       </form>
     </div>
   </div>
+
+  <!-- Scripts auxiliares -->
+  <script>
+    // Aplica máscara de CNPJ ao carregar a página
+    document.addEventListener("DOMContentLoaded", function () {
+      const cnpjInput = document.getElementById("cnpj");
+
+      // Aplica máscara ao digitar
+      cnpjInput.addEventListener("input", function () {
+        formatarCNPJ(this);
+      });
+
+      // Validação no envio do formulário
+      document.querySelector("form").addEventListener("submit", function (e) {
+        const cnpj = cnpjInput.value;
+        if (!validarCNPJ(cnpj)) {
+          e.preventDefault();
+          alert("CNPJ inválido. Por favor, verifique o número informado.");
+          cnpjInput.focus();
+        }
+      });
+    });
+
+    // Formata o CNPJ no formato 00.000.000/0000-00
+    function formatarCNPJ(input) {
+      let cnpj = input.value.replace(/\D/g, '').slice(0, 14);
+
+      if (cnpj.length >= 3) {
+        cnpj = cnpj.replace(/^(\d{2})(\d)/, "$1.$2");
+      }
+      if (cnpj.length >= 6) {
+        cnpj = cnpj.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+      }
+      if (cnpj.length >= 9) {
+        cnpj = cnpj.replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3/$4");
+      }
+      if (cnpj.length >= 13) {
+        cnpj = cnpj.replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, "$1.$2.$3/$4-$5");
+      }
+
+      input.value = cnpj;
+    }
+
+    // Valida CNPJ com base nos dígitos verificadores
+    function validarCNPJ(cnpj) {
+      cnpj = cnpj.replace(/[^\d]+/g, '');
+
+      if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+
+      let tamanho = 12;
+      let numeros = cnpj.substring(0, tamanho);
+      let digitos = cnpj.substring(tamanho);
+      let soma = 0;
+      let pos = tamanho - 7;
+
+      for (let i = tamanho; i >= 1; i--) {
+        soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
+        if (pos < 2) pos = 9;
+      }
+
+      let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+      if (resultado !== parseInt(digitos.charAt(0))) return false;
+
+      tamanho += 1;
+      numeros = cnpj.substring(0, tamanho);
+      soma = 0;
+      pos = tamanho - 7;
+
+      for (let i = tamanho; i >= 1; i--) {
+        soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
+        if (pos < 2) pos = 9;
+      }
+
+      resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+      return resultado === parseInt(digitos.charAt(1));
+    }
+  </script>
 </body>
 </html>
