@@ -5,129 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadastro de Fornecedor</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #e0e0e0;
-      color: #212529;
-      padding: 30px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .page {
-      max-width: 800px;
-      width: 100%;
-      background-color: #ffffff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-    }
-
-    .form-box h2 {
-      text-align: center;
-      margin-bottom: 24px;
-      color: #343a40;
-      padding: 10px;
-      background-color: #dee2e6;
-      border-radius: 6px;
-
-      font-size: 24px;
-    }
-
-    .section-title {
-      background-color: #dee2e6;
-      color: #343a40;
-      font-weight: bold;
-      padding: 10px;
-      border-radius: 6px;
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .form-box form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-top: 10px;
-    }
-
-    .row {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .input-group {
-      flex: 1;
-      min-width: 250px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .input-group label {
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #495057;
-    }
-
-    .input-group input,
-    .input-group select {
-      padding: 10px 12px;
-      border: 1px solid #ced4da;
-      border-radius: 6px;
-      font-size: 15px;
-      color: #495057;
-      background-color: #ffffff;
-      outline: none;
-    }
-
-    .input-group input:focus,
-    .input-group select:focus {
-      outline: 2px solid #6666ff;
-      background-color: #f0f8ff;
-    }
-
-    .btn-container {
-      display: flex;
-      justify-content: center;
-    }
-
-    .btn-container button {
-      padding: 12px 32px;
-      font-size: 16px;
-      background-color: #6c757d;
-      color: #ffffff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top:12px;
-    }
-
-    .btn-container button:hover {
-      background-color: #5a6268;
-    }
-
-    .back-button {
-      position: absolute;
-      left: 20px;
-      top: 20px;
-      background: none;
-      border: none;
-      font-size: 28px;
-      cursor: pointer;
-      color: #333;
-    }
-  </style>
+  <link href="css/cadforn.css" rel="stylesheet"/>
 </head>
 <body>
   <script>
@@ -220,14 +98,14 @@ document.querySelector("form").addEventListener("submit", function (e) {
         <div class="row">
           <div class="input-group">
             <label for="empresa">NOME DA EMPRESA</label>
-            <input type="text" id="empresa" name="empresa">
+            <input type="text" id="empresa" name="empresa" placeholder="Digite o nome da empresa...">
           </div>
           <div class="input-group">
             <label for="cnpj">CNPJ</label>
             <input type="text"
                    id=cnpj
                    name=cnpj
-                   placeholder="99.999.999/9999-99"
+                   placeholder="CNPJ"
                    oninput="formatcnpj(this)"
                    maxlength="18"
                    required>
@@ -254,15 +132,15 @@ document.querySelector("form").addEventListener("submit", function (e) {
 
 <div class="row">
   <div class="input-group">
-    <label for="email">EMAIL</label>
+    <label for="email">E-mail</label>
     <input type="email" id="email" name="email" placeholder="Digite o e-mail" required>
   </div>
   <div class="input-group">
-    <label for="telefone">TELEFONE</label>
+    <label for="telefone">Telefone</label>
     <input type="text"
            id="telefone"
            name="telefone"
-           placeholder="(00) 00000-0000"
+           placeholder="Telefone"
            oninput="formattelefone(this)"
            maxlength="15"
            required>

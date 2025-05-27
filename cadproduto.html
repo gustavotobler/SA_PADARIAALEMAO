@@ -5,59 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cadastro de Produto</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #fcf6eb; color: #212529;
-      padding: 30px; display: flex; justify-content: center; align-items: center;
-      min-height: 100vh;
-    }
-    .page { max-width: 800px; width: 100%; background-color: #ffffff; padding: 30px; border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-    }
-    .form-box h2 { text-align: center; margin-bottom: 24px; background-color: #dee2e6;
-      border-radius: 6px; padding: 8px; color: #343a40; font-size: 24px;
-    }
-    .form-box form { display: flex; flex-direction: column; gap: 20px; }
-    .row { display: flex; gap: 20px; flex-wrap: wrap; }
-    .input-group { flex: 1; min-width: 250px; display: flex; flex-direction: column; }
-    .input-group label { font-weight: 600; margin-bottom: 6px; color: #495057; }
-    .input-group input, .input-group select { padding: 10px 12px; border: 1px solid #ced4da;
-      border-radius: 6px; font-size: 15px; color: #495057; background-color: #ffffff; outline: none;
-    }
-    .input-group input:focus, .input-group select:focus { outline: 2px solid #6666ff; background-color: #f0f8ff; }
-    .btn-container { display: flex; justify-content: center; }
-    .btn-container button { padding: 12px 32px; font-size: 16px; background-color: #6c757d;
-      color: #ffffff; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s;
-    }
-    .btn-container button:hover { background-color: #5a6268; }
-    .back-button { position: absolute; left: 20px; top: 20px; background: none; border: none;
-      font-size: 28px; cursor: pointer; color: #333;
-    }
-    /* Estilo de erro/modal */
-    .mensagem-erro { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background-color: #ffffff; color: #6c757d; border: 1px solid #ffffff62;
-      padding: 20px 30px; border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-      z-index: 9999; display: none; max-width: 400px; text-align: left; font-size: 15px;
-    }
-    .mensagem-erro strong { display: block; margin-bottom: 10px; font-size: 16px; }
-    .mensagem-erro button { margin-top: 12px; padding: 6px 12px; border: none;
-      background-color: #808d8b00; color: rgb(255, 0, 0); border-radius: 4px; cursor: pointer;
-    }
-    /* modal de sucesso */
-    #confirmacao { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 9998;
-    }
-    #confirmacao .box { background: white; padding: 40px; border-radius: 10px;
-      text-align: center; box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    }
-    #confirmacao h2 { color: #28a745; margin-bottom: 10px; }
-    #confirmacao p { color: #555; margin-bottom: 20px; }
-    #confirmacao button { padding: 10px 24px; background-color: #28a745; color: white;
-      border: none; border-radius: 6px; cursor: pointer; font-size: 15px;
-    }
-    #confirmacao button:hover { background-color: #218838; }
-  </style>
+  <link href="css/cadprod.css" rel="stylesheet"/>
 </head>
 <body>
   <script>
@@ -72,6 +20,7 @@
     <div class="form-box">
       <a href="produtos.html"><button class="back-button"><span class="material-icons">arrow_back</span></button></a>
       <h2>Cadastro de Produto</h2>
+      <div class="section-subtitle">INFORMAÇÕES DO PRODUTO</div>
       <form id="formCadastro">
         <div class="row">
           <div class="input-group">
@@ -90,6 +39,10 @@
               <option value="">Selecione</option><option value="kg">kg</option><option value="g">g</option>
               <option value="mL">mL</option><option value="L">L</option>
             </select>
+          </div>
+          <div class="input-group">
+            <label for="Quantidade">Quantidade</label>
+            <input type="number" id="Quantidade" name="Quantidade" step="1" min="1" />
           </div>
           <div class="input-group">
             <label for="categoria">FORNECEDOR</label>
