@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Padaria do Alemão – Checkout</title>
+  <title>Pagamento</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p+sKp8ENbZlptM5KkzaJgKU2PX6/Kf8exIV+7j5C6pw76kF+OCxZEDug0MxvQ37xw7f78fqZPSXWbjF0Oh+Xkg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
@@ -225,7 +225,7 @@
 
     .topo-left a {
   position: relative;
-  margin-left:-220px;
+  margin-left:-160px;
   color: #000000;
 }
 
@@ -234,6 +234,27 @@
   font-size: 28px; 
   line-height: 1;     
 }
+
+.shortcut-hud {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: .5rem 1rem;
+      border-radius: 8px;
+      font-size: .9rem;
+      display: flex;
+      gap: 1rem;
+      z-index: 1000;
+    }
+    .shortcut-hud kbd {
+      background: #333;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: .9rem;
+    }
 
   </style>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -256,15 +277,14 @@
         <tr><th>Produto</th><th>Qtd.</th><th>Subtotal</th><th></th></tr>
       </thead>
       <tbody id="cart-items">
-        <tr data-price="5.50"><td>Empada</td><td><button class="qty-btn decrease">−</button><span class="qty">1</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 5,50</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
-        <tr data-price="3.00"><td>Coxinha</td><td><button class="qty-btn decrease">−</button><span class="qty">2</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 6,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
-        <tr data-price="1.50"><td>Pão de Queijo</td><td><button class="qty-btn decrease">−</button><span class="qty">11</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 16,50</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
-        <tr data-price="6.50"><td>Pastel Carne</td><td><button class="qty-btn decrease">−</button><span class="qty">1</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 6,50</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
-        <tr data-price="5.00"><td>Rosca</td><td><button class="qty-btn decrease">−</button><span class="qty">2</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 10,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
-        <tr data-price="16.00"><td>Cuca Banana</td><td><button class="qty-btn decrease">−</button><span class="qty">2</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 32,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
+        <tr data-price="5.00"><td>Café Expresso</td><td><button class="qty-btn decrease">−</button><span class="qty">2</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 10,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
+        <tr data-price="4.00"><td>Café Ao Leite</td><td><button class="qty-btn decrease">−</button><span class="qty">1</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 4,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
+        <tr data-price="9.00"><td>Bolo Morango</td><td><button class="qty-btn decrease">−</button><span class="qty">1</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 9,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
+        <tr data-price="7.00"><td>Minipizza</td><td><button class="qty-btn decrease">−</button><span class="qty">1</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 7,00</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
+        <tr data-price="7.50"><td>Doritos</td><td><button class="qty-btn decrease">−</button><span class="qty">1</span><button class="qty-btn increase">＋</button></td><td class="item-subtotal">R$ 7,50</td><td><button class="remove-item" aria-label="Remover item">🗑️</button></td></tr>
       </tbody>
     </table>
-    <div class="cart__total" id="cart-total">Total: R$ 76,50</div>
+    <div class="cart__total" id="cart-total">Total: R$ 0,00</div>
     <button id="confirm-btn" class="btn" disabled>Confirmar Pedido</button>
   </aside>
 
@@ -307,74 +327,98 @@
     </div>
   </main>
 
-  <script>
-    const methods = document.querySelectorAll('.method');
-    const confirmBtn = document.getElementById('confirm-btn');
-    let selectedMethod = null;
+<div class="shortcut-hud">
+  <div><kbd>F1</kbd> Voltar Seleção</div>
+  <div><kbd>F2</kbd> Voltar ao Menu</div>
+</div>
 
-    methods.forEach(btn => {
-      btn.addEventListener('click', () => {
-        methods.forEach(m => m.classList.remove('selected'));
-        methods.forEach(m => m.setAttribute('aria-pressed', 'false'));
-        btn.classList.add('selected');
-        btn.setAttribute('aria-pressed', 'true');
-        selectedMethod = btn.dataset.method;
-        confirmBtn.disabled = false;
-      });
+
+<script>
+  // 1) Seleção de método de pagamento
+  const methods = document.querySelectorAll('.method');
+  const confirmBtn = document.getElementById('confirm-btn');
+  let selectedMethod = null;
+
+  methods.forEach(btn => {
+    btn.addEventListener('click', () => {
+      methods.forEach(m => m.classList.remove('selected'));
+      methods.forEach(m => m.setAttribute('aria-pressed', 'false'));
+      btn.classList.add('selected');
+      btn.setAttribute('aria-pressed', 'true');
+      selectedMethod = btn.dataset.method;
+      confirmBtn.disabled = false;
     });
+  });
 
-    confirmBtn.addEventListener('click', () => {
-      if (!selectedMethod) return;
-      alert(`Pagamento via ${selectedMethod.toUpperCase()} selecionado!`);
+  confirmBtn.addEventListener('click', () => {
+    if (!selectedMethod) return;
+    alert(`Pagamento via ${selectedMethod.toUpperCase()} selecionado!`);
+  });
+
+  // 2) Quantidade, subtotal e remoção
+  function formatReal(value) {
+    return 'R$ ' + value.toFixed(2).replace('.', ',');
+  }
+
+  function updateTotal() {
+    const rows = document.querySelectorAll('#cart-items tr');
+    let total = 0;
+    rows.forEach(row => {
+      const price = parseFloat(row.dataset.price);
+      const qty = parseInt(row.querySelector('.qty').textContent, 10);
+      const subtotal = price * qty;
+      row.querySelector('.item-subtotal').textContent = formatReal(subtotal);
+      total += subtotal;
     });
+    document.getElementById('cart-total').textContent = `Total: ${formatReal(total)}`;
+    confirmBtn.disabled = (total === 0);
+  }
 
-    /* Quantidade e remoção */
-    function formatReal(value) {
-      return 'R$ ' + value.toFixed(2).replace('.', ',');
+  document.querySelectorAll('.increase').forEach(btn =>
+    btn.addEventListener('click', e => {
+      const qtyEl = e.currentTarget.parentElement.querySelector('.qty');
+      qtyEl.textContent = parseInt(qtyEl.textContent) + 1;
+      updateTotal();
+    })
+  );
+
+  document.querySelectorAll('.decrease').forEach(btn =>
+    btn.addEventListener('click', e => {
+      const qtyEl = e.currentTarget.parentElement.querySelector('.qty');
+      let q = parseInt(qtyEl.textContent) - 1;
+      if (q < 1) q = 1;
+      qtyEl.textContent = q;
+      updateTotal();
+    })
+  );
+
+  document.querySelectorAll('.remove-item').forEach(btn =>
+    btn.addEventListener('click', e => {
+      const row = e.currentTarget.closest('tr');
+      row.remove();
+      updateTotal();
+    })
+  );
+
+  // Inicializa total ao carregar
+  updateTotal();
+
+  // 3) Atalhos de teclado F1 / F2
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      // Voltar para seleção de itens
+      window.location.href = 'selecionar_itens.html';
     }
-
-    function updateTotal() {
-      const rows = document.querySelectorAll('#cart-items tr');
-      let total = 0;
-      rows.forEach(row => {
-        const price = parseFloat(row.dataset.price);
-        const qty = parseInt(row.querySelector('.qty').textContent, 10);
-        const subtotal = price * qty;
-        row.querySelector('.item-subtotal').textContent = formatReal(subtotal);
-        total += subtotal;
-      });
-      document.getElementById('cart-total').textContent = `Total: ${formatReal(total)}`;
-      confirmBtn.disabled = (total === 0);
+    if (e.key === 'F2') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      // Voltar para menu principal
+      window.location.href = 'inicial1.html';
     }
+  }, true);
+</script>
 
-    document.querySelectorAll('.increase').forEach(btn =>
-      btn.addEventListener('click', e => {
-        const qtyEl = e.currentTarget.parentElement.querySelector('.qty');
-        qtyEl.textContent = parseInt(qtyEl.textContent) + 1;
-        updateTotal();
-      })
-    );
-
-    document.querySelectorAll('.decrease').forEach(btn =>
-      btn.addEventListener('click', e => {
-        const qtyEl = e.currentTarget.parentElement.querySelector('.qty');
-        let q = parseInt(qtyEl.textContent) - 1;
-        if (q < 1) q = 1;
-        qtyEl.textContent = q;
-        updateTotal();
-      })
-    );
-
-    document.querySelectorAll('.remove-item').forEach(btn =>
-      btn.addEventListener('click', e => {
-        const row = e.currentTarget.closest('tr');
-        row.remove();
-        updateTotal();
-      })
-    );
-
-    // Inicializa total ao carregar
-    updateTotal();
-  </script>
 </body>
 </html> 
