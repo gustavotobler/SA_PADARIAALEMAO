@@ -6,6 +6,7 @@
   <title>Cadastro de Funcionário</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="css/cadfunc.css" rel="stylesheet"/>
+  
 </head>
 <body>
   <div class="container">
@@ -103,11 +104,31 @@
   <p id="erro-email-texto"></p>
   <button onclick="fecharErroEmail()">OK</button>
 </div>
-  
+
+<div class="mensagem-erro" id="erro-nome">
+  <strong>Nome inválido!</strong>
+  <ul><li>O nome deve conter no mínimo 3 caracteres.</li></ul>
+  <button onclick="fecharErroNome()">OK</button>
+</div>
+
+  <div class="mensagem-erro" id="erro-nascimento">
+  <strong>Data de nascimento inválida!</strong>
+  <ul><li>A idade deve estar entre 18 e 64 anos.</li></ul>
+  <button onclick="fecharErroNascimento()">OK</button>
+</div>
+
   
   
   <script>
-    
+    function fecharErroNascimento() {
+  document.getElementById('erro-nascimento').style.display = 'none';
+}
+
+    function fecharErroNome() {
+  document.getElementById('erro-nome').style.display = 'none';
+}
+
+  
     function validarEmail(email) {
   const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regexEmail.test(email);
@@ -190,6 +211,28 @@ function fecharSucesso() {
       if (resto === 10) resto = 0;
       return resto === parseInt(cpf.charAt(10));
     }
+    function validarIdade(dataNascStr) {
+  const partes = dataNascStr.split('/');
+  if (partes.length !== 3) return false;
+
+  const [dia, mes, ano] = partes.map(Number);
+  const nascimento = new Date(ano, mes - 1, dia);
+
+  if (isNaN(nascimento.getTime())) return false;
+
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const mesAtual = hoje.getMonth();
+  const diaAtual = hoje.getDate();
+
+  if (mesAtual < nascimento.getMonth() || 
+     (mesAtual === nascimento.getMonth() && diaAtual < nascimento.getDate())) {
+    idade--;
+  }
+
+  return idade >= 18 && idade <= 64;
+}
+
   
     document.getElementById('cadastro-funcionario').addEventListener('submit', function(e) {
   const inputCpf = document.getElementById('cpf');
@@ -198,6 +241,41 @@ function fecharSucesso() {
   const inputRG = document.getElementById('rg');
   const inputTelefone = document.getElementById('telefone');
   const inputEmail = document.getElementById('email');
+  const inputNome = document.getElementById('nome');
+  const inputNascimento = document.getElementById('nascimento');
+
+// Limpa erro anterior
+inputNascimento.classList.remove('cpf-erro');
+document.getElementById('erro-nascimento').style.display = 'none';
+
+// Validação da idade
+if (!validarIdade(inputNascimento.value)) {
+  inputNascimento.classList.add('cpf-erro');
+  document.getElementById('erro-nascimento').style.display = 'block';
+  e.preventDefault();
+  return;
+}
+
+
+// Limpa erro anterior
+inputNome.classList.remove('cpf-erro');
+document.getElementById('erro-nome').style.display = 'none';
+
+// Nome
+if (inputNome.value.trim().length < 3) {
+  inputNome.classList.add('cpf-erro');
+  document.getElementById('erro-nome').style.display = 'block';
+  e.preventDefault();
+  return;
+}
+
+if (inputNome.value.trim().length < 3) {
+  inputNome.classList.add('cpf-erro');
+  alert("O nome deve conter no mínimo 3 caracteres.");
+  e.preventDefault();
+  return;
+}
+
 
   // Limpa erros anteriores
   inputTelefone.classList.remove('cpf-erro');
@@ -257,7 +335,7 @@ function fecharSucesso() {
   }
 
   // Sucesso
-  e.preventDefault();
+    e.preventDefault();
   document.getElementById('sucesso-cadastro').style.display = 'block';
   setTimeout(() => {
     document.getElementById('sucesso-cadastro').style.display = 'none';
