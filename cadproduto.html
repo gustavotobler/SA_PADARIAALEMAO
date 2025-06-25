@@ -62,7 +62,7 @@
             <input type="number" id="Quantidade" name="Quantidade" step="1" min="1" />
           </div>
           <div class="input-group">
-            <label for="categoria">FORNECEDOR</label>
+            <label for="categoria">Fornecedor</label>
             <select id="categoria" name="categoria">
               <option value="">Selecione</option>
               <option value="padaria">CARLINHOS</option>
@@ -72,10 +72,21 @@
             </select>
           </div>
         </div>
+        <div class="input-group">
+          <label for="categoria">Categoria</label>
+          <select id="categoria" name="categoria">
+            <option value="">Selecione</option>
+            <option value="padaria">Cafés</option>
+            <option value="laticinio">Sucos</option>
+            <option value="hortifruti">Pães</option>
+            <option value="bebidas">Bolos</option>
+            <option value="bebidas">Salgados</option>
+          </select>
+        </div>
 
         <!-- Campo de validade com máscara de data -->
         <div class="input-group" style="flex:1 1 100%">
-          <label for="validade">VALIDADE</label>
+          <label for="validade">Validade</label>
           <input type="text" id="validade" name="validade" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatarData(this)" required />
         </div>
 
