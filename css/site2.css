@@ -37,6 +37,7 @@ body::before {
   z-index: -1;
 }
 :root {
+  --transition: 0.5s;
   --sidebar-bg: #2e2e2e;
   --primary-text: #fff;
   --hover-bg: #444;
