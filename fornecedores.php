@@ -14,7 +14,7 @@
     <div class="topo">
       <!-- Lado esquerdo: botão de voltar -->
       <div class="topo-left">
-        <a href="inicial1.html">
+        <a href="inicial1.php">
           <span class="material-icons icon" title="Voltar">arrow_back</span>
         </a>
       </div>
@@ -32,7 +32,7 @@
       <!-- Lado direito: botão de adicionar e de alternar ações -->
       <div class="topo-right">
         <!-- Botão de adicionar fornecedor (oculto por padrão) -->
-        <a href="cadforn.html" id="add-button" class="hidden">
+        <a href="cadforn.php" id="add-button" class="hidden">
           <button class="icon-btn add-btn" title="Adicionar">
             <span class="material-icons">add</span>
           </button>

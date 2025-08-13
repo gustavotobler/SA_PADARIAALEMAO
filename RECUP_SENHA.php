@@ -15,7 +15,7 @@
 
   <header>
     <!-- Botão de voltar para a página inicial (index.html) -->
-    <a href="index.html">
+    <a href="index.php">
       <button class="back-button">
         <!-- Ícone de seta para trás -->
         <span class="material-icons">arrow_back</span>

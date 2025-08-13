@@ -15,9 +15,9 @@
     </a>
 
     <!-- Links para outras páginas do sistema -->
-    <a href="produtos1.html" aria-controls="Produtos">🥐 Produtos</a> <!-- Página de produtos -->
-    <a href="relatorio_vendas_padaria_alemao2.html" aria-controls="Vendas">📈 Vendas</a> <!-- Página de relatórios de vendas -->
-    <a href="selecionar_itens1.html" aria-controls="Vendas">🛒 Pagamento</a> <!-- Página de pagamento -->
+    <a href="produtos1.php" aria-controls="Produtos">🥐 Produtos</a> <!-- Página de produtos -->
+    <a href="relatorio_vendas_padaria_alemao2.php" aria-controls="Vendas">📈 Vendas</a> <!-- Página de relatórios de vendas -->
+    <a href="selecionar_itens1.php" aria-controls="Vendas">🛒 Pagamento</a> <!-- Página de pagamento -->
 </nav>
 
 <!-- Conteúdo principal da página -->

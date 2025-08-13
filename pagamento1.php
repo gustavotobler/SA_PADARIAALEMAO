@@ -260,7 +260,7 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <div class="topo-left">
-  <a href="selecionar_itens1.html" title="Voltar">
+  <a href="selecionar_itens1.php" title="Voltar">
     <span class="material-icons icon">arrow_back</span>
   </a>
 </div>
@@ -409,13 +409,13 @@
       e.preventDefault();
       e.stopImmediatePropagation();
       // Voltar para seleção de itens
-      window.location.href = 'selecionar_itens.html';
+      window.location.href = 'selecionar_itens.php';
     }
     if (e.key === 'F2') {
       e.preventDefault();
       e.stopImmediatePropagation();
       // Voltar para menu principal
-      window.location.href = 'inicial1.html';
+      window.location.href = 'inicial1.php';
     }
   }, true);
 </script>

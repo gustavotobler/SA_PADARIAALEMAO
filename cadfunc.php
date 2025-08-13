@@ -11,7 +11,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <a href="funcionarios.html">
+      <a href="funcionarios.php">
         <button class="back-button"><span class="material-icons">arrow_back</span></button>
       </a>
       <h1>CADASTRO DE FUNCIONÁRIO</h1>

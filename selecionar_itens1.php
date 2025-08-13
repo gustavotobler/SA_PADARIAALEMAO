@@ -259,7 +259,7 @@
     <section class="product-panel">
       
       <div class="controls">
-        <a href="inicial2.html" title="Voltar" class="back-button">
+        <a href="inicial2.php" title="Voltar" class="back-button">
           <span class="material-icons">arrow_back</span>
         </a>
         <input type="text" placeholder="Nome ou código">
@@ -511,7 +511,7 @@
           <span>R$ 0,00</span>
         </div>
       </div>
-    <a href ="pagamento1.html">
+    <a href ="pagamento1.php">
       <div class="btn-pay">Ir para pagamento → (Total: R$ 0,00)</div>
     </a>
     </aside>
@@ -534,7 +534,7 @@
       if (e.key === 'F2') {
         e.preventDefault();
         e.stopImmediatePropagation();
-        window.location.href = 'pagamento1.html';
+        window.location.href = 'pagamento1.php';
       }
     }, true);
   

@@ -150,7 +150,7 @@ function formattelefone(input) {
     const nivel = localStorage.getItem("nivel_usuario");
     if (nivel !== "admin") {
       alert("Acesso restrito! Apenas administradores podem acessar esta página.");
-      window.location.href = "inicial1.html"; // ou página de acesso negado
+      window.location.href = "inicial1.php"; // ou página de acesso negado
     }
 
  src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/inputmask.min.js"
@@ -207,7 +207,7 @@ document.querySelector("form").addEventListener("submit", function (e) {
   </script>
   
   <div class="page">
-    <a href="fornecedores.html">
+    <a href="fornecedores.php">
     <button class="back-button"><span class="material-icons">arrow_back</span></button>
     </a>
     <div class="form-box">

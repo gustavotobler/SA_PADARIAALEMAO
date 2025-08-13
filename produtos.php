@@ -14,7 +14,7 @@
   <header>
     <div class="topo"> <!-- Container da barra superior -->
       <div class="topo-left"> <!-- Área esquerda da barra superior -->
-        <a href="inicial1.html"> <!-- Link que leva para a página inicial -->
+        <a href="inicial1.php"> <!-- Link que leva para a página inicial -->
           <!-- Ícone de seta para voltar, usando Material Icons -->
           <span class="material-icons icon" title="Voltar">arrow_back</span>
         </a>
@@ -38,7 +38,7 @@
 
       <div class="topo-right"> <!-- Área direita da barra superior -->
         <!-- Link para a página de cadastro de produto, com botão de adicionar (começa escondido) -->
-        <a href="cadproduto.html" id="add-button" class="hidden">
+        <a href="cadproduto.php" id="add-button" class="hidden">
           <button class="icon-btn add-btn" title="Adicionar">
             <!-- Ícone de adicionar -->
             <span class="material-icons">add</span>

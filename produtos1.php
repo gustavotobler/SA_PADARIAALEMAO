@@ -14,7 +14,7 @@
   <header>
     <div class="topo"> <!-- Barra superior da página -->
       <div class="topo-left"> <!-- Área esquerda da barra superior -->
-        <a href="inicial2.html"> <!-- Link que leva para a página inicial (ou outra) -->
+        <a href="inicial2.php"> <!-- Link que leva para a página inicial (ou outra) -->
           <!-- Ícone de seta para voltar -->
           <span class="material-icons icon" title="Voltar">arrow_back</span>
         </a>

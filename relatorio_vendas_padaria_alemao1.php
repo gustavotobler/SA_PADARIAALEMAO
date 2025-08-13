@@ -179,7 +179,7 @@
 <body>
 
 <nav class="sidebar" aria-label="Menu de navegação">
-    <a href="inicial1.html">
+    <a href="inicial1.php">
         <span class="material-icons icon" title="Voltar">arrow_back</span>
       </a>
         

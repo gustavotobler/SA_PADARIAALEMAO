@@ -39,7 +39,7 @@
   <header>
     <div class="topo"> <!-- Container topo da página -->
       <div class="topo-left">
-        <a href="inicial1.html"> <!-- Link para página inicial -->
+        <a href="inicial1.php"> <!-- Link para página inicial -->
           <span class="material-icons icon" title="Voltar">arrow_back</span> <!-- Ícone de seta para voltar -->
         </a>
       </div>
@@ -56,7 +56,7 @@
 
       <div class="topo-right"> <!-- Lado direito do topo -->
         <!-- Link para página de cadastro, inicialmente escondido -->
-        <a href="cadfunc.html" id="add-button" class="hidden">
+        <a href="cadfunc.php" id="add-button" class="hidden">
           <button class="icon-btn add-btn" title="Adicionar">
             <span class="material-icons">add</span> <!-- Ícone de adicionar (+) -->
           </button>

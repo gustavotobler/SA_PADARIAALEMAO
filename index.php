@@ -24,7 +24,7 @@
 
             <button type="submit">Entrar</button> <!-- Botão para enviar o formulário -->
 
-            <a href="RECUP_SENHA.html" class="esqueceu-senha" id="esqueceu-senha">Esqueceu a senha?</a> <!-- Link para recuperação de senha -->
+            <a href="RECUP_SENHA.php" class="esqueceu-senha" id="esqueceu-senha">Esqueceu a senha?</a> <!-- Link para recuperação de senha -->
         </form>
     </main>
 
@@ -66,9 +66,9 @@
 
                 // Redireciona o usuário para a página inicial de acordo com o nível dele
                 if (nivel === "admin") {
-                    window.location.href = "inicial1.html";
+                    window.location.href = "inicial1.php";
                 } else {
-                    window.location.href = "inicial2.html";
+                    window.location.href = "inicial2.php";
                 }
             } else {
                 // Se não encontrou usuário com email e senha corretos, avisa com um alert

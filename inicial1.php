@@ -14,11 +14,11 @@
         <img src="img/Logopadaria.png"><!-- Imagem do logo da padaria -->
     </a>
     <!-- Links para as diferentes seções do sistema -->
-    <a href="produtos.html" aria-controls="Produtos">🥐 Produtos</a> <!-- Link para página de produtos -->
-    <a href="funcionarios.html" aria-controls="Funcionarios">🙎‍♂️ Funcionários</a> <!-- Link para página de funcionários -->
-    <a href="fornecedores.html" aria-controls="Fornecedores">💼 Fornecedores</a> <!-- Link para página de fornecedores -->
-    <a href="relatorio_vendas_padaria_alemao1.html" aria-controls="Vendas">📈 Vendas</a> <!-- Link para página de vendas -->
-    <a href="selecionar_itens.html" aria-controls="Vendas">🛒 Pagamento</a> <!-- Link para página de pagamento -->
+    <a href="produtos.php" aria-controls="Produtos">🥐 Produtos</a> <!-- Link para página de produtos -->
+    <a href="funcionarios.php" aria-controls="Funcionarios">🙎‍♂️ Funcionários</a> <!-- Link para página de funcionários -->
+    <a href="fornecedores.php" aria-controls="Fornecedores">💼 Fornecedores</a> <!-- Link para página de fornecedores -->
+    <a href="relatorio_vendas_padaria_alemao1.php" aria-controls="Vendas">📈 Vendas</a> <!-- Link para página de vendas -->
+    <a href="selecionar_itens.php" aria-controls="Vendas">🛒 Pagamento</a> <!-- Link para página de pagamento -->
 </nav>
 
 <!-- Conteúdo principal da página -->

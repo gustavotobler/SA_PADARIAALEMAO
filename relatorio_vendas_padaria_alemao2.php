@@ -179,7 +179,7 @@
 <body>
 
 <nav class="sidebar" aria-label="Menu de navegação">
-    <a href="inicial2.html">
+    <a href="inicial2.php">
         <span class="material-icons icon" title="Voltar">arrow_back</span>
       </a>
     <a href="#" onclick="showSection('tabela')" aria-controls="tabela">📋 Tabela de Vendas</a>

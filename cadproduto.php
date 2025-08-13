@@ -17,14 +17,14 @@
     const nivel = localStorage.getItem("nivel_usuario");
     if (nivel !== "admin") {
       alert("Acesso restrito! Apenas administradores podem acessar esta página.");
-      window.location.href = "inicial2.html";
+      window.location.href = "inicial2.php";
     }
   </script>
 
   <div class="page">
     <div class="form-box">
       <!-- Botão de voltar -->
-      <a href="produtos.html"><button class="back-button"><span class="material-icons">arrow_back</span></button></a>
+      <a href="produtos.php"><button class="back-button"><span class="material-icons">arrow_back</span></button></a>
 
       <!-- Título e subtítulo -->
       <h2>Cadastro de Produto</h2>
