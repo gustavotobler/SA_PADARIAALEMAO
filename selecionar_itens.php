@@ -1,3 +1,32 @@
+<?php
+include "conexao.php";
+
+$sql = "SELECT * FROM produtos";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        echo '
+        <div class="card" data-category="'.$row['categoria'].'">
+          <img src="'.$row['imagem'].'" alt="'.$row['nome'].'">
+          <div class="info">
+            <h4>'.$row['nome'].'</h4>
+            <div class="info-footer">
+              <span class="price">R$ '.number_format($row['preco'], 2, ',', '.').'</span>
+              <button class="add-to-cart" 
+                data-name="'.$row['nome'].'" 
+                data-price="'.$row['preco'].'" 
+                '.(!empty($row['unidade']) ? 'data-unit="'.$row['unidade'].'"' : '').'>
+                ＋
+              </button>
+            </div>
+          </div>
+        </div>';
+    }
+} else {
+    echo "<p>Nenhum produto cadastrado.</p>";
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -274,227 +303,36 @@
         <button data-cat="salgados">Salgados</button>
       </div>
       <div class="grid">
-        <div class="card" data-category="cafe">
-          <img src="img/pixlr-image-generator-c21283c6-8475-4327-beb4-ba948ccf3526.png">
-          <div class="info">
-            <h4>Café Expresso</h4>
-            <div class="info-footer">
-              <span class="price">R$ 5,00</span>
-              <button class="add-to-cart" data-name="Café Expresso" data-price="5.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="cafe">
-          <img src="img/pixlr-image-generator-7d899fcb-bd77-4588-91ef-3f9aa67b0f95.png">
-          <div class="info">
-            <h4>Café ao Leite</h4>
-            <div class="info-footer">
-              <span class="price">R$ 4,00</span>
-              <button class="add-to-cart" data-name="Café ao Leite" data-price="4.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="cafe">
-          <img src="img/pixlr-image-generator-a434292a-580e-4b41-97da-993174cffbb4.png">
-          <div class="info">
-            <h4>Café Americano</h4>
-            <div class="info-footer">
-              <span class="price">R$ 4,00</span>
-              <button class="add-to-cart" data-name="Café Americano" data-price="4.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="cafe">
-          <img src="img/pixlr-image-generator-d82c58d6-8009-4456-94c1-940ab4741b1d.png">
-          <div class="info">
-            <h4>Café Latte</h4>
-            <div class="info-footer">
-              <span class="price">R$ 5,00</span>
-              <button class="add-to-cart" data-name="Café Latte" data-price="5.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="paes">
-          <img src="img/pao frances.jpg">
-          <div class="info">
-            <h4>Pão Francês</h4>
-            <div class="info-footer">
-              <span class="price">R$ 17,99 (kg)</span>
-              <button class="add-to-cart" data-name="Pão Francês (kg)" data-price="17.99" data-unit="kg">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="paes">
-          <img src="img/pão massinha.jpg">
-          <div class="info">
-            <h4>Pão Massinha</h4>
-            <div class="info-footer">
-              <span class="price">R$ 20,99 (kg)</span>
-              <button class="add-to-cart" data-name="Pão Massinha (kg)" data-price="20.99" data-unit="kg">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="paes">
-          <img src="img/paofatiado.avif">
-          <div class="info">
-            <h4>Pão Fatiado</h4>
-            <div class="info-footer">
-              <span class="price">R$ 7,99</span>
-              <button class="add-to-cart" data-name="Pão Fatiado" data-price="7.99">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="paes">
-          <img src="img/pao australiano.webp">
-          <div class="info">
-            <h4>Pão Australiano</h4>
-            <div class="info-footer">
-              <span class="price">R$ 8,99</span>
-              <button class="add-to-cart" data-name="Pão Australiano" data-price="8.99">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="bolos">
-          <img src="img/bolochocolate.png">
-          <div class="info">
-            <h4>Bolo Chocolate (Fatia)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 8,00</span>
-              <button class="add-to-cart" data-name="Bolo Chocolate (Fatia)" data-price="8.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="bolos">
-          <img src="img/bolomorango.png">
-          <div class="info">
-            <h4>Bolo Morango (Fatia)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 9,00</span>
-              <button class="add-to-cart" data-name="Bolo Morango (Fatia)" data-price="9.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="bolos">
-          <img src="img/bolochocolatecenoura.webp">
-          <div class="info">
-            <h4>Bolo Cenoura (Fatia)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 8,00</span>
-              <button class="add-to-cart" data-name="Bolo Cenoura (Fatia)" data-price="8.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="bolos">
-          <img src="img/boloprestigio.jpg">
-          <div class="info">
-            <h4>Bolo Prestigío (Fatia)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 9,00</span>
-              <button class="add-to-cart" data-name="Bolo Prestigío (Fatia)" data-price="9.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="salgados">
-          <img src="img/pastel.jpg">
-          <div class="info">
-            <h4>Pastel (Frango/Carne)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 6,00</span>
-              <button class="add-to-cart" data-name="Pastel (Frango/Carne)" data-price="6.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="salgados">
-          <img src="img/coxinhaaa.jpg">
-          <div class="info">
-            <h4>Coxinha (Frango/Carne)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 3,00</span>
-              <button class="add-to-cart" data-name="Coxinha (Frango/Carne)" data-price="3.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="salgados">
-          <img src="img/minipizza.jpg">
-          <div class="info">
-            <h4>Minipizza (Calabresa)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 7,00</span>
-              <button class="add-to-cart" data-name="Minipizza (Calabresa)" data-price="7.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="salgados">
-          <img src="img/folhado.webp">
-          <div class="info">
-            <h4>Folhado (Frango/Carne)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 6,00</span>
-              <button class="add-to-cart" data-name="Folhado (Frango/Carne)" data-price="6.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="sucos">
-          <img src="img/sucolaranjaa.png">
-          <div class="info">
-            <h4>Laranja (300ml)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 6,00</span>
-              <button class="add-to-cart" data-name="Laranja (300ml)" data-price="6.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="sucos">
-          <img src="img/sucouva.png">
-          <div class="info">
-            <h4>Uva (300ml)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 6,00</span>
-              <button class="add-to-cart" data-name="Uva (300ml)" data-price="6.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="sucos">
-          <img src="img/sucomorango.png">
-          <div class="info">
-            <h4>Morango (300ml)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 6,00</span>
-              <button class="add-to-cart" data-name="Morango (300ml)" data-price="6.00">＋</button>
-            </div>
-          </div>
-        </div>
-      
-        <div class="card" data-category="sucos">
-          <img src="img/limonada.png">
-          <div class="info">
-            <h4>Limonada (300ml)</h4>
-            <div class="info-footer">
-              <span class="price">R$ 6,00</span>
-              <button class="add-to-cart" data-name="Limonada (300ml)" data-price="6.00">＋</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+      <?php
+        include "conexao.php"; // Arquivo de conexão com o banco
+
+        $sql = "SELECT * FROM produtos";
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo '
+                <div class="card" data-category="'.$row['categoria'].'">
+                    <img src="'.$row['imagem'].'" alt="'.$row['nome'].'">
+                    <div class="info">
+                        <h4>'.$row['nome'].'</h4>
+                        <div class="info-footer">
+                            <span class="price">R$ '.number_format($row['preco'], 2, ',', '.').'</span>
+                            <button class="add-to-cart"
+                                data-name="'.$row['nome'].'"
+                                data-price="'.$row['preco'].'"
+                                '.(!empty($row['unidade']) ? 'data-unit="'.$row['unidade'].'"' : '').'>
+                                ＋
+                            </button>
+                        </div>
+                    </div>
+                </div>';
+            }
+        } else {
+            echo "<p>Nenhum produto cadastrado.</p>";
+        }
+    ?>
+</div>
 
     <!-- Sidebar do Carrinho -->
     <aside class="sidebar">
@@ -512,7 +350,7 @@
         </div>
       </div>
     <a href ="pagamento.php">
-      <div class="btn-pay">Ir para pagamento → (Total: R$ 0,00)</div>
+    <div class="btn-pay" id="btnPay">Ir para pagamento → (Total: R$ 0,00)</div>
     </a>
     </aside>
   </div>
@@ -703,6 +541,37 @@
       });
   
       // 7) INICIALIZAÇÃO
+      // Enviar pedido para o banco
+document.getElementById("btnPay").addEventListener("click", () => {
+    let itens = [];
+    document.querySelectorAll('.cart-item').forEach(item => {
+        itens.push({
+            nome: item.querySelector('.item-name').textContent,
+            qtd: item.querySelector('.qty').textContent,
+            preco: item.dataset.price
+        });
+    });
+
+    if (itens.length === 0) {
+        alert("O carrinho está vazio!");
+        return;
+    }
+
+    let total = parseFloat(totalsSubtotalEl.textContent.replace("R$","").replace(",","."));
+
+    fetch("pagamento.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "itens=" + JSON.stringify(itens) + "&total=" + total
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert(data);
+        window.location.href = "pagamento.php";
+    })
+    .catch(err => console.error(err));
+});
+
       updateTotals();
     });
   </script>  
