@@ -1,3 +1,21 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $cart = json_decode($_POST['cart'], true);
+    $total = floatval($_POST['total']);
+    $method = $_POST['method'];
+
+    echo "<h1>Resumo do Pedido</h1>";
+    echo "<ul>";
+    foreach ($cart as $item) {
+        echo "<li>{$item['produto']} — {$item['qtd']} x R$ " . number_format($item['preco'], 2, ',', '.') . " = R$ " . number_format($item['subtotal'], 2, ',', '.') . "</li>";
+    }
+    echo "</ul>";
+    echo "<h3>Total: R$ " . number_format($total, 2, ',', '.') . "</h3>";
+    echo "<p>Método de Pagamento: <strong>{$method}</strong></p>";
+} else {
+    echo "<p>Nenhum pedido encontrado.</p>";
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -285,7 +303,12 @@
       </tbody>
     </table>
     <div class="cart__total" id="cart-total">Total: R$ 0,00</div>
-    <button id="confirm-btn" class="btn" disabled>Confirmar Pedido</button>
+    <form id="payment-form" action="pagamento.php" method="POST">
+  <input type="hidden" name="cart" id="cart-data">
+  <input type="hidden" name="total" id="total-data">
+  <input type="hidden" name="method" id="method-data">
+  <button id="confirm-btn" class="btn" disabled>Confirmar Pedido</button>
+</form>
   </aside>
 
   <!-- Pagamento -->
@@ -350,10 +373,44 @@
     });
   });
 
-  confirmBtn.addEventListener('click', () => {
-    if (!selectedMethod) return;
-    alert(`Pagamento via ${selectedMethod.toUpperCase()} selecionado!`);
+  confirmBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+
+  if (!selectedMethod) {
+    alert("Selecione um método de pagamento!");
+    return;
+  }
+
+  // Pegar os dados do carrinho
+  const rows = document.querySelectorAll('#cart-items tr');
+  const cart = [];
+
+  rows.forEach(row => {
+    const produto = row.querySelector('td:first-child').textContent;
+    const qtd = parseInt(row.querySelector('.qty').textContent, 10);
+    const preco = parseFloat(row.dataset.price);
+    const subtotal = preco * qtd;
+
+    cart.push({
+      produto,
+      qtd,
+      preco,
+      subtotal
+    });
   });
+
+  // Pegar o total
+  const total = document.getElementById('cart-total').textContent.replace('Total: R$ ', '').replace(',', '.');
+
+  // Preencher inputs ocultos do formulário
+  document.getElementById('cart-data').value = JSON.stringify(cart);
+  document.getElementById('total-data').value = total;
+  document.getElementById('method-data').value = selectedMethod;
+
+  // Enviar o formulário para pagamento.php
+  document.getElementById('payment-form').submit();
+});
+
 
   // 2) Quantidade, subtotal e remoção
   function formatReal(value) {

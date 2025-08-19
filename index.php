@@ -1,3 +1,33 @@
+<?php 
+session_start();
+require_once 'conexao.php';
+
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    $email = $_POST['Email'];
+    $senha = $_POST['Senha'];
+
+    $sql = "SELECT * FROM funcionario WHERE Email = :Email LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':Email', $email);
+    $stmt->execute();
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+
+    if ($usuario) {
+        // login ok
+        $_SESSION['funcionario'] = $usuario['Nome_func'];
+        $_SESSION['nivel'] = $usuario['Nivel'];
+        $_SESSION['ID_func'] = $usuario['ID_func'];
+    
+        header("Location: inicial1.php");
+        exit;
+    } else {
+        header("Location: index.php?erro=1");
+        exit;
+    }}    
+?>
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -15,12 +45,12 @@
 
     <main>
         <!-- Formulário de login -->
-        <form id="form">
-            <label for="email">E-mail:</label> <!-- Label para o input de email -->
-            <input type="text" name="txtemail" id="email" class="inputs required" required> <!-- Campo de email obrigatório -->
+        <form id="form" action="index.php" method="POST">
+            <label for="Email">E-mail:</label> <!-- Label para o input de email -->
+            <input type="email" name="Email" id="Email" class="inputs required" required> <!-- Campo de email obrigatório -->
 
-            <label for="senha">Senha:</label> <!-- Label para o input de senha -->
-            <input type="password" id="senha" name="senha" required> <!-- Campo de senha obrigatório -->
+            <label for="Senha">Senha:</label> <!-- Label para o input de senha -->
+            <input type="password" id="Senha" name="Senha" required> <!-- Campo de senha obrigatório -->
 
             <button type="submit">Entrar</button> <!-- Botão para enviar o formulário -->
 
@@ -33,49 +63,6 @@
         <strong>Copyright &copy; Alemões</strong> <!-- Copyright da página -->
 		</div>
     </footer>
-
-    <script>
-        // Adiciona um listener para o evento de envio do formulário
-        document.getElementById("form").addEventListener("submit", function(event) {
-            event.preventDefault(); // Evita que o formulário seja enviado de forma tradicional (recarregando a página)
-
-            // Pega os valores digitados no email e converte para minúsculas
-            const email = document.getElementById("email").value.toLowerCase();
-            const senha = document.getElementById("senha").value; // Pega a senha
-
-            // Lista simulando os funcionários cadastrados com email e senha
-            const funcionarios = [
-                { nome: 'Lara Gorito Barbosa de Souza', email: 'laragorito@padaria.com', senha: 'caixa123' },
-                { nome: 'Humberto Guessinger', email: 'humbertoguessinger@padaria.com', senha: 'atendente123' },
-                { nome: 'Sergio Luiz', email: 'sergioluiz@padaria.com', senha: 'padeiro123' },
-                { nome: 'Mbappe', email: 'mbappe@padaria.com', senha: 'auxiliar123' },
-                { nome: 'Tony Stark', email: 'tonystark@padaria.com', senha: 'atendente123' },
-                { nome: 'Rafaela Elisa', email: 'rafaelaelisa@padaria.com', senha: 'confeiteira123' },
-                { nome: 'Kerry King', email: 'kerryking@padaria.com', senha: 'admin123' }
-            ];
-
-            // Procura na lista um funcionário que tenha email e senha iguais aos digitados
-            const usuario = funcionarios.find(f => f.email === email && f.senha === senha);
-
-            if (usuario) {
-                // Define o nível de acesso: se o nome for 'Kerry King' é admin, senão funcionário normal
-                const nivel = usuario.nome === 'Kerry King' ? 'admin' : 'funcionario';
-
-                // Salva o nível de usuário no localStorage para usar depois
-                localStorage.setItem("nivel_usuario", nivel);
-
-                // Redireciona o usuário para a página inicial de acordo com o nível dele
-                if (nivel === "admin") {
-                    window.location.href = "inicial1.php";
-                } else {
-                    window.location.href = "inicial2.php";
-                }
-            } else {
-                // Se não encontrou usuário com email e senha corretos, avisa com um alert
-                alert("Email ou senha inválidos.");
-            }
-        });
-    </script>
 
 </body>
 </html>
