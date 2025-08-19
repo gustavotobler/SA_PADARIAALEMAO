@@ -1,32 +1,47 @@
 <?php
-include "conexao.php";
+// Conexão PDO
+$dsn = 'mysql:host=localhost;dbname=seu_banco;charset=utf8mb4';
+$user = 'seu_usuario';
+$pass = 'sua_senha';
 
-$sql = "SELECT * FROM produtos";
-$result = $conn->query($sql);
+try {
+    $pdo = new PDO($dsn, $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Erro ao conectar: " . $e->getMessage());
+}
 
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        echo '
-        <div class="card" data-category="'.$row['categoria'].'">
-          <img src="'.$row['imagem'].'" alt="'.$row['nome'].'">
-          <div class="info">
-            <h4>'.$row['nome'].'</h4>
+// Consulta produtos
+$stmt = $pdo->prepare("SELECT id, nome, preco, imagem, categoria, unidade FROM produtos");
+$stmt->execute();
+$produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Renderizar HTML
+foreach ($produtos as $row) {
+    // Garantir que unidade não cause erro
+    $unidade = !empty($row['unidade']) 
+        ? 'data-unit="'.htmlspecialchars($row['unidade'], ENT_QUOTES, 'UTF-8').'"' 
+        : '';
+
+    echo '
+    <div class="card" data-category="'.htmlspecialchars($row['categoria'], ENT_QUOTES, 'UTF-8').'">
+        <img src="'.htmlspecialchars($row['imagem'], ENT_QUOTES, 'UTF-8').'" alt="'.htmlspecialchars($row['nome'], ENT_QUOTES, 'UTF-8').'">
+        <div class="info">
+            <h4>'.htmlspecialchars($row['nome'], ENT_QUOTES, 'UTF-8').'</h4>
             <div class="info-footer">
-              <span class="price">R$ '.number_format($row['preco'], 2, ',', '.').'</span>
-              <button class="add-to-cart" 
-                data-name="'.$row['nome'].'" 
-                data-price="'.$row['preco'].'" 
-                '.(!empty($row['unidade']) ? 'data-unit="'.$row['unidade'].'"' : '').'>
-                ＋
-              </button>
+                <span class="price">R$ '.number_format($row['preco'], 2, ',', '.').'</span>
+                <button class="add-to-cart" 
+                    data-name="'.htmlspecialchars($row['nome'], ENT_QUOTES, 'UTF-8').'" 
+                    data-price="'.$row['preco'].'" 
+                    '.$unidade.'>
+                    ＋
+                </button>
             </div>
-          </div>
-        </div>';
-    }
-} else {
-    echo "<p>Nenhum produto cadastrado.</p>";
+        </div>
+    </div>';
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
