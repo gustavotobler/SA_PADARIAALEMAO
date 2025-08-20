@@ -271,3 +271,52 @@ td input[type="text"] {
   .action-icons {
     position: relative;
   }
+
+  /* ====== MENU DROPDOWN ====== */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropbtn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.3s;
+  }
+
+  .dropbtn:hover {
+    background-color: #f0f0f0;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 180px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    z-index: 100;
+  }
+
+  .dropdown-content a {
+    color: #333;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dropdown-content a:hover {
+    background-color: #f5f5f5;
+  }
+
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+
+  
