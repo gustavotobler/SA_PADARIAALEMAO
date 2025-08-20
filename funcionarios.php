@@ -41,6 +41,7 @@
     </div>
   </header>
 
+<<<<<<< Updated upstream
 
 <main>
   <table>
@@ -90,6 +91,65 @@ document.addEventListener('DOMContentLoaded', () => {
   const tableBody = document.getElementById('func-table-body');
   const searchInput = document.getElementById('search-input');
   const searchBtn = document.getElementById('search-btn');
+=======
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Cargo</th>
+        <th>Nascimento</th>
+        <th>Admissão</th>
+        <th class="action-header hidden">Ações</th>
+      </tr>
+    </thead>
+
+    <tbody id="func-table-body">
+
+
+
+      <?php
+      require_once 'conexao.php';
+
+      $sql = "SELECT ID_func, Nome_func, Cargo, Data_nascimento, Data_admissao FROM funcionario";
+      $stmt = $pdo->query($sql);
+      $funcionarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      foreach ($funcionarios as $func): ?>
+        <tr>
+          <td><?= htmlspecialchars($func['ID_func']) ?></td>
+          <td><?= htmlspecialchars($func['Nome_func']) ?></td>
+          <td><?= htmlspecialchars($func['Cargo']) ?></td>
+          <td><?= htmlspecialchars($func['Data_nascimento']) ?></td>
+          <td><?= htmlspecialchars($func['Data_admissao']) ?> </td>
+          <td class="action-cell hidden">
+            <div class="action-icons">
+          <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
+          <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
+          <button class="undo-btn"><span class="material-icons">undo</span></button>
+          </div>
+          </td>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</main>
+
+<script>
+    // Espera carregar o conteúdo da página para executar o script
+    document.addEventListener('DOMContentLoaded', () => {
+      // Botão para alternar edição
+      const toggleBtn = document.getElementById('edit-toggle');
+      
+      // Cabeçalho da coluna ações
+      const actionHeader = document.querySelector('th.action-header');
+      
+      // Botão para adicionar funcionário
+      const addButton = document.getElementById('add-button');
+      
+      // Função que retorna todas as células de ação na tabela
+      const getActionCells = () => document.querySelectorAll('td.action-cell');
+>>>>>>> Stashed changes
 
   const getActionCells = () => document.querySelectorAll('td.action-cell');
 
@@ -122,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+<<<<<<< Updated upstream
   });
 
   // Deletar
@@ -164,3 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </html>
+=======
+  </script>
+>>>>>>> Stashed changes

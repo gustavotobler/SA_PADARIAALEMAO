@@ -1,11 +1,17 @@
 <?php
 session_start();
 require_once 'conexao.php';
+<<<<<<< Updated upstream
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Verifica se o usuário tem permissão supondo que o perfil 1 seja o admin
 if($_SESSION['nivel'] != 1){
+=======
+
+// Verifica se o usuário tem permissão supondo que o perfil 1 seja o admin
+if($_SESSION['nivel_de_acesso'] != 1){
+>>>>>>> Stashed changes
     echo "Acesso negado!";
 }
 
@@ -25,7 +31,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
   $logradouro    = $_POST['Logradouro'];
   $senha         = password_hash($_POST['Senha'], PASSWORD_DEFAULT);
   $email         = $_POST['Email'];
+<<<<<<< Updated upstream
   $nivel         = $_POST['Nivel'];
+=======
+  $nivel         = $_POST['nivel_de_acesso'];
+>>>>>>> Stashed changes
   $data_nasc     = $_POST['Data_nascimento'];
   $data_adm      = $_POST['Data_admissao'];
   $cargo         = $_POST['Cargo'];
@@ -51,7 +61,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
   $stmt->bindParam(":Logradouro",$logradouro);
   $stmt->bindParam(":Senha",$senha);
   $stmt->bindParam(":Email",$email);
+<<<<<<< Updated upstream
   $stmt->bindParam(":Nivel",$nivel);
+=======
+  $stmt->bindParam(":nivel_de_acesso",$nivel_de_acesso);
+>>>>>>> Stashed changes
   $stmt->bindParam(":Data_nascimento",$data_nasc);
   $stmt->bindParam(":Data_admissao",$data_adm);
   $stmt->bindParam(":Cargo",$cargo);
