@@ -9,9 +9,9 @@ if (!isset($_SESSION['funcionario'])) {
 
 // OBTENDO O NOME DO PERFIL DO USUÁRIO LOGADO
 $id_Nivel = $_SESSION['nivel'];
-$sqlNivel = 'SELECT nome_acesso FROM nivel WHERE Nivel = :Nivel';
+$sqlNivel = 'SELECT nome_acesso FROM nivel WHERE nivel_de_acesso = :nivel_de_acesso';
 $stmtNivel = $pdo->prepare($sqlNivel);
-$stmtNivel->bindParam(':Nivel', $id_Nivel, PDO::PARAM_INT);
+$stmtNivel->bindParam(':nivel_de_acesso', $id_Nivel, PDO::PARAM_INT);
 $stmtNivel->execute();
 $nivel = $stmtNivel->fetch(PDO::FETCH_ASSOC);
 $nome_func = $nivel['nome_acesso'] ?? '';
