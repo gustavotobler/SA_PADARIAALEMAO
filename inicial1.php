@@ -8,30 +8,11 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     exit();
 }
 
-<<<<<<< Updated upstream
 // OBTENDO O NOME DO PERFIL DO USUÁRIO LOGADO
 $id_Nivel = $_SESSION['nivel'];
 $sqlNivel = 'SELECT nome_acesso FROM nivel WHERE nivel_de_acesso = :nivel_de_acesso';
 $stmtNivel = $pdo->prepare($sqlNivel);
 $stmtNivel->bindParam(':nivel_de_acesso', $id_Nivel, PDO::PARAM_INT);
-=======
-// ID do funcionário logado
-$idFuncionario = $_SESSION['funcionario']; // aqui é o ID
-$nivel_de_acesso = $_SESSION['nivel'];
-
-// Buscar nome do funcionário
-$sqlUser = 'SELECT Nome_func FROM funcionario WHERE ID_func = :id';
-$stmtUser = $pdo->prepare($sqlUser);
-$stmtUser->bindParam(':id', $idFuncionario, PDO::PARAM_INT);
-$stmtUser->execute();
-$dadosUser = $stmtUser->fetch(PDO::FETCH_ASSOC);
-$nomeFuncionario = $dadosUser['Nome_func'] ?? 'Usuário';
-
-// Buscar nome do nível
-$sqlNivel = 'SELECT nome_acesso FROM nivel WHERE nivel_de_acesso = :nivel_de_acesso';
-$stmtNivel = $pdo->prepare($sqlNivel);
-$stmtNivel->bindParam(':nivel_de_acesso', $nivel_de_acesso, PDO::PARAM_INT);
->>>>>>> Stashed changes
 $stmtNivel->execute();
 $nivel = $stmtNivel->fetch(PDO::FETCH_ASSOC);
 $nomeNivel = $nivel['nome_acesso'] ?? '';
