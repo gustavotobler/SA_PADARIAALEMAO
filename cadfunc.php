@@ -169,10 +169,76 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
   <div class="mensagem-erro" id="erro-email"><strong>Email inválido!</strong></div>
   <div class="mensagem-erro" id="erro-nome"><strong>Nome inválido!</strong></div>
   <div class="mensagem-erro" id="erro-nascimento"><strong>Data de nascimento inválida!</strong></div>
+  <script>
 
-<script>
-// Funções JS (corrigidas para IDs em minúsculo)
-// ...
+  document.getElementById('cadastro-funcionario').addEventListener('submit', function(e) {
+    const inputCpf = document.getElementById('cpf');
+    const inputSenha = document.getElementById('senha');
+    const listaErros = document.getElementById('lista-erros');
+    const inputRG = document.getElementById('rg');
+    const inputTelefone = document.getElementById('telefone');
+    const inputEmail = document.getElementById('email');
+    const inputNome = document.getElementById('nome');
+    const inputNascimento = document.getElementById('nascimento');
+
+    // Idade
+    if (!validarIdade(inputNascimento.value)) {
+        document.getElementById('erro-nascimento').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // Nome
+    if (inputNome.value.trim().length < 3) {
+        document.getElementById('erro-nome').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // CPF
+    if (!validarCPF(inputCpf.value)) {
+        document.getElementById('erro-cpf').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // RG
+    if (!validarRG(inputRG.value)) {
+        document.getElementById('erro-rg').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // Telefone
+    if (!validarTelefone(inputTelefone.value)) {
+        document.getElementById('erro-telefone').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // Email
+    if (!validarEmail(inputEmail.value)) {
+        document.getElementById('erro-email').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // Senha
+    const errosSenha = validarSenha(inputSenha.value);
+    if (errosSenha.length > 0) {
+        listaErros.innerHTML = errosSenha.map(e => `<li>${e}</li>`).join('');
+        document.getElementById('erro-senha').style.display = 'block';
+        e.preventDefault();
+        return;
+    }
+
+    // Sucesso
+    e.preventDefault();
+    document.getElementById('sucesso-cadastro').style.display = 'block';
+    setTimeout(() => {
+        document.getElementById('sucesso-cadastro').style.display = 'none';
+    }, 3000);
+});
 </script>
 </body>
 </html>
