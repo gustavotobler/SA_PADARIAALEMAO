@@ -23,8 +23,8 @@
         <div class="search-container">
           <span class="material-icons">search</span>
           <form method="POST" action="buscar_funcionarios.php">
-          <input type="text" id="search-input" placeholder="Pesquisar...">
-          <button id="search-btn" type="button">Pesquisar</button>
+            <input type="text" id="search-input" placeholder="Pesquisar...">
+            <button id="search-btn" type="button">Pesquisar</button>
           </form>
         </div>
       </div>
@@ -41,8 +41,7 @@
         <span class="material-icons icon edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
       </div>
     </div>
-  </header>
-
+</header>
 
 <main>
   <table>
@@ -59,7 +58,6 @@
 
     <tbody id="func-table-body">
       <?php
-
       require_once 'conexao.php';
 
       $sql = "SELECT ID_func, Nome_func, Cargo, Data_nascimento, Data_admissao FROM funcionario";
@@ -73,10 +71,23 @@
           <td><?= htmlspecialchars($func['Cargo']) ?></td>
           <td><?= htmlspecialchars($func['Data_nascimento']) ?></td>
           <td><?= htmlspecialchars($func['Data_admissao']) ?></td>
+          
+          <!-- CELULA DE AÇÕES -->
           <td class="action-cell hidden">
-            <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
-            <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
-            <button class="undo-btn"><span class="material-icons">undo</span></button>
+            <button type="button" class="icon-btn edit-btn">
+              <span class="material-icons">edit</span>
+            </button>
+            
+            <form action="excluir_funcionarios.php" method="POST" style="display:inline;">
+              <input type="hidden" name="id" value="<?= htmlspecialchars($func['ID_func']) ?>">
+              <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este funcionário?')">
+                <span class="material-icons">delete</span>
+              </button>
+            </form>
+
+            <button type="button" class="undo-btn" style="display:none;">
+              <span class="material-icons">undo</span>
+            </button>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -86,7 +97,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Elementos
   const toggleBtn = document.getElementById('edit-toggle');
   const actionHeader = document.querySelector('th.action-header');
   const addButton = document.getElementById('add-button');
@@ -103,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addButton.classList.toggle('hidden');
   });
 
-  // Editar/Salvar
+  // Editar/Salvar (apenas frontend)
   tableBody.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const row = btn.closest('tr');
@@ -127,43 +137,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Deletar
-  tableBody.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = btn.closest('tr');
-      row.classList.add('disabled-row');
-      btn.style.display = 'none';
-      row.querySelector('.undo-btn').style.display = 'inline-block';
-    });
-  });
-
-  // Desfazer
-  tableBody.querySelectorAll('.undo-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = btn.closest('tr');
-      row.classList.remove('disabled-row');
-      btn.style.display = 'none';
-      row.querySelector('.delete-btn').style.display = 'inline-block';
-    });
-  });
-
-  // Função de busca
+  // A busca na tabela (JS)
   function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
-
     Array.from(tableBody.rows).forEach(row => {
       const match = Array.from(row.cells).slice(0, 5)
         .some(td => td.textContent.toLowerCase().includes(term));
       row.style.display = match ? '' : 'none';
-
       const cell = row.querySelector('td.action-cell');
       if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
     });
   }
 
-  // Eventos de busca
   searchBtn.addEventListener('click', doSearch);
   searchInput.addEventListener('input', doSearch);
 });
 </script>
+</body>
 </html>
