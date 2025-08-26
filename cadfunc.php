@@ -175,6 +175,7 @@ button:hover {background:#2980b9;}
 
 <label>Cargo:</label>
 <select name="Cargo" id="cargo" required>
+  <option value=""></option>
   <option>Gerente</option>
   <option>Padeiro</option>
   <option>Caixa</option>

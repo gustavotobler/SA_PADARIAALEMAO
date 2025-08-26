@@ -130,7 +130,7 @@ button:hover{background:#2980b9;}
 <body>
 <div class="page">
 <div class="form-box">
-<a href="funcionarios.php"><button class="back-button">Voltar</button></a>
+<a href="../funcionarios.php"><button class="back-button">Voltar</button></a>
 
 <form method="POST" action="editar_funcionarios.php">
     <input type="hidden" name="ID_func" value="<?= htmlspecialchars($func['ID_func']) ?>">
@@ -200,8 +200,12 @@ button:hover{background:#2980b9;}
 </select>
 
 <label>Cargo:</label>
-<input type="text" name="Cargo" value="<?= htmlspecialchars($func['Cargo'] ?? '') ?>">
-
+<select name="Cargo" id="cargo" required value="<?= htmlspecialchars($func['Cargo'] ?? '') ?>">
+  <option value=""></option>
+  <option>Gerente</option>
+  <option>Padeiro</option>
+  <option>Caixa</option>
+  <option>Confeiteiro</option>
 <div class="flex-group">
   <div>
     <label>Data de Nascimento:</label>
