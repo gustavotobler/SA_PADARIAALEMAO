@@ -1,7 +1,16 @@
 <?php
-require_once 'conexao.php';
+session_start();
+require_once '../conexao.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = $_POST['ID_func'] ?? null;
+    if (!$id || !is_numeric($id)) {
+        die("ID inválido!");
+    }
+    $id = intval($id);
+
     $nome       = $_POST['Nome_func'] ?? null;
     $telefone   = $_POST['Telefone'] ?? null;
     $sexo       = $_POST['Sexo'] ?? null;
@@ -15,41 +24,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cep        = $_POST['CEP'] ?? null;
     $num_casa   = $_POST['Num_casa'] ?? null;
     $logradouro = $_POST['Logradouro'] ?? null;
-    $senha      = password_hash($_POST['Senha'] ?? '', PASSWORD_DEFAULT);
     $email      = $_POST['Email'] ?? null;
     $nivel      = $_POST['nivel_de_acesso'] ?? null;
     $cargo      = $_POST['Cargo'] ?? null;
 
-    if ($id) {
-        $sql = "UPDATE funcionario 
-                SET :Nome_func,:Telefone,:Sexo,:RG,:CPF,:Esta_civil,:UF,:Cidade,:Bairro,:Tipo,:CEP,:Num_casa,:Logradouro,:Senha,:Email,:nivel_de_acesso,:Data_nascimento,:Data_admissao,:Cargo
-                WHERE ID_func=:id";
-      $stmt = $pdo->prepare($sql);
-      $stmt->bindParam(":Nome_func",$nome);
-      $stmt->bindParam(":Telefone",$telefone);
-      $stmt->bindParam(":Sexo",$sexo);
-      $stmt->bindParam(":RG",$rg);
-      $stmt->bindParam(":CPF",$cpf);
-      $stmt->bindParam(":Esta_civil",$esta_civil);
-      $stmt->bindParam(":UF",$uf);
-      $stmt->bindParam(":Cidade",$cidade);
-      $stmt->bindParam(":Bairro",$bairro);
-      $stmt->bindParam(":Tipo",$tipo);
-      $stmt->bindParam(":CEP",$cep);
-      $stmt->bindParam(":Num_casa",$num_casa);
-      $stmt->bindParam(":Logradouro",$logradouro);
-      $stmt->bindParam(":Senha",$senha);
-      $stmt->bindParam(":Email",$email);
-      $stmt->bindParam(":nivel_de_acesso",$nivel);
-      $stmt->bindParam(":Data_nascimento",$data_nasc);
-      $stmt->bindParam(":Data_admissao",$data_adm);
-      $stmt->bindParam(":Cargo",$cargo);
-        if($stmt->execute()){
-            header('Location: funcionarios.php'); // redireciona de volta
-            exit;
-        } else {
-            echo "Erro ao atualizar";
+    // Formata datas para o banco
+    function formatarDataBanco($data){
+        if(!$data) return null;
+        $partes = explode("/", $data);
+        if(count($partes) == 3){
+            return $partes[2]."-".$partes[1]."-".$partes[0];
         }
+        return null;
     }
-}
+
+    $data_nasc = formatarDataBanco($_POST['Data_nascimento'] ?? null);
+    $data_adm  = formatarDataBanco($_POST['Data_admissao'] ?? null);
+
+    // Mantém a senha antiga se o campo estiver vazio
+    $senha = !empty($_POST['Senha']) ? password_hash($_POST['Senha'], PASSWORD_DEFAULT) : null;
+
+    $sql ="UPDATE funcionario SET 
+        Nome_func=:Nome_func,
+        Telefone=:Telefone,
+        Sexo=:Sexo,
+        RG=:RG,
+        CPF=:CPF,
+        Esta_civil=:Esta_civil,
+        UF=:UF,
+        Cidade=:Cidade,
+        Bairro=:Bairro,
+        Tipo=:Tipo,
+        CEP=:CEP,
+        Num_casa=:Num_casa,
+        Logradouro=:Logradouro,
+        Senha=COALESCE(:Senha,Senha),
+        Email=:Email,
+        nivel_de_acesso=:nivel_de_acesso,
+        Data_nascimento=:Data_nascimento,
+        Data_admissao=:Data_admissao,
+        Cargo=:Cargo
+    WHERE ID_func=:id";
+
+    $stmt = $pdo->prepare($sql);
+    $executou = $stmt->execute([
+        'Nome_func'=>$nome,
+        'Telefone'=>$telefone,
+        'Sexo'=>$sexo,
+        'RG'=>$rg,
+        'CPF'=>$cpf,
+        'Esta_civil'=>$esta_civil,
+        'UF'=>$uf,
+        'Cidade'=>$cidade,
+        'Bairro'=>$bairro,
+        'Tipo'=>$tipo,
+        'CEP'=>$cep,
+        'Num_casa'=>$num_casa,
+        'Logradouro'=>$logradouro,
+        'Senha'=>$senha,
+        'Email'=>$email,
+        'nivel_de_acesso'=>$nivel,
+        'Data_nascimento'=>$data_nasc,
+        'Data_admissao'=>$data_adm,
+        'Cargo'=>$cargo,
+        'id'=>$id
+    ]);
+    
+    if($executou){
+        echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='../funcionarios.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Erro ao atualizar o funcionário.');</script>";
+    }
+}    
 ?>
