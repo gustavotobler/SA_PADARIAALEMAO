@@ -70,7 +70,7 @@
           <!-- CELULA DE AÇÕES: lápis e deletar -->
           <td class="action-cell hidden">
             <!-- Editar redirecionando para outro formulário -->
-            <a href="alterar/alterar_funcionario.php" class="icon-btn" title="Editar">
+            <a href="alterar/alterar_funcionario.php?id=<?= $func['ID_func'] ?>" class="icon-btn" title="Editar">
               <span class="material-icons">edit</span>
             </a>
 

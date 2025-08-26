@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $stmt->bindParam(":Cargo",$cargo);
 
   if($stmt->execute()){
-      echo "<script>alert('Funcionário cadastrado com sucesso!');</script>";
+      echo "<script>alert('Funcionário cadastrado com sucesso!');window.location.href='funcionarios.php'</script>";
   } else{
       echo "<script>alert('Erro ao cadastrar funcionário');</script>";
   }
@@ -126,7 +126,7 @@ button:hover {background:#2980b9;}
 <span id="erro-rg" class="erro"></span>
 
 <label>CPF:</label>
-<input type="text" name="CPF" id="cpf" required>
+<input type="text" name="CPF" id="cpf" required maxlength="15">
 <span id="erro-cpf" class="erro"></span>
 
 <label>Estado Civil:</label>
@@ -174,7 +174,11 @@ button:hover {background:#2980b9;}
 </select>
 
 <label>Cargo:</label>
-<input type="text" name="Cargo">
+<select name="Cargo" id="cargo" required>
+  <option>Gerente</option>
+  <option>Padeiro</option>
+  <option>Caixa</option>
+  <option>Confeiteiro</option>
 
 <div class="flex-group">
   <div>
@@ -193,38 +197,95 @@ button:hover {background:#2980b9;}
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  const telefone=document.getElementById("telefone");
-  const rg=document.getElementById("rg");
-  const cpf=document.getElementById("cpf");
-  const cep=document.getElementById("cep");
-  const nascimento=document.getElementById("nascimento");
-  const senha=document.getElementById("senha");
+  const telefone = document.getElementById("telefone");
+  const rg = document.getElementById("rg");
+  const cpf = document.getElementById("cpf");
+  const cep = document.getElementById("cep");
+  const nascimento = document.getElementById("nascimento");
+  const admissao = document.getElementById("admissao");
+  const senha = document.getElementById("senha");
 
-  telefone.addEventListener("input",()=>{telefone.value=telefone.value.replace(/\D/g,"").replace(/^(\d{2})(\d)/,"($1) $2").replace(/(\d{5})(\d{4}).*/,"$1-$2");});
-  rg.addEventListener("input",()=>{rg.value=rg.value.replace(/\D/g,"").slice(0,9);});
-  cpf.addEventListener("input",()=>{cpf.value=cpf.value.replace(/\D/g,"").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");});
-  cep.addEventListener("input",()=>{cep.value=cep.value.replace(/\D/g,"").replace(/(\d{5})(\d{3})$/,"$1-$2");});
-  nascimento.addEventListener("input",()=>{nascimento.value=nascimento.value.replace(/\D/g,"").replace(/(\d{2})(\d)/,"$1/$2").replace(/(\d{2})(\d)/,"$1/$2").replace(/(\d{4})(\d)/,"$1");});
+  // Máscara telefone (99) 99999-9999
+  telefone.addEventListener("input", () => {
+    let v = telefone.value.replace(/\D/g,"");
+    if(v.length > 11) v = v.slice(0,11);
+    v = v.replace(/^(\d{2})(\d)/,"($1) $2");
+    v = v.replace(/(\d{5})(\d)/,"$1-$2");
+    telefone.value = v;
+  });
 
+  // Máscara RG (99.999.999-9)
+  rg.addEventListener("input", () => {
+    let v = rg.value.replace(/\D/g,"").slice(0,9);
+    if(v.length > 2) v = v.slice(0,2) + '.' + v.slice(2);
+    if(v.length > 5) v = v.slice(0,6) + '.' + v.slice(6);
+    if(v.length > 8) v = v.slice(0,9) + '-' + v.slice(9);
+    rg.value = v;
+  });
+
+  // Máscara CPF (999.999.999-99)
+  cpf.addEventListener("input", () => {
+    let v = cpf.value.replace(/\D/g,"").slice(0,11);
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+    cpf.value = v;
+  });
+
+  // Máscara CEP (99999-999)
+  cep.addEventListener("input", () => {
+    let v = cep.value.replace(/\D/g,"").slice(0,8);
+    v = v.replace(/(\d{5})(\d)/,"$1-$2");
+    cep.value = v;
+  });
+
+  // Máscara datas dd/mm/aaaa
+  function mascaraData(el){
+    el.addEventListener("input", () => {
+      let v = el.value.replace(/\D/g,"").slice(0,8);
+      if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+      if(v.length > 5) v = v.slice(0,5) + '/' + v.slice(5);
+      el.value = v;
+    });
+  }
+  mascaraData(nascimento);
+  mascaraData(admissao);
+
+  // Validação antes de enviar
   document.querySelector("form").addEventListener("submit",(e)=>{
-    let ok=true;
-    if(cpf.value.replace(/\D/g,"").length!==11){document.getElementById("erro-cpf").innerText="CPF inválido."; ok=false;} else document.getElementById("erro-cpf").innerText="";
-    if(senha.value.length<8){document.getElementById("erro-senha").innerText="Senha deve ter no mínimo 8 caracteres."; ok=false;} else document.getElementById("erro-senha").innerText="";
+    let ok = true;
+
+    // CPF
+    if(cpf.value.replace(/\D/g,"").length !== 11){
+      document.getElementById("erro-cpf").innerText = "CPF inválido.";
+      ok = false;
+    } else document.getElementById("erro-cpf").innerText = "";
+
+    // Senha
+    if(senha.value.length > 0 && senha.value.length < 8){
+      document.getElementById("erro-senha").innerText = "Senha deve ter no mínimo 8 caracteres.";
+      ok = false;
+    } else document.getElementById("erro-senha").innerText = "";
+
+    // Data nascimento >= 18 anos
     if(nascimento.value){
-      const p=nascimento.value.split("/");
-      if(p.length===3){
-        const nasc=new Date(p[2],p[1]-1,p[0]);
-        const hoje=new Date();
-        let idade=hoje.getFullYear()-nasc.getFullYear();
-        if(hoje<new Date(nasc.setFullYear(hoje.getFullYear()))) idade--;
-        if(idade<18){document.getElementById("erro-nascimento").innerText="Funcionário deve ter pelo menos 18 anos."; ok=false;}
-        else document.getElementById("erro-nascimento").innerText="";
+      const p = nascimento.value.split("/");
+      if(p.length === 3){
+        const nasc = new Date(p[2], p[1]-1, p[0]);
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - nasc.getFullYear();
+        if(hoje < new Date(nasc.setFullYear(hoje.getFullYear()))) idade--;
+        if(idade < 18){
+          document.getElementById("erro-nascimento").innerText = "Funcionário deve ter pelo menos 18 anos.";
+          ok = false;
+        } else document.getElementById("erro-nascimento").innerText = "";
       }
     }
+
     if(!ok) e.preventDefault();
   });
 });
-</script>
 
+</script>
 </body>
 </html>
