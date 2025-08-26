@@ -186,11 +186,52 @@
   </style>
 </head>
 <body>
+<<<<<<< Updated upstream
   <!-- Menu lateral fixo -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo" id="sidebar-logo">
       <img src="img/Logopadaria.png" alt="Padaria do Alemão" />
       <span>Padaria do Alemão</span>
+=======
+  
+  <header>
+    <div class="topo"> <!-- Container da barra superior -->
+      <div class="topo-left"> <!-- Área esquerda da barra superior -->
+        <a href="inicial1.php"> <!-- Link que leva para a página inicial -->
+          <!-- Ícone de seta para voltar, usando Material Icons -->
+          <span class="material-icons icon" title="Voltar">arrow_back</span>
+        </a>
+      </div>
+
+      <div class="topo-center"> <!-- Área central da barra superior -->
+        <h1>PRODUTOS</h1> <!-- Título da página -->
+
+        <!-- Container do campo de pesquisa -->
+        <div class="search-container">
+          <!-- Ícone de lupa ao lado do input -->
+          <span class="material-icons">search</span>
+
+          <!-- Campo de texto para digitar o termo de pesquisa -->
+          <input type="text" id="search-input" placeholder="Pesquisar...">
+
+          <!-- Botão para iniciar a busca -->
+          <button id="search-btn" type="button">Pesquisar</button>
+        </div>
+      </div>
+
+      <div class="topo-right"> <!-- Área direita da barra superior -->
+        <!-- Link para a página de cadastro de produto, com botão de adicionar (começa escondido) -->
+        <a href="cadproduto.php" id="add-button" class="hidden">
+          <button class="icon-btn add-btn" title="Adicionar">
+            <!-- Ícone de adicionar -->
+            <span class="material-icons">add</span>
+          </button>
+        </a>
+
+        <!-- Ícone que funciona como botão para mostrar ou ocultar as ações da tabela -->
+        <span class="material-icons icon edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
+      </div>
+>>>>>>> Stashed changes
     </div>
 
     <a href="produtos.php" class="menu-item">

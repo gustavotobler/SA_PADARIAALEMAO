@@ -28,9 +28,6 @@ $nomeNivel = $nivel['nome_acesso'] ?? '';
 <body>
 
 <!-- Mensagem personalizada -->
-<h2>
-    BEM VINDO <?= htmlspecialchars($nomeFuncionario) ?> [<?= htmlspecialchars($nomeNivel) ?>] AO SISTEMA
-</h2>
 
 <!-- Menu lateral de navegação -->
 <nav class="sidebar" aria-label="Menu de navegação">
