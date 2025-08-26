@@ -1,34 +1,40 @@
 <?php
-require_once 'conexao.php';
+$host = 'localhost';
+$dbname = 'padariadoalemao';
+$user = 'root';
+$pass = '';
 
-// Consulta de vendas com junção
-$sql = "
-SELECT 
-    v.ID_vendas,
-    v.venda_data,
-    f.nome_funcionario,
-    p.Nome_prod,
-    v.quant_vendas,
-    v.preco_unit,
-    v.preco_total,
-    v.forma_pagamento
-FROM vendas v
-JOIN produtos p ON v.ID_produto = p.ID_produto
-JOIN funcionarios f ON v.ID_func = f.ID_funcionario
-ORDER BY v.venda_data DESC
+try {
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+    // 🔹 Consulta de vendas com join
+    $sql = "
+    SELECT 
+        v.ID_vendas,
+        v.venda_data,
+        f.Nome_func,
+        p.Nome_prod,
+        v.quant_vendas,
+        v.preco_unit,
+        v.preco_total,
+        v.forma_pagamento
+    FROM vendas v
+    JOIN funcionario f ON v.ID_func = f.ID_func
+    JOIN compras c ON v.ID_vendas = c.ID_vendas
+    JOIN produtos p ON c.ID_produto = p.ID_produto
+    ORDER BY v.venda_data DESC
 ";
-
-
-$result = $conn->query($sql);
-$rows = [];
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $rows[] = $row;
-    }
+    $stmt = $conn->query($sql);
+    $rows = $stmt->fetchAll();
+} catch (PDOException $e) {
+    die("Erro na conexão: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Dashboard de Vendas</title>
@@ -44,369 +50,410 @@ if ($result && $result->num_rows > 0) {
             --accent: #3f3f3f;
             --highlight: #e0f7ff;
         }
-        * { 
-          box-sizing: border-box; 
+
+        * {
+            box-sizing: border-box;
         }
-        body { 
-             margin: 0; 
-             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-             background-color: var(--main-bg); 
-             color: #333; 
-             display: flex; 
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--main-bg);
+            color: #333;
+            display: flex;
         }
-        .sidebar { 
-                 width: 240px; 
-                 background-color: var(--sidebar-bg); 
-                 height: 100vh; position: fixed; display: flex; 
-                 flex-direction: column; 
-                 padding-top: 20px; 
+
+        .sidebar {
+            width: 240px;
+            background-color: var(--sidebar-bg);
+            height: 100vh;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
         }
-        .sidebar h2 { 
-                    color: var(--primary-text); 
-                    text-align: center; 
-                    margin-bottom: 30px; 
+
+        .sidebar h2 {
+            color: var(--primary-text);
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .sidebar a { 
-                   color: var(--primary-text); 
-                   padding: 15px 20px; 
-                   text-decoration: none; 
-                   transition: background 0.3s; 
+
+        .sidebar a {
+            color: var(--primary-text);
+            padding: 15px 20px;
+            text-decoration: none;
+            transition: background 0.3s;
         }
-        .sidebar a:hover { 
-                         background-color: var(--hover-bg); 
-                        }
-        .main-content { 
-                      margin-left: 240px; 
-                      padding: 30px; width: 100%; 
+
+        .sidebar a:hover {
+            background-color: var(--hover-bg);
         }
-        h1, h2 { 
-               text-align: center; 
-               margin-bottom: 20px; 
+
+        .main-content {
+            margin-left: 240px;
+            padding: 30px;
+            width: 100%;
         }
-        #filters { 
-                 display: flex; 
-                 flex-wrap: wrap; 
-                 justify-content: center; 
-                 gap: 10px; margin-bottom: 20px; 
+
+        h1,
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        #filters .filter-group { 
-                               display: flex; 
-                               flex-direction: column; 
-                               align-items: start; 
+
+        #filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        #filters label { 
-                       font-size: 12px; 
-                       margin-left: 2px; 
+
+        #filters .filter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: start;
         }
-        #filters input { 
-                       padding: 8px 12px; 
-                       border: 1px solid #ccc; 
-                       border-radius: 4px; 
+
+        #filters label {
+            font-size: 12px;
+            margin-left: 2px;
         }
-        table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              background-color: var(--card-bg); 
-              box-shadow: 0 4px 16px rgba(0,0,0,0.1); 
-              border-radius: 12px; 
-              overflow: hidden; 
+
+        #filters input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
-        caption { 
-                caption-side: top; 
-                text-align: left; 
-                font-weight: bold; 
-                padding: 10px; 
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
         }
-        th, td { 
-               padding: 12px 15px; 
-               text-align: center; 
-               border-bottom: 1px solid #eee; 
+
+        caption {
+            caption-side: top;
+            text-align: left;
+            font-weight: bold;
+            padding: 10px;
         }
-        th { 
-           background-color: var(--accent); 
-           color: var(--primary-text); 
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
         }
-        th[scope="col"], td[scope="row"] 
-        { 
-        text-align: left; 
+
+        th {
+            background-color: var(--accent);
+            color: var(--primary-text);
         }
-        tr:nth-child(even) 
-        { 
-        background-color: #f9f9f9; 
+
+        th[scope="col"],
+        td[scope="row"] {
+            text-align: left;
         }
-        tr:hover { 
-                 background-color: var(--highlight); 
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
-        .chart-section, .sheet-section { 
-                                       margin: 40px auto; 
-                                       background: var(--card-bg); 
-                                       padding: 20px; 
-                                       border-radius: 12px; 
-                                       box-shadow: 0 6px 12px rgba(0,0,0,0.15); 
-                                       max-width: 700px; 
+
+        tr:hover {
+            background-color: var(--highlight);
         }
-        #grafico-pagamento canvas { 
-                                  max-height: 325px; 
+
+        .chart-section,
+        .sheet-section {
+            margin: 40px auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            max-width: 700px;
         }
-        canvas { 
-               max-width: 100%; 
-               height: auto; 
+
+        #grafico-pagamento canvas {
+            max-height: 325px;
         }
-        .section { 
-                 display: none; 
+
+        canvas {
+            max-width: 100%;
+            height: auto;
         }
-        .section.active { 
-                        display: block; 
+
+        .section {
+            display: none;
         }
-        .pagination { 
-                    display: flex; 
-                    justify-content: center; 
-                    align-items: center; 
-                    gap: 10px; 
-                    margin-top: 15px; 
+
+        .section.active {
+            display: block;
         }
-        .pagination button { 
-                           padding: 8px 12px; 
-                           border: none; 
-                           background-color: var(--accent); 
-                           color: var(--primary-text); 
-                           border-radius: 4px; 
-                           cursor: pointer; 
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
         }
-        .pagination button:disabled { 
-                                    background-color: #999; 
-                                    cursor: default; 
+
+        .pagination button {
+            padding: 8px 12px;
+            border: none;
+            background-color: var(--accent);
+            color: var(--primary-text);
+            border-radius: 4px;
+            cursor: pointer;
         }
-        .back-button { 
-                     display: flex; 
-                     align-items: center; 
-                     justify-content: center; 
-                     padding: 10px 20px; 
-                     margin: 10px; 
-                     background-color: var(--accent); 
-                     color: var(--primary-text); 
-                     border-radius: 8px; 
-                     text-decoration: none; 
-                     font-size: 16px; 
-                     font-weight: 500; 
-                     transition: background-color 0.2s, transform 0.1s; 
+
+        .pagination button:disabled {
+            background-color: #999;
+            cursor: default;
         }
-        .back-button .icon { 
-                           margin-right: 8px; 
-                           font-size: 18px; 
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: var(--accent);
+            color: var(--primary-text);
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
         }
-        .back-button:hover { 
-                           background-color: #555; 
-                           transform: translateY(-1px); 
+
+        .back-button .icon {
+            margin-right: 8px;
+            font-size: 18px;
         }
-        .back-button:active { 
-                            background-color: #333; 
-                            transform: translateY(0); 
+
+        .back-button:hover {
+            background-color: #555;
+            transform: translateY(-1px);
+        }
+
+        .back-button:active {
+            background-color: #333;
+            transform: translateY(0);
         }
     </style>
 </head>
+
 <body>
 
-<nav class="sidebar" aria-label="Menu de navegação">
-    <a href="inicial1.php">
-        <span class="material-icons icon" title="Voltar">arrow_back</span>
-      </a>
-        
-    </a>
-    <a href="#" onclick="showSection('tabela')" aria-controls="tabela">📋 Tabela de Vendas</a>
-    <a href="#" onclick="showSection('grafico-produto')" aria-controls="grafico-produto">📦 Gráf. Produto</a>
-    <a href="#" onclick="showSection('grafico-pagamento')" aria-controls="grafico-pagamento">💳 Gráf. Pagamento</a>
-    <a href="#" onclick="showSection('grafico-funcionario')" aria-controls="grafico-funcionario">👨‍💼 Gráf. Funcionário</a>
-    <a href="#" onclick="showSection('grafico-dia')" aria-controls="grafico-dia">📅 Gráf. Total Vendido</a>
-</nav>
-    
-<main class="main-content">
-    <section id="tabela" class="section active" aria-labelledby="titulo-tabela">
-        <h1 id="titulo-tabela">Relatório de Vendas</h1>
-        <div id="filters" role="region" aria-label="Filtros de busca">
-            <div class="filter-group">
-                <label for="startDate">📅 Data Inicial</label>
-                <input type="date" id="startDate" aria-labelledby="startDate">
+    <nav class="sidebar" aria-label="Menu de navegação">
+        <a href="inicial1.php">
+            <span class="material-icons icon" title="Voltar">arrow_back</span>
+        </a>
+
+        </a>
+        <a href="#" onclick="showSection('tabela')" aria-controls="tabela">📋 Tabela de Vendas</a>
+        <a href="#" onclick="showSection('grafico-produto')" aria-controls="grafico-produto">📦 Gráf. Produto</a>
+        <a href="#" onclick="showSection('grafico-pagamento')" aria-controls="grafico-pagamento">💳 Gráf. Pagamento</a>
+        <a href="#" onclick="showSection('grafico-funcionario')" aria-controls="grafico-funcionario">👨‍💼 Gráf.
+            Funcionário</a>
+        <a href="#" onclick="showSection('grafico-dia')" aria-controls="grafico-dia">📅 Gráf. Total Vendido</a>
+    </nav>
+
+    <main class="main-content">
+        <section id="tabela" class="section active" aria-labelledby="titulo-tabela">
+            <h1 id="titulo-tabela">Relatório de Vendas</h1>
+            <div id="filters" role="region" aria-label="Filtros de busca">
+                <div class="filter-group">
+                    <label for="startDate">📅 Data Inicial</label>
+                    <input type="date" id="startDate" aria-labelledby="startDate">
+                </div>
+                <div class="filter-group">
+                    <label for="endDate">📅 Data Final</label>
+                    <input type="date" id="endDate" aria-labelledby="endDate">
+                </div>
+                <div class="filter-group">
+                    <label for="search">🔍 Produto</label>
+                    <input type="text" id="search" placeholder="Pesquisar por nome do Produto..."
+                        aria-labelledby="search">
+                </div>
             </div>
-            <div class="filter-group">
-                <label for="endDate">📅 Data Final</label>
-                <input type="date" id="endDate" aria-labelledby="endDate">
+            <table aria-describedby="descr-tabela">
+                <thead>
+                    <tr>
+                        <th scope="col">ID Venda</th>
+                        <th scope="col">Data</th>
+                        <th scope="col">Nome Funcionário</th>
+                        <th scope="col">Nome Produto</th>
+                        <th scope="col">Quantidade</th>
+                        <th scope="col">Preço Unitário</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Pagamento</th>
+                    </tr>
+                </thead>
+            </table>
+            <tbody>
+                <?php foreach ($rows as $row): ?>
+                    <tr>
+                        <td><?= $row['ID_vendas'] ?></td>
+                        <td><?= $row['venda_data'] ?></td>
+                        <td><?= $row['Nome_func'] ?></td>
+                        <td><?= $row['Nome_prod'] ?></td>
+                        <td><?= $row['quant_vendas'] ?></td>
+                        <td><?= number_format($row['preco_unit'], 2, ',', '.') ?></td>
+                        <td><?= number_format($row['preco_total'], 2, ',', '.') ?></td>
+                        <td><?= $row['forma_pagamento'] ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+            <div class="pagination" role="navigation" aria-label="Paginação de resultados">
+                <button id="prevBtn" disabled aria-label="Página anterior">&larr; Anterior</button>
+                <span id="pageInfo" aria-live="polite">Página 1</span>
+                <button id="nextBtn" aria-label="Próxima página">Próxima &rarr;</button>
             </div>
-            <div class="filter-group">
-                <label for="search">🔍 Produto</label>
-                <input type="text" id="search" placeholder="Pesquisar por nome do Produto..." aria-labelledby="search">
-            </div>
-        </div>
-        <table aria-describedby="descr-tabela">
-            <thead>
-                <tr>
-                    <th scope="col">ID Venda</th>
-                    <th scope="col">Data</th>
-                    <th scope="col">Nome Funcionário</th>
-                    <th scope="col">Nome Produto</th>
-                    <th scope="col">Quantidade</th>
-                    <th scope="col">Preço Unitário</th>
-                    <th scope="col">Total</th>
-                    <th scope="col">Pagamento</th>
-                </tr>
-            </thead>
-</table>
-<tbody>
-<?php foreach($rows as $row): ?>
-    <tr>
-        <td><?= $row['ID_vendas'] ?></td>
-        <td><?= $row['venda_data'] ?></td>
-        <td><?= $row['nome_funcionario'] ?></td>
-        <td><?= $row['Nome_prod'] ?></td>
-        <td><?= $row['quant_vendas'] ?></td>
-        <td><?= number_format($row['preco_unit'], 2, ',', '.') ?></td>
-        <td><?= number_format($row['preco_total'], 2, ',', '.') ?></td>
-        <td><?= $row['forma_pagamento'] ?></td>
-    </tr>
-<?php endforeach; ?>
-</tbody>
-<div class="pagination" role="navigation" aria-label="Paginação de resultados">
-    <button id="prevBtn" disabled aria-label="Página anterior">&larr; Anterior</button>
-    <span id="pageInfo" aria-live="polite">Página 1</span>
-    <button id="nextBtn" aria-label="Próxima página">Próxima &rarr;</button>
-</div>
-</section>
+        </section>
 
-<section id="grafico-produto" class="section chart-section" aria-labelledby="titulo-produto">
-<h2 id="titulo-produto">Vendas por Produto</h2>
-<canvas id="produtoChart" role="img" aria-label="Gráfico de vendas por produto"></canvas>
-</section>
+        <section id="grafico-produto" class="section chart-section" aria-labelledby="titulo-produto">
+            <h2 id="titulo-produto">Vendas por Produto</h2>
+            <canvas id="produtoChart" role="img" aria-label="Gráfico de vendas por produto"></canvas>
+        </section>
 
-<section id="grafico-pagamento" class="section chart-section" aria-labelledby="titulo-pagamento">
-<h2 id="titulo-pagamento">Vendas por Forma de Pagamento</h2>
-<canvas id="pagamentoChart" role="img" aria-label="Gráfico de vendas por forma de pagamento"></canvas>
-</section>
+        <section id="grafico-pagamento" class="section chart-section" aria-labelledby="titulo-pagamento">
+            <h2 id="titulo-pagamento">Vendas por Forma de Pagamento</h2>
+            <canvas id="pagamentoChart" role="img" aria-label="Gráfico de vendas por forma de pagamento"></canvas>
+        </section>
 
-<section id="grafico-funcionario" class="section chart-section" aria-labelledby="titulo-funcionario">
-<h2 id="titulo-funcionario">Vendas por Funcionário</h2>
-<canvas id="funcionarioChart" role="img" aria-label="Gráfico de vendas por funcionário"></canvas>
-</section>
+        <section id="grafico-funcionario" class="section chart-section" aria-labelledby="titulo-funcionario">
+            <h2 id="titulo-funcionario">Vendas por Funcionário</h2>
+            <canvas id="funcionarioChart" role="img" aria-label="Gráfico de vendas por funcionário"></canvas>
+        </section>
 
-<section id="grafico-dia" class="section chart-section" aria-labelledby="titulo-dia">
-<h2 id="titulo-dia">Vendas</h2>
-<canvas id="diaChart" role="img" aria-label="Gráfico de vendas"></canvas>
-</section>
-</main>
+        <section id="grafico-dia" class="section chart-section" aria-labelledby="titulo-dia">
+            <h2 id="titulo-dia">Vendas</h2>
+            <canvas id="diaChart" role="img" aria-label="Gráfico de vendas"></canvas>
+        </section>
+    </main>
 
-<script>
-    
-function showSection(id) {
-document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-}
+    <script>
 
-    const rawRows = Array.from(document.querySelectorAll('#tabela tbody tr')).map(row => ({
-        id: row.cells[0].textContent,
-        date: row.cells[1].textContent,
-        funcionario: row.cells[2].textContent,
-        produto: row.cells[3].textContent,
-        quantidade: +row.cells[4].textContent,
-        preco: +row.cells[5].textContent,
-        total: +row.cells[6].textContent,
-        pagamento: row.cells[7].textContent
-    }));
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-    const defaultColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8E44AD', '#2ECC71', '#E74C3C'];
+        const rawRows = Array.from(document.querySelectorAll('#tabela tbody tr')).map(row => ({
+            id: row.cells[0].textContent,
+            date: row.cells[1].textContent,
+            funcionario: row.cells[2].textContent,
+            produto: row.cells[3].textContent,
+            quantidade: +row.cells[4].textContent,
+            preco: +row.cells[5].textContent,
+            total: +row.cells[6].textContent,
+            pagamento: row.cells[7].textContent
+        }));
 
-    const ctxProd = document.getElementById('produtoChart');
-    const ctxPag  = document.getElementById('pagamentoChart');
-    const ctxFunc = document.getElementById('funcionarioChart');
-    const ctxDia  = document.getElementById('diaChart');
+        const defaultColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8E44AD', '#2ECC71', '#E74C3C'];
 
-    let produtoChart = new Chart(ctxProd, {type:'bar', data: {labels:[], datasets:[{label:'Quantidade', data:[], backgroundColor:[], borderWidth:1}]}});
-    let pagamentoChart = new Chart(ctxPag,  {type:'pie', data: {labels:[], datasets:[{label:'Utilizada', data:[], backgroundColor:[]} ]}});
-    let funcionarioChart = new Chart(ctxFunc,{type:'bar', data: {labels:[], datasets:[{label:'Vendas', data:[], backgroundColor:[], borderWidth:1}]}});
-    let diaChart = new Chart(ctxDia,   {type:'line', data:{labels:[], datasets:[{label:'Total vendido (R$)', data:[], borderColor:'', backgroundColor:'', fill:true, tension:0.3}]}});
+        const ctxProd = document.getElementById('produtoChart');
+        const ctxPag = document.getElementById('pagamentoChart');
+        const ctxFunc = document.getElementById('funcionarioChart');
+        const ctxDia = document.getElementById('diaChart');
 
-    const rowsPerPage = 9;
-    let currentPage = 1;
-    let filteredIndices = [];
+        let produtoChart = new Chart(ctxProd, { type: 'bar', data: { labels: [], datasets: [{ label: 'Quantidade', data: [], backgroundColor: [], borderWidth: 1 }] } });
+        let pagamentoChart = new Chart(ctxPag, { type: 'pie', data: { labels: [], datasets: [{ label: 'Utilizada', data: [], backgroundColor: [] }] } });
+        let funcionarioChart = new Chart(ctxFunc, { type: 'bar', data: { labels: [], datasets: [{ label: 'Vendas', data: [], backgroundColor: [], borderWidth: 1 }] } });
+        let diaChart = new Chart(ctxDia, { type: 'line', data: { labels: [], datasets: [{ label: 'Total vendido (R$)', data: [], borderColor: '', backgroundColor: '', fill: true, tension: 0.3 }] } });
 
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const pageInfo = document.getElementById('pageInfo');
+        const rowsPerPage = 9;
+        let currentPage = 1;
+        let filteredIndices = [];
 
-    prevBtn.addEventListener('click', () => { if(currentPage>1){ currentPage--; applyFilters(); }});
-    nextBtn.addEventListener('click', () => { if(currentPage < Math.ceil(filteredIndices.length/rowsPerPage)){ currentPage++; applyFilters(); }});
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageInfo = document.getElementById('pageInfo');
 
-    function applyFilters() {
-        const start = document.getElementById('startDate').value;
-        const end   = document.getElementById('endDate').value;
-        const search= document.getElementById('search').value.trim();
+        prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; applyFilters(); } });
+        nextBtn.addEventListener('click', () => { if (currentPage < Math.ceil(filteredIndices.length / rowsPerPage)) { currentPage++; applyFilters(); } });
 
-        filteredIndices = [];
-        rawRows.forEach((item, idx) => {
-            let passDate = true;
-            if (start) passDate = item.date >= start;
-            if (passDate && end) passDate = item.date <= end;
-            let passSearch = item.produto.includes(search);
-            if(passDate && passSearch) filteredIndices.push(idx);
-        });
+        function applyFilters() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            const search = document.getElementById('search').value.trim();
 
-       
-        const totalPages = Math.ceil(filteredIndices.length/rowsPerPage) || 1;
-        if(currentPage>totalPages) currentPage = totalPages;
+            filteredIndices = [];
+            rawRows.forEach((item, idx) => {
+                let passDate = true;
+                if (start) passDate = item.date >= start;
+                if (passDate && end) passDate = item.date <= end;
+                let passSearch = item.produto.includes(search);
+                if (passDate && passSearch) filteredIndices.push(idx);
+            });
 
-        document.querySelectorAll('#tabela tbody tr').forEach((row, idx) => {
-            const pos = filteredIndices.indexOf(idx);
-            if(pos >= (currentPage-1)*rowsPerPage && pos < currentPage*rowsPerPage) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
 
-        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === totalPages;
+            const totalPages = Math.ceil(filteredIndices.length / rowsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
 
-        updateCharts();
-    }
+            document.querySelectorAll('#tabela tbody tr').forEach((row, idx) => {
+                const pos = filteredIndices.indexOf(idx);
+                if (pos >= (currentPage - 1) * rowsPerPage && pos < currentPage * rowsPerPage) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
 
-    function updateCharts() {
-        const prodCounts = {}, pagCounts = {}, funcCounts = {}, diaTotals = {};
-        filteredIndices.forEach(idx => {
-            const item = rawRows[idx];
-            prodCounts[item.produto]      = (prodCounts[item.produto]||0)      + item.quantidade;
-            pagCounts[item.pagamento]     = (pagCounts[item.pagamento]||0)     + 1;
-            funcCounts[item.funcionario]  = (funcCounts[item.funcionario]||0)  + 1;
-            diaTotals[item.date]          = (diaTotals[item.date]||0)          + item.total;
-        });
+            pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
 
-        produtoChart.data.labels = Object.keys(prodCounts);
-        produtoChart.data.datasets[0].data = Object.values(prodCounts);
-        produtoChart.data.datasets[0].backgroundColor = produtoChart.data.labels.map((_,i) => defaultColors[i % defaultColors.length]);
-        produtoChart.update();
+            updateCharts();
+        }
 
-        pagamentoChart.data.labels = Object.keys(pagCounts);
-        pagamentoChart.data.datasets[0].data = Object.values(pagCounts);
-        pagamentoChart.data.datasets[0].backgroundColor = pagamentoChart.data.labels.map((_,i) => defaultColors[i % defaultColors.length]);
-        pagamentoChart.update();
+        function updateCharts() {
+            const prodCounts = {}, pagCounts = {}, funcCounts = {}, diaTotals = {};
+            filteredIndices.forEach(idx => {
+                const item = rawRows[idx];
+                prodCounts[item.produto] = (prodCounts[item.produto] || 0) + item.quantidade;
+                pagCounts[item.pagamento] = (pagCounts[item.pagamento] || 0) + 1;
+                funcCounts[item.funcionario] = (funcCounts[item.funcionario] || 0) + 1;
+                diaTotals[item.date] = (diaTotals[item.date] || 0) + item.total;
+            });
 
-        funcionarioChart.data.labels = Object.keys(funcCounts);
-        funcionarioChart.data.datasets[0].data = Object.values(funcCounts);
-        funcionarioChart.data.datasets[0].backgroundColor = funcionarioChart.data.labels.map((_,i) => defaultColors[i % defaultColors.length]);
-        funcionarioChart.update();
+            produtoChart.data.labels = Object.keys(prodCounts);
+            produtoChart.data.datasets[0].data = Object.values(prodCounts);
+            produtoChart.data.datasets[0].backgroundColor = produtoChart.data.labels.map((_, i) => defaultColors[i % defaultColors.length]);
+            produtoChart.update();
 
-        diaChart.data.labels = Object.keys(diaTotals);
-        diaChart.data.datasets[0].data = Object.values(diaTotals);
-        const dayColor = defaultColors[1];
-        diaChart.data.datasets[0].borderColor = dayColor;
-        diaChart.data.datasets[0].backgroundColor = dayColor + '33';
-        diaChart.update();
-    }
+            pagamentoChart.data.labels = Object.keys(pagCounts);
+            pagamentoChart.data.datasets[0].data = Object.values(pagCounts);
+            pagamentoChart.data.datasets[0].backgroundColor = pagamentoChart.data.labels.map((_, i) => defaultColors[i % defaultColors.length]);
+            pagamentoChart.update();
 
-    document.getElementById('startDate').addEventListener('change', () => { currentPage=1; applyFilters(); });
-    document.getElementById('endDate').addEventListener('change', () => { currentPage=1; applyFilters(); });
-    document.getElementById('search').addEventListener('input', () => { currentPage=1; applyFilters(); });
+            funcionarioChart.data.labels = Object.keys(funcCounts);
+            funcionarioChart.data.datasets[0].data = Object.values(funcCounts);
+            funcionarioChart.data.datasets[0].backgroundColor = funcionarioChart.data.labels.map((_, i) => defaultColors[i % defaultColors.length]);
+            funcionarioChart.update();
 
-    applyFilters();
-</script>
+            diaChart.data.labels = Object.keys(diaTotals);
+            diaChart.data.datasets[0].data = Object.values(diaTotals);
+            const dayColor = defaultColors[1];
+            diaChart.data.datasets[0].borderColor = dayColor;
+            diaChart.data.datasets[0].backgroundColor = dayColor + '33';
+            diaChart.update();
+        }
+
+        document.getElementById('startDate').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+        document.getElementById('endDate').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+        document.getElementById('search').addEventListener('input', () => { currentPage = 1; applyFilters(); });
+
+        applyFilters();
+    </script>
 
 </body>
+
 </html>

@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/site3.css">
 </head>
 <body>
+  
   <header>
     <div class="topo"> <!-- Barra superior da página -->
       <div class="topo-left"> <!-- Área esquerda da barra superior -->
