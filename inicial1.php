@@ -36,8 +36,8 @@ $nomeNivel = $nivel['nome_acesso'] ?? '';
     </a>
     <a href="produtos.php" aria-label="Ir para Produtos">🥐 Produtos</a>
     <a href="funcionarios.php" aria-label="Ir para Funcionários">🙎‍♂️ Funcionários</a>
-    <a href="estoque.php" arial-label="Ir para Estoque">📦 Estoque</a>
     <a href="fornecedores.php" aria-label="Ir para Fornecedores">💼 Fornecedores</a>
+    <a href="estoque.php" arial-label="Ir para Estoque">📦 Estoque</a>
     <a href="relatorio_vendas_padaria_alemao1.php" aria-label="Ir para Relatório de Vendas">📈 Vendas</a>
     <a href="selecionar_itens.php" aria-label="Ir para Pagamento">🛒 Pagamento</a>
 </nav>
