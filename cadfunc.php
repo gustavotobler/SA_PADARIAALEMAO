@@ -2,38 +2,48 @@
 session_start();
 require_once 'conexao.php';
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-// Verifica se o usuário tem permissão supondo que o perfil 1 seja o admin
-if($_SESSION['nivel'] != 1){
+// Verifica permissão
+if ($_SESSION['nivel'] != 1) {
     echo "Acesso negado!";
+    exit;
 }
 
-if($_SERVER["REQUEST_METHOD"] == "POST"){
-  $nome          = $_POST['Nome_func'];
-  $telefone      = $_POST['Telefone'];
-  $sexo          = $_POST['Sexo'];
-  $rg            = $_POST['RG'];
-  $cpf           = $_POST['CPF'];
-  $esta_civil    = $_POST['Esta_civil'];
-  $uf            = $_POST['UF'];
-  $cidade        = $_POST['Cidade'];
-  $bairro        = $_POST['Bairro'];
-  $tipo          = $_POST['Tipo'];
-  $cep           = $_POST['CEP'];
-  $num_casa      = $_POST['Num_casa'];
-  $logradouro    = $_POST['Logradouro'];
-  $senha         = password_hash($_POST['Senha'], PASSWORD_DEFAULT);
-  $email         = $_POST['Email'];
-  $nivel         = $_POST['Nivel'];
-  $data_nasc     = $_POST['Data_nascimento'];
-  $data_adm      = $_POST['Data_admissao'];
-  $cargo         = $_POST['Cargo'];
-  
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  // Pegando com segurança
+  $nome       = $_POST['Nome_func'] ?? null;
+  $telefone   = $_POST['Telefone'] ?? null;
+  $sexo       = $_POST['Sexo'] ?? null;
+  $rg         = $_POST['RG'] ?? null;
+  $cpf        = $_POST['CPF'] ?? null;
+  $esta_civil = $_POST['Esta_civil'] ?? null;
+  $uf         = $_POST['UF'] ?? null;
+  $cidade     = $_POST['Cidade'] ?? null;
+  $bairro     = $_POST['Bairro'] ?? null;
+  $tipo       = $_POST['Tipo'] ?? null;
+  $cep        = $_POST['CEP'] ?? null;
+  $num_casa   = $_POST['Num_casa'] ?? null;
+  $logradouro = $_POST['Logradouro'] ?? null;
+  $senha      = password_hash($_POST['Senha'] ?? '', PASSWORD_DEFAULT);
+  $email      = $_POST['Email'] ?? null;
+  $nivel      = $_POST['nivel_de_acesso'] ?? null;
+  $cargo      = $_POST['Cargo'] ?? null;
+
+  function formatarDataBanco($data){
+      if(!$data) return null;
+      $partes = explode("/", $data);
+      if(count($partes) == 3){
+          return $partes[2]."-".$partes[1]."-".$partes[0];
+      }
+      return null;
+  }
+  $data_nasc = formatarDataBanco($_POST['Data_nascimento'] ?? null);
+  $data_adm  = formatarDataBanco($_POST['Data_admissao'] ?? null);
+
   $sql = "INSERT INTO funcionario 
-  (Nome_func,Telefone,Sexo,RG,CPF,Esta_civil,UF,Cidade,Bairro,Tipo,CEP,Num_casa,Logradouro,Senha,Email,Nivel,Data_nascimento,Data_admissao,Cargo)
+  (Nome_func,Telefone,Sexo,RG,CPF,Esta_civil,UF,Cidade,Bairro,Tipo,CEP,Num_casa,Logradouro,Senha,Email,nivel_de_acesso,Data_nascimento,Data_admissao,Cargo)
   VALUES 
-  (:Nome_func,:Telefone,:Sexo,:RG,:CPF,:Esta_civil,:UF,:Cidade,:Bairro,:Tipo,:CEP,:Num_casa,:Logradouro,:Senha,:Email,:Nivel,:Data_nascimento,:Data_admissao,:Cargo)";
+  (:Nome_func,:Telefone,:Sexo,:RG,:CPF,:Esta_civil,:UF,:Cidade,:Bairro,:Tipo,:CEP,:Num_casa,:Logradouro,:Senha,:Email,:nivel_de_acesso,:Data_nascimento,:Data_admissao,:Cargo)";
 
   $stmt = $pdo->prepare($sql);
   $stmt->bindParam(":Nome_func",$nome);
@@ -51,194 +61,231 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
   $stmt->bindParam(":Logradouro",$logradouro);
   $stmt->bindParam(":Senha",$senha);
   $stmt->bindParam(":Email",$email);
-  $stmt->bindParam(":Nivel",$nivel);
+  $stmt->bindParam(":nivel_de_acesso",$nivel);
   $stmt->bindParam(":Data_nascimento",$data_nasc);
   $stmt->bindParam(":Data_admissao",$data_adm);
   $stmt->bindParam(":Cargo",$cargo);
 
   if($stmt->execute()){
-      echo "<script>alert('Funcionário cadastrado com sucesso!');</script>";
+      echo "<script>alert('Funcionário cadastrado com sucesso!');window.location.href='funcionarios.php'</script>";
   } else{
       echo "<script>alert('Erro ao cadastrar funcionário');</script>";
   }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro de Funcionário</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="css/cadfunc.css" rel="stylesheet"/>
+<meta charset="UTF-8">
+<title>Cadastro de Funcionário</title>
+<style>
+/* Reset e corpo */
+* {margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+body {background:#eef2f7;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;}
+
+/* Card do formulário */
+form {background:#fff;padding:35px 40px;border-radius:15px;box-shadow:0 12px 25px rgba(0,0,0,0.12);max-width:550px;width:100%;}
+h2 {text-align:center;margin-bottom:30px;color:#2c3e50;font-size:1.8rem;}
+label {display:block;margin-bottom:6px;font-weight:600;color:#34495e;}
+input, select {width:100%;padding:12px 15px;margin-bottom:15px;border:1px solid #ccc;border-radius:10px;font-size:0.95rem;transition:all 0.3s ease;}
+input:focus, select:focus {border-color:#3498db;box-shadow:0 0 8px rgba(52,152,219,0.3);outline:none;}
+button {width:100%;padding:14px;background:#3498db;border:none;color:white;font-size:1rem;font-weight:600;border-radius:10px;cursor:pointer;transition:0.3s;}
+button:hover {background:#2980b9;}
+.erro {color:#e74c3c;font-size:0.85rem;margin-top:-10px;margin-bottom:10px;display:block;}
+.flex-group {display:flex;gap:10px;margin-bottom:15px;}
+.flex-group input,.flex-group select {flex:1;}
+@media(max-width:600px){form{padding:25px 20px;}.flex-group{flex-direction:column;}}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <a href="funcionarios.php">
-        <button class="back-button"><span class="material-icons">arrow_back</span></button>
-      </a>
-      <h1>CADASTRO DE FUNCIONÁRIO</h1>
-    </div>
+<div class="page">
+    <div class="form-box">
+      <!-- Botão de voltar -->
+      <a href="funcionarios.php"><button class="back-button"><span class="material-icons">arrow_back</span></button></a>
 
-    <div class="section-title">DADOS PESSOAIS</div>
+<form method="POST">
+<h2>Cadastro de Funcionário</h2>
 
-    <form id="cadastro-funcionario" class="form-box" action="cadfunc.php" method="POST">
-      <div class="form-group">
-        <input type="text" id="nome" name="Nome_func" placeholder="Nome completo" required>
-        <input type="text" id="rg" name="RG" placeholder="RG" oninput="formatRG(this)" maxlength="12" required>
-        <select id="sexo" name="Sexo" required>
-          <option value="" disabled selected>Sexo</option>
-          <option value="Masculino">Masculino</option>
-          <option value="Feminino">Feminino</option>
-        </select>
-      </div>
+<label>Nome:</label>
+<input type="text" name="Nome_func" required>
 
-      <div class="form-group">
-        <input type="text" id="nascimento" name="Data_nascimento" placeholder="Data de Nascimento" maxlength="10" oninput="formatarData(this)" required>
-        <input type="text" id="admissao" name="Data_admissao" placeholder="Data de Admissão" maxlength="10" oninput="formatarData(this)" required>
-        <input type="text" id="cpf" name="CPF" placeholder="CPF" oninput="formatCPF(this)" maxlength="14" required>
-        <select id="estado-civil" name="Esta_civil" required>
-          <option value="" disabled selected>Estado civil</option>
-          <option value="Solteiro">Solteiro(a)</option> 
-          <option value="Casado">Casado(a)</option>
-          <option value="Viúvo">Viúvo(a)</option>
-        </select>
-        <input type="password" id="senha" name="Senha" placeholder="Senha" maxlength="12" required>
-      </div>
+<label>Telefone:</label>
+<input type="text" name="Telefone" id="telefone" required>
+<span id="erro-telefone" class="erro"></span>
 
-      <select id="cargo" name="Cargo" required>
-        <option value="" disabled selected>Selecione o Cargo</option>
-        <option value="Padeiro">Padeiro</option>
-        <option value="Confeiteiro">Confeiteiro</option>
-        <option value="Gerente">Gerente</option>
-        <option value="Caixa">Caixa</option>
-        <option value="Entregador">Entregador</option>
-        <option value="Ajudante Geral">Ajudante Geral</option>
-        <option value="Auxiliar de Limpeza">Auxiliar de Limpeza</option>
-        <option value="Estoquista">Estoquista</option>
-        <option value="Atendente">Atendente</option>
-      </select>
+<label>Sexo:</label>
+<select name="Sexo" required>
+  <option value="">Selecione</option>
+  <option value="M">Masculino</option>
+  <option value="F">Feminino</option>
+</select>
 
-      <input type="text" id="uf" name="UF" class="full-width" placeholder="Estado" required>
-      <input type="text" id="cidade" name="Cidade" class="full-width" placeholder="Cidade" required>
-      <input type="text" id="bairro" name="Bairro" class="full-width" placeholder="Bairro" required>
-      <input type="text" id="tipo" name="Tipo" class="full-width" placeholder="Tipo de rua" required>
-      <input type="text" id="cep" name="CEP" class="full-width" placeholder="CEP" required>
-      <input type="text" id="num_casa" name="Num_casa" class="full-width" placeholder="Número da casa" required>
-      <input type="text" id="logradouro" name="Logradouro" class="full-width" placeholder="Logradouro" required>
+<label>RG:</label>
+<input type="text" name="RG" id="rg" required>
+<span id="erro-rg" class="erro"></span>
 
-      <div class="section-subtitle">FORMAS DE CONTATO</div>
-      <div class="form-group">
-        <input type="email" id="email" name="Email" placeholder="Digite seu e-mail" required>
-        <input type="text" id="telefone" name="Telefone" placeholder="Telefone" oninput="formatTelefone(this)" maxlength="15" required>
-      </div>
+<label>CPF:</label>
+<input type="text" name="CPF" id="cpf" required maxlength="15">
+<span id="erro-cpf" class="erro"></span>
 
-      <div class="section-subtitle">NÍVEL</div>
-      <div class="form-group center">
-        <select id="nivel" name="Nivel" required>
-          <option value="1">Nível 1</option>
-          <option value="2">Nível 2</option>
-          <option value="3">Nível 3</option>
-        </select>
-      </div>
+<label>Estado Civil:</label>
+<input type="text" name="Esta_civil">
 
-      <div class="form-group center">
-        <button type="submit" class="submit-button">CADASTRAR</button>
-      </div>
-    </form>
+<div class="flex-group">
+  <div>
+    <label>UF:</label>
+    <input type="text" name="UF" maxlength="2">
   </div>
-
-  <!-- Mensagens de erro/sucesso -->
-  <div class="mensagem-erro" id="erro-senha">
-    <strong>Senha inválida! Ela deve conter:</strong>
-    <ul id="lista-erros"></ul>
-    <button onclick="fecharErro()">OK</button>
+  <div>
+    <label>Número da Casa:</label>
+    <input type="text" name="Num_casa">
   </div>
+</div>
 
-  <div class="mensagem-sucesso" id="sucesso-cadastro">
-    <img src="img/confirmado.png" alt="Cadastro realizado com sucesso">
-    <div style="text-align: center; margin-top: 15px;">
-      <button onclick="fecharSucesso()" class="botao-ok">OK</button>
-    </div>
+<label>Cidade:</label>
+<input type="text" name="Cidade">
+
+<label>Bairro:</label>
+<input type="text" name="Bairro">
+
+<label>Tipo:</label>
+<input type="text" name="Tipo">
+
+<label>CEP:</label>
+<input type="text" name="CEP" id="cep">
+<span id="erro-cep" class="erro"></span>
+
+<label>Logradouro:</label>
+<input type="text" name="Logradouro">
+
+<label>Email:</label>
+<input type="email" name="Email" id="email" required>
+<span id="erro-email" class="erro"></span>
+
+<label>Senha:</label>
+<input type="password" name="Senha" id="senha" required>
+<span id="erro-senha" class="erro"></span>
+
+<label>Nível de Acesso:</label>
+<select name="nivel_de_acesso" required>
+  <option value="1">Administrador</option>
+  <option value="2">Funcionário</option>
+</select>
+
+<label>Cargo:</label>
+<select name="Cargo" id="cargo" required>
+  <option>Gerente</option>
+  <option>Padeiro</option>
+  <option>Caixa</option>
+  <option>Confeiteiro</option>
+
+<div class="flex-group">
+  <div>
+    <label>Data de Nascimento:</label>
+    <input type="text" name="Data_nascimento" id="nascimento" placeholder="dd/mm/aaaa">
+    <span id="erro-nascimento" class="erro"></span>
   </div>
+  <div>
+    <label>Data de Admissão:</label>
+    <input type="text" name="Data_admissao" id="admissao" placeholder="dd/mm/aaaa">
+  </div>
+</div>
 
-  <div class="mensagem-erro" id="erro-cpf"><strong>CPF inválido!</strong></div>
-  <div class="mensagem-erro" id="erro-rg"><strong>RG inválido!</strong></div>
-  <div class="mensagem-erro" id="erro-telefone"><strong>Telefone inválido!</strong></div>
-  <div class="mensagem-erro" id="erro-email"><strong>Email inválido!</strong></div>
-  <div class="mensagem-erro" id="erro-nome"><strong>Nome inválido!</strong></div>
-  <div class="mensagem-erro" id="erro-nascimento"><strong>Data de nascimento inválida!</strong></div>
-  <script>
+<button type="submit">Cadastrar</button>
+</form>
 
-  document.getElementById('cadastro-funcionario').addEventListener('submit', function(e) {
-    const inputCpf = document.getElementById('cpf');
-    const inputSenha = document.getElementById('senha');
-    const listaErros = document.getElementById('lista-erros');
-    const inputRG = document.getElementById('rg');
-    const inputTelefone = document.getElementById('telefone');
-    const inputEmail = document.getElementById('email');
-    const inputNome = document.getElementById('nome');
-    const inputNascimento = document.getElementById('nascimento');
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const telefone = document.getElementById("telefone");
+  const rg = document.getElementById("rg");
+  const cpf = document.getElementById("cpf");
+  const cep = document.getElementById("cep");
+  const nascimento = document.getElementById("nascimento");
+  const admissao = document.getElementById("admissao");
+  const senha = document.getElementById("senha");
 
-    // Idade
-    if (!validarIdade(inputNascimento.value)) {
-        document.getElementById('erro-nascimento').style.display = 'block';
-        e.preventDefault();
-        return;
-    }
+  // Máscara telefone (99) 99999-9999
+  telefone.addEventListener("input", () => {
+    let v = telefone.value.replace(/\D/g,"");
+    if(v.length > 11) v = v.slice(0,11);
+    v = v.replace(/^(\d{2})(\d)/,"($1) $2");
+    v = v.replace(/(\d{5})(\d)/,"$1-$2");
+    telefone.value = v;
+  });
 
-    // Nome
-    if (inputNome.value.trim().length < 3) {
-        document.getElementById('erro-nome').style.display = 'block';
-        e.preventDefault();
-        return;
-    }
+  // Máscara RG (99.999.999-9)
+  rg.addEventListener("input", () => {
+    let v = rg.value.replace(/\D/g,"").slice(0,9);
+    if(v.length > 2) v = v.slice(0,2) + '.' + v.slice(2);
+    if(v.length > 5) v = v.slice(0,6) + '.' + v.slice(6);
+    if(v.length > 8) v = v.slice(0,9) + '-' + v.slice(9);
+    rg.value = v;
+  });
+
+  // Máscara CPF (999.999.999-99)
+  cpf.addEventListener("input", () => {
+    let v = cpf.value.replace(/\D/g,"").slice(0,11);
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+    cpf.value = v;
+  });
+
+  // Máscara CEP (99999-999)
+  cep.addEventListener("input", () => {
+    let v = cep.value.replace(/\D/g,"").slice(0,8);
+    v = v.replace(/(\d{5})(\d)/,"$1-$2");
+    cep.value = v;
+  });
+
+  // Máscara datas dd/mm/aaaa
+  function mascaraData(el){
+    el.addEventListener("input", () => {
+      let v = el.value.replace(/\D/g,"").slice(0,8);
+      if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+      if(v.length > 5) v = v.slice(0,5) + '/' + v.slice(5);
+      el.value = v;
+    });
+  }
+  mascaraData(nascimento);
+  mascaraData(admissao);
+
+  // Validação antes de enviar
+  document.querySelector("form").addEventListener("submit",(e)=>{
+    let ok = true;
 
     // CPF
-    if (!validarCPF(inputCpf.value)) {
-        document.getElementById('erro-cpf').style.display = 'block';
-        e.preventDefault();
-        return;
-    }
-
-    // RG
-    if (!validarRG(inputRG.value)) {
-        document.getElementById('erro-rg').style.display = 'block';
-        e.preventDefault();
-        return;
-    }
-
-    // Telefone
-    if (!validarTelefone(inputTelefone.value)) {
-        document.getElementById('erro-telefone').style.display = 'block';
-        e.preventDefault();
-        return;
-    }
-
-    // Email
-    if (!validarEmail(inputEmail.value)) {
-        document.getElementById('erro-email').style.display = 'block';
-        e.preventDefault();
-        return;
-    }
+    if(cpf.value.replace(/\D/g,"").length !== 11){
+      document.getElementById("erro-cpf").innerText = "CPF inválido.";
+      ok = false;
+    } else document.getElementById("erro-cpf").innerText = "";
 
     // Senha
-    const errosSenha = validarSenha(inputSenha.value);
-    if (errosSenha.length > 0) {
-        listaErros.innerHTML = errosSenha.map(e => `<li>${e}</li>`).join('');
-        document.getElementById('erro-senha').style.display = 'block';
-        e.preventDefault();
-        return;
+    if(senha.value.length > 0 && senha.value.length < 8){
+      document.getElementById("erro-senha").innerText = "Senha deve ter no mínimo 8 caracteres.";
+      ok = false;
+    } else document.getElementById("erro-senha").innerText = "";
+
+    // Data nascimento >= 18 anos
+    if(nascimento.value){
+      const p = nascimento.value.split("/");
+      if(p.length === 3){
+        const nasc = new Date(p[2], p[1]-1, p[0]);
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - nasc.getFullYear();
+        if(hoje < new Date(nasc.setFullYear(hoje.getFullYear()))) idade--;
+        if(idade < 18){
+          document.getElementById("erro-nascimento").innerText = "Funcionário deve ter pelo menos 18 anos.";
+          ok = false;
+        } else document.getElementById("erro-nascimento").innerText = "";
+      }
     }
 
-    // Sucesso
-    e.preventDefault();
-    document.getElementById('sucesso-cadastro').style.display = 'block';
-    setTimeout(() => {
-        document.getElementById('sucesso-cadastro').style.display = 'none';
-    }, 3000);
+    if(!ok) e.preventDefault();
+  });
 });
+
 </script>
 </body>
 </html>

@@ -10,14 +10,12 @@
 
 <header>
     <div class="topo">
-      <!-- Lado esquerdo: botão de voltar -->
       <div class="topo-left">
         <a href="inicial1.php">
           <span class="material-icons icon" title="Voltar">arrow_back</span>
         </a>
       </div>
 
-      <!-- Centro: título e barra de pesquisa -->
       <div class="topo-center">
         <h1>FUNCIONÁRIOS</h1>
         <div class="search-container">
@@ -29,15 +27,12 @@
         </div>
       </div>
 
-      <!-- Lado direito: botão de adicionar e de alternar ações -->
       <div class="topo-right">
-        <!-- Botão de adicionar fornecedor (oculto por padrão) -->
         <a href="cadfunc.php" id="add-button" class="hidden">
           <button class="icon-btn add-btn" title="Adicionar">
             <span class="material-icons">add</span>
           </button>
         </a>
-        <!-- Botão para mostrar/ocultar ações -->
         <span class="material-icons icon edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
       </div>
     </div>
@@ -72,22 +67,19 @@
           <td><?= htmlspecialchars($func['Data_nascimento']) ?></td>
           <td><?= htmlspecialchars($func['Data_admissao']) ?></td>
           
-          <!-- CELULA DE AÇÕES -->
+          <!-- CELULA DE AÇÕES: lápis e deletar -->
           <td class="action-cell hidden">
-            <button type="button" class="icon-btn edit-btn">
+            <!-- Editar redirecionando para outro formulário -->
+            <a href="alterar/alterar_funcionario.php?id=<?= $func['ID_func'] ?>" class="icon-btn" title="Editar">
               <span class="material-icons">edit</span>
-            </button>
-            
+            </a>
+
             <form action="excluir_funcionarios.php" method="POST" style="display:inline;">
               <input type="hidden" name="id" value="<?= htmlspecialchars($func['ID_func']) ?>">
               <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este funcionário?')">
                 <span class="material-icons">delete</span>
               </button>
             </form>
-
-            <button type="button" class="undo-btn" style="display:none;">
-              <span class="material-icons">undo</span>
-            </button>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -113,31 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addButton.classList.toggle('hidden');
   });
 
-  // Editar/Salvar (apenas frontend)
-  tableBody.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = btn.closest('tr');
-      const icon = btn.querySelector('.material-icons');
-      const editing = row.classList.toggle('editing');
-      icon.textContent = editing ? 'save' : 'edit';
-
-      for (let i = 0; i < 5; i++) {
-        const cell = row.cells[i];
-        if (editing) {
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = cell.textContent;
-          cell.textContent = '';
-          cell.appendChild(input);
-        } else {
-          const input = cell.querySelector('input');
-          if (input) cell.textContent = input.value;
-        }
-      }
-    });
-  });
-
-  // A busca na tabela (JS)
+  // Busca na tabela
   function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
     Array.from(tableBody.rows).forEach(row => {
