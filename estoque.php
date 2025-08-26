@@ -77,6 +77,9 @@ try {
     <a href="#" onclick="showSection('tabela')">📋 Tabela de Estoque</a>
     <a href="#" onclick="showSection('grafico-qtd')">📦 Gráf. Quantidade</a>
     <a href="#" onclick="showSection('grafico-valor')">💰 Gráf. Valor</a>
+    <a href="#" onclick="showSection('grafico-fornecedor')">🏭 Gráf. Fornecedor</a>
+    <a href="#" onclick="showSection('grafico-validade')">⏳ Gráf. Validade</a>
+    <a href="#" onclick="showSection('grafico-preco')">💵 Gráf. Preço</a>
 </nav>
 
 <main class="main-content">
@@ -137,27 +140,39 @@ try {
         <h2>Valor Total em Estoque por Produto</h2>
         <canvas id="valorChart"></canvas>
     </section>
+
+    <section id="grafico-fornecedor" class="chart-section">
+        <h2>Quantidade Total por Fornecedor</h2>
+        <canvas id="fornecedorChart"></canvas>
+    </section>
+
+    <section id="grafico-validade" class="chart-section">
+        <h2>Produtos Próximos da Validade (≤ 30 dias)</h2>
+        <canvas id="validadeChart"></canvas>
+    </section>
+
+    <section id="grafico-preco" class="chart-section">
+        <h2>Distribuição de Preços Unitários</h2>
+        <canvas id="precoChart"></canvas>
+    </section>
 </main>
 
 <script>
 let qtdChartInstance = null;
 let valorChartInstance = null;
+let fornecedorChartInstance = null;
+let validadeChartInstance = null;
+let precoChartInstance = null;
 
 function showSection(id){
-    // Oculta todas as seções
     document.querySelectorAll('.section, .chart-section').forEach(s => s.style.display = 'none');
-    
-    // Mostra a seção selecionada
     const section = document.getElementById(id);
     section.style.display = 'block';
-
-    // Se for gráfico, inicializa ou atualiza
-    if(id === 'grafico-qtd' || id === 'grafico-valor'){
-        setTimeout(updateCharts, 50); // Delay curto para garantir que o canvas está visível
+    if(id.startsWith('grafico-')){
+        setTimeout(updateCharts, 50);
     }
 }
 
-// Referências da tabela e filtros
 const tableRows = Array.from(document.querySelectorAll('tbody tr'));
 const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
@@ -183,22 +198,21 @@ function applyFilters(){
     });
 }
 
-// Filtros
 startDateInput.addEventListener('change', applyFilters);
 endDateInput.addEventListener('change', applyFilters);
 searchInput.addEventListener('input', applyFilters);
 
-// Atualiza os gráficos
 function updateCharts(){
     const visibleRows = tableRows.filter(r => r.style.display !== 'none');
     const labels = visibleRows.map(r => r.cells[1].textContent);
     const qtds = visibleRows.map(r => parseFloat(r.cells[4].textContent));
     const valores = visibleRows.map(r => parseFloat(r.cells[6].textContent.replace('.', '').replace(',', '.')));
+    const fornecedores = visibleRows.map(r => r.cells[2].textContent || '---');
+    const precos = visibleRows.map(r => parseFloat(r.cells[5].textContent.replace('.', '').replace(',', '.')));
     const colors = ['#36A2EB','#FF6384','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#2ECC71','#E74C3C'];
 
-    // Destrói gráficos anteriores se existirem
-    if(qtdChartInstance) qtdChartInstance.destroy();
-    if(valorChartInstance) valorChartInstance.destroy();
+    [qtdChartInstance, valorChartInstance, fornecedorChartInstance, validadeChartInstance, precoChartInstance]
+        .forEach(c => c && c.destroy());
 
     qtdChartInstance = new Chart(document.getElementById('qtdChart'), {
         type: 'bar',
@@ -211,12 +225,47 @@ function updateCharts(){
         data: { labels, datasets: [{ label: 'Valor em R$', data: valores, backgroundColor: colors }] },
         options: { responsive: true }
     });
+
+    // Quantidade por fornecedor
+    const fornecedorMap = {};
+    visibleRows.forEach(r => {
+        const f = r.cells[2].textContent || '---';
+        fornecedorMap[f] = (fornecedorMap[f] || 0) + parseFloat(r.cells[4].textContent);
+    });
+    fornecedorChartInstance = new Chart(document.getElementById('fornecedorChart'), {
+        type: 'bar',
+        data: { labels: Object.keys(fornecedorMap), datasets: [{ label: 'Qtd Total', data: Object.values(fornecedorMap), backgroundColor: colors }] },
+        options: { responsive: true }
+    });
+
+    // Produtos próximos da validade (≤ 30 dias)
+    const today = new Date();
+    const proxValidadeLabels = [];
+    const proxValidadeQtds = [];
+    visibleRows.forEach(r => {
+        const val = new Date(r.cells[7].textContent);
+        const diffDays = (val - today) / (1000*60*60*24);
+        if(diffDays <= 30 && diffDays >= 0) {
+            proxValidadeLabels.push(r.cells[1].textContent);
+            proxValidadeQtds.push(parseFloat(r.cells[4].textContent));
+        }
+    });
+    validadeChartInstance = new Chart(document.getElementById('validadeChart'), {
+        type: 'bar',
+        data: { labels: proxValidadeLabels, datasets: [{ label: 'Qtd Próx Validade', data: proxValidadeQtds, backgroundColor: colors }] },
+        options: { responsive: true }
+    });
+
+    // Distribuição de preços
+    precoChartInstance = new Chart(document.getElementById('precoChart'), {
+        type: 'pie',
+        data: { labels, datasets: [{ label: 'Preço Unitário', data: precos, backgroundColor: colors }] },
+        options: { responsive: true }
+    });
 }
 
-// Inicializa mostrando a tabela
 showSection('tabela');
 applyFilters();
 </script>
-
 </body>
 </html>
