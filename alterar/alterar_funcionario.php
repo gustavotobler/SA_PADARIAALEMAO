@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'conexao.php';
+require_once '../conexao.php';
 error_reporting(E_ALL);
 
 // Verifica permissão
@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cadastro de Funcionário</title>
+<title>Alterar Funcionário</title>
 <style>
 /* Reset e corpo */
 * {margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
@@ -105,7 +105,7 @@ button:hover {background:#2980b9;}
       <a href="funcionarios.php"><button class="back-button"><span class="material-icons">arrow_back</span></button></a>
 
 <form method="POST">
-<h2>Cadastro de Funcionário</h2>
+<h2>Alterar Funcionário</h2>
 
 <label>Nome:</label>
 <input type="text" name="Nome_func" required>
