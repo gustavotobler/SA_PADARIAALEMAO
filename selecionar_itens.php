@@ -135,18 +135,44 @@ $produtos = $stmt->fetchAll();
 
     /* Sidebar do carrinho */
     .sidebar {
-      background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      height: fit-content;
-    }
+  width: 240px;
+  background: #2e2e2e;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0; /* garante alinhamento à esquerda */
+  display: flex;
+  flex-direction: column;
+  padding-top: 0; /* remove espaço superior desnecessário */
+  padding-left: 0; /* remove recuo interno */
+  padding-right: 0;
+  box-sizing: border-box;
+  transition: width 0.3s;
+  border-radius: 0; /* remove arredondamento que empurra conteúdo */
+}
 
-    .sidebar h3 {
-      margin-bottom: 1rem;
-    }
+.sidebar a {
+  color: #fff;
+  padding: 15px 20px; /* mantém espaçamento uniforme */
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar .toggle-btn {
+  padding: 15px 20px; /* mesmo padding dos links */
+  font-size: 20px;
+  color: #fff;
+  text-align: left;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar.collapsed .text {
+  display: none;
+}
 
     .cart-items {
       flex: 1;
@@ -429,7 +455,7 @@ $produtos = $stmt->fetchAll();
 }
 
 .sidebar a.back-link .material-icons {
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -441,11 +467,15 @@ $produtos = $stmt->fetchAll();
 <body>
   <!-- Sidebar fixa lateral -->
   <nav class="sidebar" id="sidebar">
-    <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
-    <a href="inicial1.php"><span class="material-icons">arrow_back</span><span class="text">Voltar</span></a>
-    <a href="#"><span class="text">🍞 Produtos</span></a>
-    <a href="pagamento.php"><span class="text">💳 Pagamento</span></a>
-  </nav>
+  <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+  <a href="inicial1.php" class="back-link">
+    <span class="material-icons">arrow_back</span>
+    <span class="text">Voltar</span>
+  </a>
+  <a href="#"><span class="text">🍞 Produtos</span></a>
+  <a href="pagamento.php"><span class="text">💳 Pagamento</span></a>
+</nav>
+
 
   <!-- Conteúdo principal -->
   <main class="main-content" id="mainContent">
