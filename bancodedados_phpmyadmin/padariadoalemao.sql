@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 25/08/2025 às 18:42
+-- Tempo de geração: 27/08/2025 às 19:48
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -24,18 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `compras`
---
-
-CREATE TABLE `compras` (
-  `ID_compra` int(11) NOT NULL,
-  `ID_produto` int(11) DEFAULT NULL,
-  `ID_vendas` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Estrutura para tabela `fornecedores`
 --
 
@@ -47,13 +35,19 @@ CREATE TABLE `fornecedores` (
   `UF` char(2) DEFAULT NULL,
   `Cidade` varchar(30) DEFAULT NULL,
   `Bairro` varchar(30) DEFAULT NULL,
-  `Tipo` varchar(30) DEFAULT NULL,
   `CEP` char(8) DEFAULT NULL,
   `Num_empresa` int(11) DEFAULT NULL,
   `Logradouro` varchar(60) DEFAULT NULL,
   `Email` varchar(60) DEFAULT NULL,
   `Data_fundacao` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `fornecedores`
+--
+
+INSERT INTO `fornecedores` (`ID_forn`, `Nome_forn`, `Telefone`, `CNPJ`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_empresa`, `Logradouro`, `Email`, `Data_fundacao`) VALUES
+(1, '[joao]', '[47996855520]', '[12345678912345]', '[S', '[joinville]', '[espinheiros]', '[1212121', 0, '[rua osvaldo galiza]', '[joao@gmail.com]', '0000-00-00');
 
 -- --------------------------------------------------------
 
@@ -72,7 +66,6 @@ CREATE TABLE `funcionario` (
   `UF` char(2) DEFAULT NULL,
   `Cidade` varchar(30) DEFAULT NULL,
   `Bairro` varchar(30) DEFAULT NULL,
-  `Tipo` varchar(30) DEFAULT NULL,
   `CEP` char(8) DEFAULT NULL,
   `Num_casa` int(11) DEFAULT NULL,
   `Logradouro` varchar(60) DEFAULT NULL,
@@ -88,9 +81,31 @@ CREATE TABLE `funcionario` (
 -- Despejando dados para a tabela `funcionario`
 --
 
-INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `Tipo`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
-(1, 'Kerry King', NULL, 'Masculino', NULL, NULL, 'Solteiro', 'SP', 'São Paulo', 'Centro', 'Avenida', '89230-45', 190, 'Rua 25 de março', 'admin123', 'kerryking@padaria.com', 1, '1974-06-03', '2025-08-19', 'Gerente'),
-(2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', 'Avenida', '8922687', 189, 'rua', '$2y$10$i.FGwrLPX5JIt9jk98EXoOWOdhj2Yc82rVbFfvh7P33.pYz6uDdp2', 'ian@gmail.com', 0, '0000-00-00', '0000-00-00', 'Padeiro');
+INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
+(1, 'Kerry King', NULL, 'Masculino', NULL, NULL, 'Solteiro', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', 'admin123', 'kerryking@padaria.com', 1, '1974-06-03', '2025-08-19', 'Gerente'),
+(2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$i.FGwrLPX5JIt9jk98EXoOWOdhj2Yc82rVbFfvh7P33.pYz6uDdp2', 'ian@gmail.com', 0, '0000-00-00', '0000-00-00', 'Padeiro'),
+(3, 'Lucas Borba', '(51) 98765-4321', '', '123456789', '123.456.789-00', 'Solteiro', 'RS', 'Porto Alegre', 'Centro', '90000-00', 101, 'Rua das Flores', 'SenhaForte@123', 'lucas.borba@email.com', 2, '1990-05-15', '2025-08-01', 'Analista de Sistemas');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `itens_vendas`
+--
+
+CREATE TABLE `itens_vendas` (
+  `ID_itensvendas` int(11) NOT NULL,
+  `ID_vendas` int(11) NOT NULL,
+  `ID_produto` int(11) NOT NULL,
+  `Quantidade` int(11) NOT NULL,
+  `valor_total` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `itens_vendas`
+--
+
+INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quantidade`, `valor_total`) VALUES
+(1, 0, 1, 1, 2.00);
 
 -- --------------------------------------------------------
 
@@ -121,11 +136,18 @@ CREATE TABLE `produtos` (
   `ID_produto` int(11) NOT NULL,
   `ID_forn` int(11) DEFAULT NULL,
   `Nome_prod` varchar(60) DEFAULT NULL,
-  `Preco` decimal(10,2) DEFAULT NULL,
+  `Preco_unitario` decimal(10,2) DEFAULT NULL,
   `Unid_medida` char(2) DEFAULT NULL,
   `Validade` varchar(15) DEFAULT NULL,
   `Qntd_produto` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `produtos`
+--
+
+INSERT INTO `produtos` (`ID_produto`, `ID_forn`, `Nome_prod`, `Preco_unitario`, `Unid_medida`, `Validade`, `Qntd_produto`) VALUES
+(1, 1, 'bolacha', 2.00, 'kg', '10/03/2026', 80);
 
 -- --------------------------------------------------------
 
@@ -137,23 +159,19 @@ CREATE TABLE `vendas` (
   `ID_vendas` int(11) NOT NULL,
   `ID_func` int(11) DEFAULT NULL,
   `venda_data` datetime DEFAULT NULL,
-  `quant_vendas` int(11) DEFAULT NULL,
-  `preco_unit` decimal(10,2) DEFAULT NULL,
-  `preco_total` decimal(10,2) DEFAULT NULL,
   `forma_pagamento` varchar(15) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Índices para tabelas despejadas
+-- Despejando dados para a tabela `vendas`
 --
 
+INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`) VALUES
+(0, 3, '0000-00-00 00:00:00', '[pix]');
+
 --
--- Índices de tabela `compras`
+-- Índices para tabelas despejadas
 --
-ALTER TABLE `compras`
-  ADD PRIMARY KEY (`ID_compra`),
-  ADD KEY `ID_vendas` (`ID_vendas`),
-  ADD KEY `ID_produto` (`ID_produto`);
 
 --
 -- Índices de tabela `fornecedores`
@@ -171,6 +189,13 @@ ALTER TABLE `funcionario`
   ADD UNIQUE KEY `Email` (`Email`),
   ADD UNIQUE KEY `CPF` (`CPF`),
   ADD KEY `Nivel` (`nivel_de_acesso`);
+
+--
+-- Índices de tabela `itens_vendas`
+--
+ALTER TABLE `itens_vendas`
+  ADD PRIMARY KEY (`ID_itensvendas`),
+  ADD KEY `ID_venda` (`ID_vendas`,`ID_produto`);
 
 --
 -- Índices de tabela `nivel`
@@ -200,13 +225,19 @@ ALTER TABLE `vendas`
 -- AUTO_INCREMENT de tabela `fornecedores`
 --
 ALTER TABLE `fornecedores`
-  MODIFY `ID_forn` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_forn` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `funcionario`
 --
 ALTER TABLE `funcionario`
-  MODIFY `ID_func` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID_func` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de tabela `itens_vendas`
+--
+ALTER TABLE `itens_vendas`
+  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `nivel`
@@ -215,15 +246,14 @@ ALTER TABLE `nivel`
   MODIFY `nivel_de_acesso` int(1) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- Restrições para tabelas despejadas
+-- AUTO_INCREMENT de tabela `produtos`
 --
+ALTER TABLE `produtos`
+  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- Restrições para tabelas `compras`
+-- Restrições para tabelas despejadas
 --
-ALTER TABLE `compras`
-  ADD CONSTRAINT `compras_ibfk_1` FOREIGN KEY (`ID_vendas`) REFERENCES `vendas` (`ID_vendas`),
-  ADD CONSTRAINT `compras_ibfk_2` FOREIGN KEY (`ID_produto`) REFERENCES `produtos` (`ID_produto`);
 
 --
 -- Restrições para tabelas `produtos`
