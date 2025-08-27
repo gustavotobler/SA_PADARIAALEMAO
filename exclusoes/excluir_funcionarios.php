@@ -1,10 +1,10 @@
 <?php 
 session_start();
-require_once 'conexao.php';
+require_once '../conexao.php';
 
 //VERIFICA SE O USUARIO TEM PERMISSAO DE ADM
 If($_SESSION['nivel']!=1){
-    echo "<script>alert('Acesso Negado!');window.location.href='inicial1.php'</script>";
+    echo "<script>alert('Acesso Negado!');window.location.href='../inicial1.php'</script>";
     exit();
 }
 
@@ -27,7 +27,7 @@ if(isset($_POST['id'])&& is_numeric($_POST['id'])){
     $stmt->bindParam(':id',$id_funcionario,PDO::PARAM_INT);
 
     if($stmt->execute()){
-        echo "<script>alert('Funcionário deletado com sucesso!');window.location.href='funcionarios.php'</script>";
+        echo "<script>alert('Funcionário deletado com sucesso!');window.location.href='../funcionarios.php'</script>";
     }else{
         echo "<script>alert('Erro ao excluir funcionário!');</script>";
     }

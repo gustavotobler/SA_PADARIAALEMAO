@@ -44,7 +44,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $uf         = $_POST['UF'] ?? '';
     $cidade     = $_POST['Cidade'] ?? '';
     $bairro     = $_POST['Bairro'] ?? '';
-    $tipo       = $_POST['Tipo'] ?? '';
     $cep        = $_POST['CEP'] ?? '';
     $num_casa   = $_POST['Num_casa'] ?? '';
     $logradouro = $_POST['Logradouro'] ?? '';
@@ -67,7 +66,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 UF=:UF,
                 Cidade=:Cidade,
                 Bairro=:Bairro,
-                Tipo=:Tipo,
                 CEP=:CEP,
                 Num_casa=:Num_casa,
                 Logradouro=:Logradouro,
@@ -90,7 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'UF'=>$uf,
         'Cidade'=>$cidade,
         'Bairro'=>$bairro,
-        'Tipo'=>$tipo,
         'CEP'=>$cep,
         'Num_casa'=>$num_casa,
         'Logradouro'=>$logradouro,
@@ -103,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'id'=>$id
     ]);
 
-    echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='funcionarios.php';</script>";
+    echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='../funcionarios.php';</script>";
 }
 ?>
 <!DOCTYPE html>
@@ -157,8 +154,13 @@ button:hover{background:#2980b9;}
 <input type="text" name="CPF" id="cpf" required maxlength="15" value="<?= htmlspecialchars($func['CPF'] ?? '') ?>">
 <span id="erro-cpf" class="erro"></span>
 
-<label>Estado Civil:</label>
-<input type="text" name="Esta_civil" value="<?= htmlspecialchars($func['Esta_civil'] ?? '') ?>">
+<select name="Esta_civil" id="Estado_civil" value="<?= htmlspecialchars($func['Esta_civil'] ?? '') ?>">
+<option value=""></option>
+<option>Solteiro</option>
+<option>Casado</option>
+<option>Viúvo</option>
+
+</select>
 
 <div class="flex-group">
   <div>
@@ -176,9 +178,6 @@ button:hover{background:#2980b9;}
 
 <label>Bairro:</label>
 <input type="text" name="Bairro" value="<?= htmlspecialchars($func['Bairro'] ?? '') ?>">
-
-<label>Tipo:</label>
-<input type="text" name="Tipo" value="<?= htmlspecialchars($func['Tipo'] ?? '') ?>">
 
 <label>CEP:</label>
 <input type="text" name="CEP" id="cep" value="<?= htmlspecialchars($func['CEP'] ?? '') ?>">

@@ -74,7 +74,7 @@
               <span class="material-icons">edit</span>
             </a>
 
-            <form action="excluir_funcionarios.php" method="POST" style="display:inline;">
+            <form action="exclusoes/excluir_funcionarios.php" method="POST" style="display:inline;">
               <input type="hidden" name="id" value="<?= htmlspecialchars($func['ID_func']) ?>">
               <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este funcionário?')">
                 <span class="material-icons">delete</span>
