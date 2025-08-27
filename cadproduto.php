@@ -31,17 +31,17 @@
       <div class="section-subtitle">INFORMAÇÕES DO PRODUTO</div>
 
       <!-- Formulário de cadastro -->
-      <form id="formCadastro">
+      <form id="formCadastro" method="POST" action="cadastros/cadastro_produto.php">
 
         <!-- Linha com nome do produto e preço -->
         <div class="row">
           <div class="input-group">
             <label for="nome">Nome do Produto</label>
-            <input type="text" id="nome" name="nome" />
+            <input type="text" id="nome" name="Nome_prod" />
           </div>
           <div class="input-group">
             <label for="preco">Preço</label>
-            <input type="number" id="preco" name="preco" step="0.01" min="0.10" />
+            <input type="number" id="preco" name="Preco_unitario" step="0.01" min="0.10" />
           </div>
         </div>
 
@@ -49,7 +49,7 @@
         <div class="row">
           <div class="input-group">
             <label for="escolha">Unidade M.</label>
-            <select id="escolha" name="escolha">
+            <select id="escolha" name="Unid_medida">
               <option value="">Selecione</option>
               <option value="kg">kg</option>
               <option value="g">g</option>
@@ -59,11 +59,11 @@
           </div>
           <div class="input-group">
             <label for="Quantidade">Quantidade</label>
-            <input type="number" id="Quantidade" name="Quantidade" step="1" min="1" />
+            <input type="number" id="Quantidade" name="Qntd_produto" step="1" min="1" />
           </div>
           <div class="input-group">
             <label for="categoria">Fornecedor</label>
-            <select id="categoria" name="categoria">
+            <select id="categoria" name="ID_forn">
               <option value="">Selecione</option>
               <option value="padaria">CARLINHOS</option>
               <option value="laticinio">BOLOS MAIDEN</option>
@@ -74,7 +74,7 @@
         </div>
         <div class="input-group">
           <label for="categoria">Categoria</label>
-          <select id="categoria" name="categoria">
+          <select id="categoria" name="id_categorias">
             <option value="">Selecione</option>
             <option value="padaria">Cafés</option>
             <option value="laticinio">Sucos</option>
@@ -87,7 +87,7 @@
         <!-- Campo de validade com máscara de data -->
         <div class="input-group" style="flex:1 1 100%">
           <label for="validade">Validade</label>
-          <input type="text" id="validade" name="validade" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatarData(this)" required />
+          <input type="text" id="validade" name="Validade" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatarData(this)" required />
         </div>
 
         <!-- Botão de envio -->
@@ -133,12 +133,6 @@
     function fecharErro() {
       document.getElementById('mensagem-erro').style.display = 'none';
     }
-
-    // Validação do formulário ao enviar
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('formCadastro');
-      form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Impede envio automático
 
         // Coleta os valores dos campos
         const nome      = document.getElementById('nome').value.trim();
