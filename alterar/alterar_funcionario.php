@@ -129,7 +129,7 @@ button:hover{background:#2980b9;}
 <div class="form-box">
 <a href="funcionarios.php"><button class="back-button">Voltar</button></a>
 
-<form method="POST" action="editar_funcionarios.php">
+<form method="POST" action="editar_funcionario.php">
     <input type="hidden" name="ID_func" value="<?= htmlspecialchars($func['ID_func']) ?>">
 
 <h2>Alterar Funcionário</h2>
