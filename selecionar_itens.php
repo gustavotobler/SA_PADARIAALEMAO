@@ -356,52 +356,88 @@ $produtos = $stmt->fetchAll();
     }
 
     /* Sidebar fixa estilo do relatório */
-.sidebar {
-  width: 240px;
-  background: #2e2e2e;
-  height: 100vh;
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  padding-top: 20px;
-  transition: width 0.3s;
-  border-radius: 0;
-}
-.sidebar.collapsed { width: 60px; }
-.sidebar a {
-  color: #fff;
-  padding: 15px 20px;
-  text-decoration: none;
+    .sidebar {
+      width: 240px;
+      background: #2e2e2e;
+      height: 100vh;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      transition: width 0.3s;
+      border-radius: 0;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    .sidebar a {
+      color: #fff;
+      padding: 15px 20px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .sidebar a:hover {
+      background: #444;
+    }
+
+    .sidebar .icon {
+      margin-right: 8px;
+      font-size: 20px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar.collapsed .text {
+      display: none;
+    }
+
+    .toggle-btn {
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: #fff;
+    }
+
+    /* Ajusta o conteúdo para a sidebar fixa */
+    .main-content {
+      margin-left: 240px;
+      padding: 20px;
+      width: calc(100% - 240px);
+      transition: margin-left 0.3s;
+    }
+
+    .main-content.collapsed {
+      margin-left: 60px;
+      width: calc(100% - 60px);
+    }
+
+    .sidebar a.back-link {
   display: flex;
   align-items: center;
-  white-space: nowrap;
-}
-.sidebar a:hover { background: #444; }
-.sidebar .icon { margin-right: 8px; }
-.sidebar.collapsed .text { display: none; }
-.toggle-btn {
-  cursor: pointer;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 20px;
+  gap: 8px;          /* espaço entre ícone e texto */
+  padding: 15px 20px;
   color: #fff;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
-/* Ajusta o conteúdo para a sidebar fixa */
-.main-content {
-  margin-left: 240px;
-  padding: 20px;
-  width: calc(100% - 240px);
-  transition: margin-left 0.3s;
-}
-.main-content.collapsed {
-  margin-left: 60px;
-  width: calc(100% - 60px);
+.sidebar a.back-link .material-icons {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
-  
   </style>
 </head>
+
 <body>
   <!-- Sidebar fixa lateral -->
   <nav class="sidebar" id="sidebar">
@@ -439,10 +475,8 @@ $produtos = $stmt->fetchAll();
                   <h4><?= htmlspecialchars($row['Nome_prod']) ?></h4>
                   <div class="info-footer">
                     <span class="price">R$ <?= number_format($row['Preco'], 2, ',', '.') ?></span>
-                    <button class="add-to-cart"
-                            data-name="<?= htmlspecialchars($row['Nome_prod']) ?>"
-                            data-price="<?= htmlspecialchars($row['Preco']) ?>"
-                            <?= !empty($row['Unid_medida']) ? 'data-unit="' . htmlspecialchars($row['Unid_medida']) . '"' : '' ?>>
+                    <button class="add-to-cart" data-name="<?= htmlspecialchars($row['Nome_prod']) ?>"
+                      data-price="<?= htmlspecialchars($row['Preco']) ?>" <?= !empty($row['Unid_medida']) ? 'data-unit="' . htmlspecialchars($row['Unid_medida']) . '"' : '' ?>>
 
                     </button>
                   </div>
@@ -469,149 +503,91 @@ $produtos = $stmt->fetchAll();
       </aside>
     </div>
 
-  <script>
-    // 1) Captura global de F1/F2
-    window.addEventListener('keydown', function (e) {
-      if (e.key === 'F1') {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        document.getElementById('scan-modal').classList.remove('hidden');
-        document.getElementById('scan-input').focus();
-      }
-      if (e.key === 'F2') {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        window.location.href = 'pagamento.php';
-      }
-    }, true);
+    <script>
+      // 1) Captura global de F1/F2
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'F1') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          document.getElementById('scan-modal').classList.remove('hidden');
+          document.getElementById('scan-input').focus();
+        }
+        if (e.key === 'F2') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          window.location.href = 'pagamento.php';
+        }
+      }, true);
 
-    document.addEventListener("DOMContentLoaded", () => {
-      // ELEMENTOS
-      const searchInput = document.querySelector('.controls input[type="text"]');
-      const cards = document.querySelectorAll('.grid .card');
-      const hudButtons = document.querySelectorAll('.category-hud button');
-      const cartItemsContainer = document.querySelector('.cart-items');
-      const totalsSubtotalEl = document.querySelector('.totals div:first-child span:last-child');
-      const totalsTaxEl = document.querySelector('.totals div:nth-child(2) span:last-child');
-      const btnPay = document.querySelector('.btn-pay');
+      document.addEventListener("DOMContentLoaded", () => {
+        // ELEMENTOS
+        const searchInput = document.querySelector('.controls input[type="text"]');
+        const cards = document.querySelectorAll('.grid .card');
+        const hudButtons = document.querySelectorAll('.category-hud button');
+        const cartItemsContainer = document.querySelector('.cart-items');
+        const totalsSubtotalEl = document.querySelector('.totals div:first-child span:last-child');
+        const totalsTaxEl = document.querySelector('.totals div:nth-child(2) span:last-child');
+        const btnPay = document.querySelector('.btn-pay');
 
-      // FORMATAÇÃO DE MOEDA
-      function formatReal(v) {
-        return 'R$ ' + v.toFixed(2).replace('.', ',');
-      }
+        // FORMATAÇÃO DE MOEDA
+        function formatReal(v) {
+          return 'R$ ' + v.toFixed(2).replace('.', ',');
+        }
 
-      // 3) ATUALIZA TODOS OS TOTAIS (agora suporta decimal)
-      function updateTotals() {
-        let sub = 0;
-        cartItemsContainer.querySelectorAll('.cart-item').forEach(item => {
-          const price = parseFloat(item.dataset.price);
-          const qty = parseFloat(item.querySelector('.qty').textContent);
-          const itemSub = price * qty;
-          item.querySelector('.item-subtotal').textContent = formatReal(itemSub);
-          sub += itemSub;
+        // 3) ATUALIZA TODOS OS TOTAIS (agora suporta decimal)
+        function updateTotals() {
+          let sub = 0;
+          cartItemsContainer.querySelectorAll('.cart-item').forEach(item => {
+            const price = parseFloat(item.dataset.price);
+            const qty = parseFloat(item.querySelector('.qty').textContent);
+            const itemSub = price * qty;
+            item.querySelector('.item-subtotal').textContent = formatReal(itemSub);
+            sub += itemSub;
+          });
+          totalsSubtotalEl.textContent = formatReal(sub);
+
+          const tax = parseFloat(totalsTaxEl.dataset.tax || 0);
+          totalsTaxEl.textContent = formatReal(tax);
+
+          btnPay.textContent = `Ir para pagamento → (Total: ${formatReal(sub + tax)})`;
+        }
+
+        // 1) FILTRO DE BUSCA
+        searchInput.addEventListener('input', () => {
+          const term = searchInput.value.toLowerCase();
+          const activeCat = document.querySelector('.category-hud button.active').dataset.cat;
+          cards.forEach(card => {
+            const title = card.querySelector('h4').textContent.toLowerCase();
+            const match = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
+            card.style.display = match ? '' : 'none';
+          });
         });
-        totalsSubtotalEl.textContent = formatReal(sub);
 
-        const tax = parseFloat(totalsTaxEl.dataset.tax || 0);
-        totalsTaxEl.textContent = formatReal(tax);
-
-        btnPay.textContent = `Ir para pagamento → (Total: ${formatReal(sub + tax)})`;
-      }
-
-      // 1) FILTRO DE BUSCA
-      searchInput.addEventListener('input', () => {
-        const term = searchInput.value.toLowerCase();
-        const activeCat = document.querySelector('.category-hud button.active').dataset.cat;
-        cards.forEach(card => {
-          const title = card.querySelector('h4').textContent.toLowerCase();
-          const match = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
-          card.style.display = match ? '' : 'none';
+        // 2) FILTRO DE CATEGORIA
+        hudButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            hudButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            searchInput.dispatchEvent(new Event('input'));
+          });
         });
-      });
 
-      // 2) FILTRO DE CATEGORIA
-      hudButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          hudButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          searchInput.dispatchEvent(new Event('input'));
-        });
-      });
+        // 4) BOTÃO “＋” NOS CARDS (pede peso para produtos por kg)
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const name = btn.dataset.name;
+            const price = parseFloat(btn.dataset.price);
+            let qty = 1;
 
-      // 4) BOTÃO “＋” NOS CARDS (pede peso para produtos por kg)
-      document.querySelectorAll('.add-to-cart').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const name = btn.dataset.name;
-          const price = parseFloat(btn.dataset.price);
-          let qty = 1;
-
-          if (btn.dataset.unit === 'kg') {
-            const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
-            if (!input) return;
-            qty = parseFloat(input.replace(',', '.'));
-            if (isNaN(qty) || qty <= 0) {
-              alert('Peso inválido!');
-              return;
+            if (btn.dataset.unit === 'kg') {
+              const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
+              if (!input) return;
+              qty = parseFloat(input.replace(',', '.'));
+              if (isNaN(qty) || qty <= 0) {
+                alert('Peso inválido!');
+                return;
+              }
             }
-          }
-
-          let existing = Array.from(cartItemsContainer.children)
-            .find(el => el.querySelector('.item-name').textContent === name);
-
-          if (existing) {
-            const qtyEl = existing.querySelector('.qty');
-            const newQty = parseFloat(qtyEl.textContent) + qty;
-            qtyEl.textContent = newQty.toFixed(2);
-          } else {
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            div.dataset.price = price;
-            div.innerHTML = `
-              <div class="item-info">
-                <button class="qty-btn decrease">−</button>
-                <span class="qty">${qty.toFixed(2)}</span>
-                <button class="qty-btn increase">＋</button>
-                <span class="item-name">${name}</span>
-              </div>
-              <span class="item-subtotal">${formatReal(price * qty)}</span>
-            `;
-            cartItemsContainer.appendChild(div);
-          }
-
-          updateTotals();
-        });
-      });
-
-      // 5) CONTROLE DE +/− NA SIDEBAR
-      cartItemsContainer.addEventListener('click', e => {
-        const itemEl = e.target.closest('.cart-item');
-        if (!itemEl) return;
-
-        if (e.target.matches('.increase')) {
-          const qtyEl = itemEl.querySelector('.qty');
-          const newQty = parseFloat(qtyEl.textContent) + 1;
-          qtyEl.textContent = newQty.toFixed(2);
-          updateTotals();
-        }
-        if (e.target.matches('.decrease')) {
-          const qtyEl = itemEl.querySelector('.qty');
-          const newQty = parseFloat(qtyEl.textContent) - 1;
-          if (newQty <= 0) itemEl.remove();
-          else qtyEl.textContent = newQty.toFixed(2);
-          updateTotals();
-        }
-      });
-
-      // 6) INSERIR PRODUTO POR CÓDIGO ESCANEADO
-      document.getElementById('scan-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          const code = e.target.value.trim();
-
-          // Código para "Doritos"
-          if (code === '1234') {
-            const name = 'Doritos';
-            const price = 7.50;
-            const qty = 1;
 
             let existing = Array.from(cartItemsContainer.children)
               .find(el => el.querySelector('.item-name').textContent === name);
@@ -637,61 +613,119 @@ $produtos = $stmt->fetchAll();
             }
 
             updateTotals();
-          }
-
-          // Limpa o campo para novo código
-          e.target.value = '';
-        }
-      });
-
-      // Fecha modal “Cancelar”
-      document.getElementById('close-scan').addEventListener('click', () => {
-        document.getElementById('scan-modal').classList.add('hidden');
-      });
-
-      // 7) INICIALIZAÇÃO
-      // Enviar pedido para o banco
-      document.getElementById("btnPay").addEventListener("click", () => {
-        let itens = [];
-        document.querySelectorAll('.cart-item').forEach(item => {
-          itens.push({
-            nome: item.querySelector('.item-name').textContent,
-            qtd: item.querySelector('.qty').textContent,
-            preco: item.dataset.price
           });
         });
 
-        if (itens.length === 0) {
-          alert("O carrinho está vazio!");
-          return;
-        }
+        // 5) CONTROLE DE +/− NA SIDEBAR
+        cartItemsContainer.addEventListener('click', e => {
+          const itemEl = e.target.closest('.cart-item');
+          if (!itemEl) return;
 
-        let total = parseFloat(totalsSubtotalEl.textContent.replace("R$", "").replace(",", "."));
+          if (e.target.matches('.increase')) {
+            const qtyEl = itemEl.querySelector('.qty');
+            const newQty = parseFloat(qtyEl.textContent) + 1;
+            qtyEl.textContent = newQty.toFixed(2);
+            updateTotals();
+          }
+          if (e.target.matches('.decrease')) {
+            const qtyEl = itemEl.querySelector('.qty');
+            const newQty = parseFloat(qtyEl.textContent) - 1;
+            if (newQty <= 0) itemEl.remove();
+            else qtyEl.textContent = newQty.toFixed(2);
+            updateTotals();
+          }
+        });
 
-        fetch("pagamento.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: "itens=" + JSON.stringify(itens) + "&total=" + total
-        })
-          .then(res => res.text())
-          .then(data => {
-            alert(data);
-            window.location.href = "pagamento.php";
+        // 6) INSERIR PRODUTO POR CÓDIGO ESCANEADO
+        document.getElementById('scan-input').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const code = e.target.value.trim();
+
+            // Código para "Doritos"
+            if (code === '1234') {
+              const name = 'Doritos';
+              const price = 7.50;
+              const qty = 1;
+
+              let existing = Array.from(cartItemsContainer.children)
+                .find(el => el.querySelector('.item-name').textContent === name);
+
+              if (existing) {
+                const qtyEl = existing.querySelector('.qty');
+                const newQty = parseFloat(qtyEl.textContent) + qty;
+                qtyEl.textContent = newQty.toFixed(2);
+              } else {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.dataset.price = price;
+                div.innerHTML = `
+                  <div class="item-info">
+                    <button class="qty-btn decrease">−</button>
+                    <span class="qty">${qty.toFixed(2)}</span>
+                    <button class="qty-btn increase">＋</button>
+                    <span class="item-name">${name}</span>
+                  </div>
+                  <span class="item-subtotal">${formatReal(price * qty)}</span>
+                `;
+                cartItemsContainer.appendChild(div);
+              }
+
+              updateTotals();
+            }
+
+            // Limpa o campo para novo código
+            e.target.value = '';
+          }
+        });
+
+        // Fecha modal “Cancelar”
+        document.getElementById('close-scan').addEventListener('click', () => {
+          document.getElementById('scan-modal').classList.add('hidden');
+        });
+
+        // 7) INICIALIZAÇÃO
+        // Enviar pedido para o banco
+        document.getElementById("btnPay").addEventListener("click", () => {
+          let itens = [];
+          document.querySelectorAll('.cart-item').forEach(item => {
+            itens.push({
+              nome: item.querySelector('.item-name').textContent,
+              qtd: item.querySelector('.qty').textContent,
+              preco: item.dataset.price
+            });
+          });
+
+          if (itens.length === 0) {
+            alert("O carrinho está vazio!");
+            return;
+          }
+
+          let total = parseFloat(totalsSubtotalEl.textContent.replace("R$", "").replace(",", "."));
+
+          fetch("pagamento.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "itens=" + JSON.stringify(itens) + "&total=" + total
           })
-          .catch(err => console.error(err));
+            .then(res => res.text())
+            .then(data => {
+              alert(data);
+              window.location.href = "pagamento.php";
+            })
+            .catch(err => console.error(err));
+        });
+        updateTotals();
       });
-      updateTotals();
-    });
-  </script>
+    </script>
 
-<script>
-  const sidebar = document.getElementById('sidebar');
-  const mainContent = document.getElementById('mainContent');
-  function toggleSidebar() {
-    sidebar.classList.toggle('collapsed');
-    mainContent.classList.toggle('collapsed');
-  }
-</script>
+    <script>
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('collapsed');
+      }
+    </script>
 
 </body>
 
