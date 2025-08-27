@@ -40,13 +40,15 @@ $nomeNivel = $nivel['nome_acesso'] ?? '';
     <a href="estoque.php" arial-label="Ir para Estoque">📦 Estoque</a>
     <a href="relatorio_vendas_padaria_alemao1.php" aria-label="Ir para Relatório de Vendas">📈 Vendas</a>
     <a href="selecionar_itens.php" aria-label="Ir para Pagamento">🛒 Pagamento</a>
+
+    <a href="index.php">Logout</a>
 </nav>
 
 <!-- Conteúdo principal -->
 <main class="main-content">
     <section>
         <div class="welcome-card">
-            <h2>Seja bem-vindo ao nosso sistema de gestão!</h2>
+            <h2>Seja bem-vindo ao nosso sistema de gestão! Você está utilizando um perfil de <?=$nomeNivel?>.</h2>
         </div>
     </section>
 </main>

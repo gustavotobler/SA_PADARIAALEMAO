@@ -20,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uf         = $_POST['UF'] ?? null;
     $cidade     = $_POST['Cidade'] ?? null;
     $bairro     = $_POST['Bairro'] ?? null;
-    $tipo       = $_POST['Tipo'] ?? null;
     $cep        = $_POST['CEP'] ?? null;
     $num_casa   = $_POST['Num_casa'] ?? null;
     $logradouro = $_POST['Logradouro'] ?? null;
@@ -54,7 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UF=:UF,
         Cidade=:Cidade,
         Bairro=:Bairro,
-        Tipo=:Tipo,
         CEP=:CEP,
         Num_casa=:Num_casa,
         Logradouro=:Logradouro,
@@ -77,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'UF'=>$uf,
         'Cidade'=>$cidade,
         'Bairro'=>$bairro,
-        'Tipo'=>$tipo,
         'CEP'=>$cep,
         'Num_casa'=>$num_casa,
         'Logradouro'=>$logradouro,

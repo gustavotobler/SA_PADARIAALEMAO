@@ -20,7 +20,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $uf         = $_POST['UF'] ?? null;
   $cidade     = $_POST['Cidade'] ?? null;
   $bairro     = $_POST['Bairro'] ?? null;
-  $tipo       = $_POST['Tipo'] ?? null;
   $cep        = $_POST['CEP'] ?? null;
   $num_casa   = $_POST['Num_casa'] ?? null;
   $logradouro = $_POST['Logradouro'] ?? null;
@@ -41,9 +40,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $data_adm  = formatarDataBanco($_POST['Data_admissao'] ?? null);
 
   $sql = "INSERT INTO funcionario 
-  (Nome_func,Telefone,Sexo,RG,CPF,Esta_civil,UF,Cidade,Bairro,Tipo,CEP,Num_casa,Logradouro,Senha,Email,nivel_de_acesso,Data_nascimento,Data_admissao,Cargo)
+  (Nome_func,Telefone,Sexo,RG,CPF,Esta_civil,UF,Cidade,Bairro,CEP,Num_casa,Logradouro,Senha,Email,nivel_de_acesso,Data_nascimento,Data_admissao,Cargo)
   VALUES 
-  (:Nome_func,:Telefone,:Sexo,:RG,:CPF,:Esta_civil,:UF,:Cidade,:Bairro,:Tipo,:CEP,:Num_casa,:Logradouro,:Senha,:Email,:nivel_de_acesso,:Data_nascimento,:Data_admissao,:Cargo)";
+  (:Nome_func,:Telefone,:Sexo,:RG,:CPF,:Esta_civil,:UF,:Cidade,:Bairro,:CEP,:Num_casa,:Logradouro,:Senha,:Email,:nivel_de_acesso,:Data_nascimento,:Data_admissao,:Cargo)";
 
   $stmt = $pdo->prepare($sql);
   $stmt->bindParam(":Nome_func",$nome);
@@ -55,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $stmt->bindParam(":UF",$uf);
   $stmt->bindParam(":Cidade",$cidade);
   $stmt->bindParam(":Bairro",$bairro);
-  $stmt->bindParam(":Tipo",$tipo);
   $stmt->bindParam(":CEP",$cep);
   $stmt->bindParam(":Num_casa",$num_casa);
   $stmt->bindParam(":Logradouro",$logradouro);
@@ -129,8 +127,11 @@ button:hover {background:#2980b9;}
 <input type="text" name="CPF" id="cpf" required maxlength="15">
 <span id="erro-cpf" class="erro"></span>
 
-<label>Estado Civil:</label>
-<input type="text" name="Esta_civil">
+<select name="Esta_civil" id="Estado_civil" required>
+<option value=""></option>
+<option>Solteiro</option>
+<option>Casado</option>
+<option>Viúvo</option>
 
 <div class="flex-group">
   <div>
@@ -148,9 +149,6 @@ button:hover {background:#2980b9;}
 
 <label>Bairro:</label>
 <input type="text" name="Bairro">
-
-<label>Tipo:</label>
-<input type="text" name="Tipo">
 
 <label>CEP:</label>
 <input type="text" name="CEP" id="cep">

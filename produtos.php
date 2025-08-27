@@ -80,13 +80,23 @@ tbody td {padding:12px 15px; text-align:center; font-size:0.95rem; border-bottom
   <table>
     <thead>
       <tr>
+        <th>ID</th>  
         <th>ID FORNECEDOR</th>
-        <th>ID</th>
         <th>Nome do produto</th>
         <th>Preço</th>
+        <th>Unidade de medida</th>
+        <th>Validade</th>
         <th>Quantidade</th>
         <th class="hidden">Ações</th>
       </tr>
+      <?php
+      require_once 'conexao.php';
+
+      $sql = "SELECT ID_produto, ID_forn, Nome_prod, Preco_unitario, Unid_medida, Validade, Qntd_produto FROM produtos";
+      $stmt = $pdo->query($sql);
+      $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+      foreach ($produtos as $prod):?>
       <tr>
           <td><?= htmlspecialchars($prod['ID_produto']) ?></td>
           <td><?= htmlspecialchars($prod['ID_forn']) ?></td>
@@ -99,10 +109,11 @@ tbody td {padding:12px 15px; text-align:center; font-size:0.95rem; border-bottom
           <!-- CELULA DE AÇÕES: lápis e deletar -->
           <td class="action-cell hidden">
             <!-- Editar redirecionando para outro formulário -->
-            <a href="alterar/alterar_funcionario.php?id=<?= $func['ID_func'] ?>" class="icon-btn" title="Editar">
+            <a href="alterar/alterar_produto.php?id=<?= $prod['ID_produto'] ?>" class="icon-btn" title="Editar">
               <span class="material-icons">edit</span>
             </a>
-
+      </tr>
+      <?php endforeach;?>
     </thead>
     <tbody id="supplier-table-body">
       
