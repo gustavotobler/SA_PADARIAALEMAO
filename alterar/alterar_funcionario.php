@@ -1,22 +1,38 @@
 <?php
 session_start();
 require_once '../conexao.php';
+// Verifica permissão
 if ($_SESSION['nivel'] != 1) {
     die("Acesso negado!");
 }
 
+// Verifica se o ID foi passado
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     die("Funcionário não encontrado!");
 }
 
 $id = intval($_GET['id']);
 
+// Pega os dados do funcionário
 $stmt = $pdo->prepare("SELECT * FROM funcionario WHERE ID_func = :id");
 $stmt->execute(['id' => $id]);
 $func = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$func) die("Funcionário não encontrado!");
+if (!$func) {
+    die("Funcionário não encontrado!");
+}
 
+// Função para formatar datas para o banco
+function formatarDataBanco($data){
+    if(!$data) return null;
+    $partes = explode("/", $data);
+    if(count($partes) == 3){
+        return $partes[2]."-".$partes[1]."-".$partes[0];
+    }
+    return null;
+}
+
+// Processa o formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['ID_func'];
     $nome       = $_POST['Nome_func'] ?? '';
@@ -37,6 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $data_nasc  = $_POST['Data_nascimento'] ?? null;
     $data_adm   = $_POST['Data_admissao'] ?? null;
 
+    // Mantém a senha antiga se o campo estiver vazio
     $senha = !empty($_POST['Senha']) ? password_hash($_POST['Senha'], PASSWORD_DEFAULT) : $func['Senha'];
 
     $sql = "UPDATE funcionario SET 
@@ -86,7 +103,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='../funcionarios.php';</script>";
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -109,7 +125,11 @@ button:hover{background:#2980b9;}
 </style>
 </head>
 <body>
-<form method="POST" action="editar_funcionarios.php">
+<div class="page">
+<div class="form-box">
+<a href="funcionarios.php"><button class="back-button">Voltar</button></a>
+
+<form method="POST" action="editar_funcionario.php">
     <input type="hidden" name="ID_func" value="<?= htmlspecialchars($func['ID_func']) ?>">
 
 <h2>Alterar Funcionário</h2>
@@ -134,12 +154,12 @@ button:hover{background:#2980b9;}
 <input type="text" name="CPF" id="cpf" required maxlength="15" value="<?= htmlspecialchars($func['CPF'] ?? '') ?>">
 <span id="erro-cpf" class="erro"></span>
 
-<label>Estado Civil:</label>
-<select name="Esta_civil" id="Estado_civil">
-<option value="">Selecione</option>
-<option value="Solteiro" <?= ($func['Esta_civil']??'')=='Solteiro'?'selected':'' ?>>Solteiro</option>
-<option value="Casado" <?= ($func['Esta_civil']??'')=='Casado'?'selected':'' ?>>Casado</option>
-<option value="Viúvo" <?= ($func['Esta_civil']??'')=='Viúvo'?'selected':'' ?>>Viúvo</option>
+<select name="Esta_civil" id="Estado_civil" value="<?= htmlspecialchars($func['Esta_civil'] ?? '') ?>">
+<option value=""></option>
+<option>Solteiro</option>
+<option>Casado</option>
+<option>Viúvo</option>
+
 </select>
 
 <div class="flex-group">
@@ -195,6 +215,8 @@ button:hover{background:#2980b9;}
 
 <button type="submit">Salvar Alterações</button>
 </form>
+</div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
@@ -208,9 +230,12 @@ document.addEventListener("DOMContentLoaded", function(){
   telefone.addEventListener("input",()=>{telefone.value=telefone.value.replace(/\D/g,"").replace(/^(\d{2})(\d)/,"($1) $2").replace(/(\d{5})(\d{4}).*/,"$1-$2");});
 
   rg.addEventListener("input", () => {
-    let v = rg.value.replace(/\D/g,"");
-    v = v.slice(0, 9);
-    rg.value = v.replace(/^(\d{2})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1})$/,"$1-$2");
+    let v = rg.value.replace(/\D/g,""); // remove tudo que não é número
+    v = v.slice(0, 9); // limita a 9 dígitos
+    if(v.length > 2) v = v.slice(0,2) + '.' + v.slice(2);
+    if(v.length > 6) v = v.slice(0,6) + '.' + v.slice(6);
+    if(v.length > 10) v = v.slice(0,10) + '-' + v.slice(10);
+    rg.value = v;
   });
 
   cpf.addEventListener("input",()=>{cpf.value=cpf.value.replace(/\D/g,"").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");});
@@ -227,9 +252,7 @@ document.addEventListener("DOMContentLoaded", function(){
         const nasc=new Date(p[2],p[1]-1,p[0]);
         const hoje=new Date();
         let idade=hoje.getFullYear()-nasc.getFullYear();
-        const nascAjustada = new Date(nasc.getFullYear(), nasc.getMonth(), nasc.getDate());
-        nascAjustada.setFullYear(hoje.getFullYear());
-        if(hoje < nascAjustada) idade--;
+        if(hoje<new Date(nasc.setFullYear(hoje.getFullYear()))) idade--;
         if(idade<18){document.getElementById("erro-nascimento").innerText="Funcionário deve ter pelo menos 18 anos."; ok=false;}
         else document.getElementById("erro-nascimento").innerText="";
       }
@@ -238,5 +261,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 </script>
+
 </body>
 </html>
