@@ -174,13 +174,56 @@ tr:hover { background: var(--highlight); }
     background-color: #999;
     cursor: default;
 }
+
+/* Link de voltar com animação */
+.back-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* inicial à esquerda */
+    padding: 15px 20px;
+    transition: all 0.3s;
+}
+
+.back-link .icon {
+    margin-right: 8px;
+    transition: transform 0.3s, margin 0.3s;
+}
+
+/* Quando a sidebar estiver colapsada */
+.sidebar.collapsed .back-link {
+    justify-content: center; /* centraliza horizontalmente */
+}
+
+.sidebar.collapsed .back-link .icon {
+    margin-right: 0;
+    transform: rotate(180deg); /* seta gira ao colapsar */
+}
+
+/* Mantém emojis visíveis junto da seta ao colapsar */
+.sidebar a .emoji {
+    margin-right: 8px; /* espaço padrão */
+    transition: margin 0.3s, transform 0.3s;
+}
+
+/* Quando a sidebar estiver colapsada */
+.sidebar.collapsed a .emoji {
+    display: inline-block; /* garante que continue visível */
+    margin-right: 4px;     /* pode ajustar para ficar mais próximo da seta */
+    transform: rotate(0deg); /* não gira */
+}
+
+/* Ajusta o link de voltar especificamente */
+.sidebar.collapsed .back-link .emoji {
+    margin-right: 4px;
+}
+
 </style>
 </head>
 
 <body>
 <nav class="sidebar" id="sidebar">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
-    <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
+    <a href="inicial1.php" class="back-link"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
     <a href="#" onclick="showSection('tabela')"><span class="text">📋 Tabela de Vendas</span></a>
     <a href="#" onclick="showSection('grafico-produto')"><span class="text">📦 Gráf. Produto</span></a>
     <a href="#" onclick="showSection('grafico-pagamento')"><span class="text">💳 Gráf. Pagamento</span></a>
