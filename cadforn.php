@@ -208,102 +208,6 @@ form button[type="submit"]:hover{
   color:#721c24;
 }
 
-=======
-* {
-   margin:0; 
-   padding:0; 
-   box-sizing:border-box; 
-   font-family:'Poppins',
-   sans-serif;
-  }
-body {
-  background: linear-gradient(135deg,#fff,#e9d2b4);
-  display:flex; 
-  justify-content:center; 
-  align-items:center; 
-  min-height:100vh;
-}
-.container {
-  background:#fff; 
-  padding:40px 35px; 
-  border-radius:15px; 
-  box-shadow:0 15px 40px rgba(0,0,0,0.1); 
-  width:100%; 
-  max-width:500px; 
-  transition: transform 0.3s;
-}
-.container:hover {
-  transform: translateY(-5px);
-}
-.container>button {
-  background:#2196f3;
-  color:#fff;
-  border:none;
-  padding:10px 18px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:500;
-  margin-bottom:25px; 
-  transition: 0.3s;
-}
-.container>button:hover
-{background:#1976d2; 
-  transform:scale(1.05);
-}
-h1{
-  text-align:center;
-  margin-bottom:30px;
-  color:#333;
-  font-size:1.8rem;
-}
-h2{
-  margin-top:25px;
-  margin-bottom:15px;
-  color:#555;
-  font-size:1.2rem;
-  border-bottom:1px solid #e0e0e0;
-  padding-bottom:5px;
-}
-form{
-  display:flex;
-  flex-direction:column
-  ;gap:18px;
-}
-label{
-  font-weight:500;
-  margin-bottom:5px;
-  color:#333;
-}
-input{
-  padding:12px 15px;
-  border:1px solid #ccc;
-  border-radius:12px;
-  outline:none
-  ;transition: all 0.3s;
-  font-size:0.95rem;
-}
-input:focus{
-  border-color:#2196f3;
-  box-shadow:0 0 8px rgba(33,150,243,0.3);
-}
-form button[type="submit"]{
-  margin-top:10px;
-  padding:12px;
-  background:#2196f3;
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  font-size:1rem;
-  cursor:pointer;
-  font-weight:500;
-  transition:0.3s;
-}
-form button[type="submit"]:hover{
-  background:#1976d2;
-  transform:translateY(-2px);
-  box-shadow:0 5px 15px rgba(33,150,243,0.3);
-  }
-
 </style>
 </head>
 <body>
@@ -337,7 +241,7 @@ form button[type="submit"]:hover{
   <input type="text" id="logradouro" name="logradouro" maxlength="60" placeholder="Rua, Avenida..." required>
 
   <label for="num_empresa">Número</label>
-  <input type="text" id="num_empresa" name="num_empresa" maxlength="5" placeholder="Número" required>
+  <input type="number" id="num_empresa" name="num_empresa" maxlength="5" placeholder="Número" required>
 
   <label for="bairro">Bairro</label>
   <input type="text" id="bairro" name="bairro" maxlength="30" placeholder="Bairro" required>
@@ -363,7 +267,6 @@ form button[type="submit"]:hover{
   <label for="email">Email</label>
   <input type="email" id="email" name="email" maxlength="60" placeholder="Digite o e-mail" required>
 
-<form id="form-fornecedor">
 <h2>Dados da Empresa</h2>
 <label for="empresa">Nome da Empresa</label>
 <input type="text" id="empresa" name="empresa" placeholder="Nome da empresa">
@@ -386,7 +289,7 @@ form button[type="submit"]:hover{
 
 <div class="uk-margin">
     <label> <strong>Telefone ou Celular</strong>
-      <input class="uk-input sp_celphones" type="text" name="telefone" placeholder="Ex: (11) 90000-9999">
+      <input class="uk-input sp_celphones" type="text" id="telefone" name="telefone" placeholder="Ex: (11) 90000-9999">
     </label>
 </div>
 
@@ -486,7 +389,7 @@ document.getElementById('cnpj').addEventListener('input', function(e) {
 		// Verifica se, ao remover o '0', o restante é um CNPJ válido
 		var potentialCNPJ = rawValue.substring(1);
 		// Atualiza rawValue para o CNPJ sem o '0' inicial
-		if (validaCNPJ(potentialCNPJ)) rawValue = potentialCNPJ;
+		if (validarCNPJ(potentialCNPJ)) rawValue = potentialCNPJ;
 	}
 
 	var cnpjPattern = rawValue
@@ -502,6 +405,7 @@ function mascaraCEP(input) {
     const valor = input.value.replace(/\D/g, '');  // Remove caracteres não numéricos
     input.value = valor.replace(/^(\d{5})(\d)/, '$1-$2');  // Adiciona o hífen após o quinto dígito
 }
+
 </script>
 </body>
 </html>
