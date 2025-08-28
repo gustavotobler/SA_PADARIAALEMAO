@@ -79,21 +79,94 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <title>Cadastro de Funcionário</title>
 <style>
 /* Reset e corpo */
-* {margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
-body {background:#eef2f7;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;}
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+body {
+  background:#eef2f7;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  padding:20px;
+}
 
 /* Card do formulário */
-form {background:#fff;padding:35px 40px;border-radius:15px;box-shadow:0 12px 25px rgba(0,0,0,0.12);max-width:550px;width:100%;}
-h2 {text-align:center;margin-bottom:30px;color:#2c3e50;font-size:1.8rem;}
-label {display:block;margin-bottom:6px;font-weight:600;color:#34495e;}
-input, select {width:100%;padding:12px 15px;margin-bottom:15px;border:1px solid #ccc;border-radius:10px;font-size:0.95rem;transition:all 0.3s ease;}
-input:focus, select:focus {border-color:#3498db;box-shadow:0 0 8px rgba(52,152,219,0.3);outline:none;}
-button {width:100%;padding:14px;background:#3498db;border:none;color:white;font-size:1rem;font-weight:600;border-radius:10px;cursor:pointer;transition:0.3s;}
-button:hover {background:#2980b9;}
-.erro {color:#e74c3c;font-size:0.85rem;margin-top:-10px;margin-bottom:10px;display:block;}
-.flex-group {display:flex;gap:10px;margin-bottom:15px;}
-.flex-group input,.flex-group select {flex:1;}
-@media(max-width:600px){form{padding:25px 20px;}.flex-group{flex-direction:column;}}
+form {
+  background:#fff;
+  padding:35px 40px;
+  border-radius:15px;
+  box-shadow:0 12px 25px rgba(0,0,0,0.12);
+  max-width:550px;
+  width:100%;
+}
+h2 {
+  text-align:center;
+  margin-bottom:30px;
+  color:#2c3e50;
+  font-size:1.8rem;
+}
+label {
+  display:block;
+  margin-bottom:6px;
+  font-weight:600;
+  color:#34495e;
+}
+input, select {
+  width:100%;
+  padding:12px 15px;
+  margin-bottom:15px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+}
+input:focus, select:focus {
+  border-color:#3498db;
+  box-shadow:0 0 8px rgba(52,152,219,0.3);
+  outline:none;
+}
+button {
+  width:100%;
+  padding:14px;
+  background:#3498db;
+  border:none;
+  color:white;
+  font-size:1rem;
+  font-weight:600;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.3s;
+}
+button:hover {
+  background:#2980b9;
+}
+.erro {
+  color:#e74c3c;
+  font-size:0.85rem;
+  margin-top:-10px;
+  margin-bottom:10px;
+  display:block;
+}
+.flex-group {
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+.flex-group input,.flex-group select {
+  flex:1;
+}
+@media(max-width:600px){
+  form{
+    padding:25px 20px;
+    }
+    .flex-group{
+      flex-direction:column;
+    }
+}
 </style>
 </head>
 <body>
@@ -140,7 +213,7 @@ button:hover {background:#2980b9;}
   </div>
   <div>
     <label>Número da Casa:</label>
-    <input type="text" name="Num_casa">
+    <input type="number" name="Num_casa">
   </div>
 </div>
 
@@ -151,7 +224,7 @@ button:hover {background:#2980b9;}
 <input type="text" name="Bairro">
 
 <label>CEP:</label>
-<input type="text" name="CEP" id="cep">
+<input type="number" name="CEP" id="cep">
 <span id="erro-cep" class="erro"></span>
 
 <label>Logradouro:</label>
