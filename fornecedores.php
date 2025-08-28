@@ -38,11 +38,13 @@ if ($_SESSION['nivel'] != 1) {
       <!-- Centro: título e barra de pesquisa -->
       <div class="topo-center">
         <h1>FORNECEDORES</h1>
+        <form action="pesquisar/buscar_fornecedor.php" method="POST">
         <div class="search-container">
           <span class="material-icons">search</span>
           <input type="text" id="search-input" placeholder="Pesquisar...">
           <button id="search-btn" type="button">Pesquisar</button>
         </div>
+        </form>
       </div>
 
       <!-- Lado direito: botão de adicionar e de alternar ações -->
