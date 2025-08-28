@@ -16,6 +16,7 @@ $produtos = $stmt->fetchAll();
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     /* Reset básico */
+    
     * {
       margin: 0;
       padding: 0;
@@ -23,7 +24,7 @@ $produtos = $stmt->fetchAll();
     }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background: #f5f2ed;
       color: #333;
     }
@@ -136,46 +137,51 @@ $produtos = $stmt->fetchAll();
     /* Sidebar do carrinho */
     /* Botão de toggle centralizado verticalmente */
     .sidebar {
-    width: 240px;
-    background: var(--sidebar-bg);
-    height: 100vh;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    padding-top: 10px;  /* reduz o espaço do topo */
-    transition: width 0.3s;
-}
+      width: 240px;
+      background: var(--sidebar-bg);
+      height: 100vh;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      padding-top: 10px;
+      /* reduz o espaço do topo */
+      transition: width 0.3s;
+    }
 
-.toggle-btn {
-    cursor: pointer;
-    text-align: center;
-    font-size: 28px;      /* mantém o tamanho do ícone */
-    color: var(--primary-text);
-    margin-bottom: 5px;   /* espaço entre toggle e link Voltar */
-    height: 30px;         /* altura do botão mais compacta */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    line-height: 1;
-}
+    .toggle-btn {
+      cursor: pointer;
+      text-align: center;
+      font-size: 20px;
+      /* mantém o tamanho do ícone */
+      color: var(--primary-text);
+      margin-bottom: 20px;
+      /* espaço entre toggle e link Voltar */
+      height: 0px;
+      /* altura do botão mais compacta */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+    }
 
 
 
 
-.sidebar .toggle-btn {
-  padding: 15px 20px; /* mesmo padding dos links */
-  font-size: 20px;
-  color: #fff;
-  text-align: left;
-}
+    .sidebar .toggle-btn {
+      padding: 15px 20px;
+      /* mesmo padding dos links */
+      font-size: 20px;
+      color: #fff;
+      text-align: left;
+    }
 
-.sidebar.collapsed {
-  width: 60px;
-}
+    .sidebar.collapsed {
+      width: 60px;
+    }
 
-.sidebar.collapsed .text {
-  display: none;
-}
+    .sidebar.collapsed .text {
+      display: none;
+    }
 
     .cart-items {
       flex: 1;
@@ -447,38 +453,75 @@ $produtos = $stmt->fetchAll();
       width: calc(100% - 60px);
     }
 
-    .sidebar a.back-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;          /* espaço entre ícone e texto */
-  padding: 15px 20px;
-  color: #fff;
-  text-decoration: none;
-  box-sizing: border-box;
-}
 
-.sidebar a.back-link .material-icons {
-  font-size: 24px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-}
+    /* Esconde apenas o texto quando colapsada */
+    .sidebar.collapsed .text {
+      display: none;
+    }
 
+    /* Ajusta emojis quando a sidebar está colapsada */
+    .sidebar .emoji {
+      margin-right: 8px;
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar.collapsed .emoji {
+      margin-right: 0;
+      width: 100%;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      transition: all 0.3s;
+      /* suaviza posição e rotação */
+    }
+
+    .back-link .icon {
+      transition: transform 0.3s;
+      margin-right: 8px;
+    }
+
+    /* Quando a sidebar estiver colapsada */
+    .sidebar.collapsed .back-link {
+      justify-content: center;
+      /* centraliza horizontalmente */
+    }
+
+    .sidebar.collapsed .back-link .icon {
+      margin-right: 0;
+      transform: rotate(180deg);
+      /* rotação da seta */
+    }
   </style>
 </head>
 
 <body>
   <!-- Sidebar fixa lateral -->
   <nav class="sidebar" id="sidebar">
-  <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
-  <a href="inicial1.php" class="back-link">
-    <span class="material-icons">arrow_back</span>
-    <span class="text">Voltar</span>
-  </a>
-  <a href="#"><span class="text">🍞 Produtos</span></a>
-  <a href="comanda.php"><span class="text">🧾 Comanda</span></a>
-  <a href="pagamento.php"><span class="text">💳 Pagamento</span></a>
-</nav>
+    <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+    <a href="inicial1.php" class="back-link">
+      <span class="material-icons icon">arrow_back</span>
+      <span class="text">Voltar</span>
+    </a>
+
+    <a href="#" onclick="showSection('tabela')">
+      <span class="emoji">🍞</span>
+      <span class="text">Produtos</span>
+    </a>
+
+    <a href="#" onclick="showSection('comanda.php')">
+      <span class="emoji">🧾</span>
+      <span class="text">Comanda</span>
+    </a>
+
+    <a href="#" onclick="showSection('pagamento.php')">
+      <span class="emoji">💳</span>
+      <span class="text">Pagamento</span>
+    </a>
+  </nav>
 
 
   <!-- Conteúdo principal -->
