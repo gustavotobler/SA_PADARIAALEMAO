@@ -2,9 +2,14 @@
 require_once('conexao.php');
 
 // Buscar produtos
-$stmt = $pdo->prepare("SELECT * FROM produtos");
+$stmt = $pdo->prepare("
+    SELECT p.*, c.nome_categoria
+FROM produtos p
+JOIN categorias c ON p.id_categorias = c.id_categorias
+");
 $stmt->execute();
-$produtos = $stmt->fetchAll();
+$produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -464,31 +469,41 @@ $produtos = $stmt->fetchAll();
       width: 100%;
     }
 
-    /* Link de voltar */
-    .back-link {
+    .sidebar .back-link {
       display: flex;
       align-items: center;
-      transition: all 0.3s;
+      transition: all 0.3s ease;
+      /* anima margem, rotação, etc */
     }
 
-    /* Garante que a seta "Voltar" use o tamanho padrão (24px) */
-    .sidebar .icon {
-      margin-right: 8px;
+    .sidebar .back-link .icon {
       font-size: 24px;
-      /* mesmo tamanho do relatório */
       display: flex;
       align-items: center;
+      transition: transform 0.3s ease, margin 0.3s ease;
+      /* anima rotação e margem */
+      margin-right: 8px;
     }
-
-
 
     .sidebar.collapsed .back-link {
       justify-content: center;
+      /* centraliza quando colapsa */
     }
 
     .sidebar.collapsed .back-link .icon {
       margin-right: 0;
       transform: rotate(180deg);
+    }
+
+    .main-content {
+      margin-left: 240px;
+      /* mesma largura da sidebar */
+      transition: margin-left 0.3s;
+    }
+
+    .sidebar.collapsed~.main-content {
+      margin-left: 60px;
+      /* quando colapsa */
     }
   </style>
 </head>
@@ -531,18 +546,21 @@ $produtos = $stmt->fetchAll();
         <!-- HUD de categorias -->
         <div class="category-hud">
           <button data-cat="all" class="active">Todas</button>
-          <button data-cat="cafe">Cafés</button>
-          <button data-cat="sucos">Sucos</button>
-          <button data-cat="paes">Pães</button>
-          <button data-cat="bolos">Bolos</button>
-          <button data-cat="salgados">Salgados</button>
+          <button data-cat="Café">Cafés</button>
+          <button data-cat="Sucos">Sucos</button>
+          <button data-cat="bebidas">Bebidas</button>
+          <button data-cat="Pães">Pães</button>
+          <button data-cat="Bolos">Bolos</button>
+          <button data-cat="Salgados">Salgados</button>
+          <button data-cat="Laticínios">Laticínios</button>
         </div>
+
 
         <!-- Lista de produtos -->
         <div class="grid">
           <?php if ($produtos): ?>
             <?php foreach ($produtos as $row): ?>
-              <div class="card" data-category="<?= htmlspecialchars($row['id_categorias']) ?>">
+              <div class="card" data-category="<?= htmlspecialchars($row['nome_categoria']) ?>">
                 <div class="info">
                   <h4><?= htmlspecialchars($row['Nome_prod']) ?></h4>
                   <div class="info-footer">
