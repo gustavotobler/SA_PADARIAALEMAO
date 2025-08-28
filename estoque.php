@@ -49,7 +49,9 @@ try {
             --highlight: #e0f7ff;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -74,20 +76,30 @@ try {
         }
 
         .sidebar a {
-            color: var(--primary-text);
-            padding: 15px 20px;
-            text-decoration: none;
             display: flex;
             align-items: center;
+            color: var(--primary-text);
+            text-decoration: none;
+            padding: 15px 20px;
             white-space: nowrap;
         }
 
-        .sidebar a:hover { background: var(--hover-bg); }
+        .sidebar a:hover {
+            background: var(--hover-bg);
+        }
 
-        .sidebar .icon { margin-right: 8px; }
+        .sidebar .icon {
+            margin-right: 8px;
+        }
 
-        .sidebar.collapsed .text { display: none; }
-        .sidebar.collapsed .icon { margin-right: 0; justify-content: center; }
+        .sidebar.collapsed .text {
+            display: none;
+        }
+
+        .sidebar.collapsed .icon {
+            margin-right: 0;
+            justify-content: center;
+        }
 
         .toggle-btn {
             cursor: pointer;
@@ -104,9 +116,15 @@ try {
             transition: margin-left 0.3s;
         }
 
-        .main-content.collapsed { margin-left: 60px; }
+        .main-content.collapsed {
+            margin-left: 60px;
+        }
 
-        h1, h2 { text-align: center; margin-bottom: 20px; }
+        h1,
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
         #filters {
             display: flex;
@@ -117,11 +135,20 @@ try {
             align-items: flex-end;
         }
 
-        .filter-group { display: flex; flex-direction: column; }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
 
-        .filter-group label { margin-bottom: 5px; }
+        .filter-group label {
+            margin-bottom: 5px;
+        }
 
-        .filter-group input { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .filter-group input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
 
         #clearFilters {
             background: var(--accent);
@@ -132,7 +159,9 @@ try {
             cursor: pointer;
         }
 
-        #clearFilters:hover { background: #555; }
+        #clearFilters:hover {
+            background: #555;
+        }
 
         table {
             width: 100%;
@@ -142,13 +171,25 @@ try {
             overflow: hidden;
         }
 
-        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #eee; }
+        th,
+        td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
 
-        th { background: var(--accent); color: var(--primary-text); }
+        th {
+            background: var(--accent);
+            color: var(--primary-text);
+        }
 
-        tr:nth-child(even) { background: #f9f9f9; }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
 
-        tr:hover { background: var(--highlight); }
+        tr:hover {
+            background: var(--highlight);
+        }
 
         .chart-section {
             margin: 40px auto;
@@ -159,11 +200,63 @@ try {
             display: none;
         }
 
-        .chart-section.active { display: block; }
+        .chart-section.active {
+            display: block;
+        }
 
-        .chart-container { position: relative; height: 400px; width: 100%; }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
 
-        .filter-info { text-align: center; margin-bottom: 10px; font-weight: bold; }
+        .filter-info {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* Esconde apenas o texto quando colapsada */
+        .sidebar.collapsed .text {
+            display: none;
+        }
+
+        /* Ajusta emojis quando a sidebar está colapsada */
+        .sidebar .emoji {
+            margin-right: 8px;
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .emoji {
+            margin-right: 0;
+            width: 100%;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            /* suaviza posição e rotação */
+        }
+
+        .back-link .icon {
+            transition: transform 0.3s;
+            margin-right: 8px;
+        }
+
+        /* Quando a sidebar estiver colapsada */
+        .sidebar.collapsed .back-link {
+            justify-content: center;
+            /* centraliza horizontalmente */
+        }
+
+        .sidebar.collapsed .back-link .icon {
+            margin-right: 0;
+            transform: rotate(180deg);
+            /* rotação da seta */
+        }
     </style>
 </head>
 
@@ -171,13 +264,34 @@ try {
 
     <nav class="sidebar" id="sidebar">
         <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
-        <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
-        <a href="#" onclick="showSection('tabela')"><span class="text">📋 Tabela de Estoque</span></a>
-        <a href="#" onclick="showSection('grafico-qtd')"><span class="text">📦 Gráf. Quantidade</span></a>
-        <a href="#" onclick="showSection('grafico-valor')"><span class="text">💰 Gráf. Valor</span></a>
-        <a href="#" onclick="showSection('grafico-fornecedor')"><span class="text">🏭 Gráf. Fornecedor</span></a>
-        <a href="#" onclick="showSection('grafico-validade')"><span class="text">⏳ Gráf. Validade</span></a>
-        <a href="#" onclick="showSection('grafico-preco')"><span class="text">💵 Gráf. Preço</span></a>
+        <a href="inicial1.php" class="back-link">
+            <span class="material-icons icon">arrow_back</span>
+            <span class="text">Voltar</span>
+        </a>
+        <a href="#" onclick="showSection('tabela')">
+            <span class="emoji">📋</span>
+            <span class="text">Tabela de Estoque</span>
+        </a>
+        <a href="#" onclick="showSection('grafico-qtd')">
+            <span class="emoji">📦</span>
+            <span class="text">Gráf. Quantidade</span>
+        </a>
+        <a href="#" onclick="showSection('grafico-valor')">
+            <span class="emoji">💰</span>
+            <span class="text">Gráf. Valor</span>
+        </a>
+        <a href="#" onclick="showSection('grafico-fornecedor')">
+            <span class="emoji">🏭</span>
+            <span class="text">Gráf. Fornecedor</span>
+        </a>
+        <a href="#" onclick="showSection('grafico-validade')">
+            <span class="emoji">⏳</span>
+            <span class="text">Gráf. Validade</span>
+        </a>
+        <a href="#" onclick="showSection('grafico-preco')">
+            <span class="emoji">💵</span>
+            <span class="text">Gráf. Preço</span>
+        </a>
     </nav>
 
     <main class="main-content" id="mainContent">
@@ -275,7 +389,7 @@ try {
         function showSection(id) {
             document.querySelectorAll('.section, .chart-section').forEach(s => s.style.display = 'none');
             document.getElementById(id).style.display = 'block';
-            if(id.startsWith('grafico-')) setTimeout(updateCharts, 50);
+            if (id.startsWith('grafico-')) setTimeout(updateCharts, 50);
         }
 
         const tableRows = Array.from(document.querySelectorAll('tbody tr'));
@@ -297,14 +411,14 @@ try {
                 const id = row.cells[0].textContent.toLowerCase();
 
                 let passDate = true;
-                if(start) passDate = validade >= start;
-                if(end) passDate = passDate && validade <= end;
+                if (start) passDate = validade >= start;
+                if (end) passDate = passDate && validade <= end;
 
                 let passSearch = true;
-                if(search) passSearch = nome.includes(search) || id.includes(search);
+                if (search) passSearch = nome.includes(search) || id.includes(search);
 
                 row.style.display = (passDate && passSearch) ? '' : 'none';
-                if(row.style.display !== 'none') countVisible++;
+                if (row.style.display !== 'none') countVisible++;
             });
 
             filterInfo.textContent = countVisible > 0 ? `Produtos encontrados: ${countVisible}` : 'Nenhum produto encontrado';
@@ -358,8 +472,8 @@ try {
             const proxValidadeLabels = [], proxValidadeQtds = [];
             visibleRows.forEach(r => {
                 const val = r.cells[7].textContent.split('/').reverse().join('-'); // dd/mm/yyyy → yyyy-mm-dd
-                const diffDays = (new Date(val) - today) / (1000*60*60*24);
-                if(diffDays <= 30 && diffDays >= 0){
+                const diffDays = (new Date(val) - today) / (1000 * 60 * 60 * 24);
+                if (diffDays <= 30 && diffDays >= 0) {
                     proxValidadeLabels.push(r.cells[1].textContent);
                     proxValidadeQtds.push(parseFloat(r.cells[4].textContent));
                 }
@@ -382,4 +496,5 @@ try {
         applyFilters();
     </script>
 </body>
+
 </html>

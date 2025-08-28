@@ -134,30 +134,33 @@ $produtos = $stmt->fetchAll();
     }
 
     /* Sidebar do carrinho */
+    /* Botão de toggle centralizado verticalmente */
     .sidebar {
-  width: 240px;
-  background: #2e2e2e;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0; /* garante alinhamento à esquerda */
-  display: flex;
-  flex-direction: column;
-  padding-top: 0; /* remove espaço superior desnecessário */
-  padding-left: 0; /* remove recuo interno */
-  padding-right: 0;
-  box-sizing: border-box;
-  transition: width 0.3s;
-  border-radius: 0; /* remove arredondamento que empurra conteúdo */
+    width: 240px;
+    background: var(--sidebar-bg);
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;  /* reduz o espaço do topo */
+    transition: width 0.3s;
 }
 
-.sidebar a {
-  color: #fff;
-  padding: 15px 20px; /* mantém espaçamento uniforme */
-  text-decoration: none;
-  display: flex;
-  align-items: center;
+.toggle-btn {
+    cursor: pointer;
+    text-align: center;
+    font-size: 28px;      /* mantém o tamanho do ícone */
+    color: var(--primary-text);
+    margin-bottom: 5px;   /* espaço entre toggle e link Voltar */
+    height: 30px;         /* altura do botão mais compacta */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
 }
+
+
+
 
 .sidebar .toggle-btn {
   padding: 15px 20px; /* mesmo padding dos links */
@@ -473,6 +476,7 @@ $produtos = $stmt->fetchAll();
     <span class="text">Voltar</span>
   </a>
   <a href="#"><span class="text">🍞 Produtos</span></a>
+  <a href="comanda.php"><span class="text">🧾 Comanda</span></a>
   <a href="pagamento.php"><span class="text">💳 Pagamento</span></a>
 </nav>
 
@@ -507,7 +511,7 @@ $produtos = $stmt->fetchAll();
                     <span class="price">R$ <?= number_format($row['Preco'], 2, ',', '.') ?></span>
                     <button class="add-to-cart" data-name="<?= htmlspecialchars($row['Nome_prod']) ?>"
                       data-price="<?= htmlspecialchars($row['Preco']) ?>" <?= !empty($row['Unid_medida']) ? 'data-unit="' . htmlspecialchars($row['Unid_medida']) . '"' : '' ?>>
-
+                      +
                     </button>
                   </div>
                 </div>
