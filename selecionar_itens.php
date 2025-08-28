@@ -16,7 +16,7 @@ $produtos = $stmt->fetchAll();
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     /* Reset básico */
-    
+
     * {
       margin: 0;
       padding: 0;
@@ -390,40 +390,45 @@ $produtos = $stmt->fetchAll();
       cursor: pointer;
     }
 
-    /* Sidebar fixa estilo do relatório */
+    :root {
+      --sidebar-bg: #2e2e2e;
+      --primary-text: #fff;
+      --hover-bg: #444;
+    }
+
+    /* Sidebar fixa padrão */
     .sidebar {
       width: 240px;
-      background: #2e2e2e;
+      background: var(--sidebar-bg);
       height: 100vh;
       position: fixed;
       display: flex;
       flex-direction: column;
       padding-top: 20px;
       transition: width 0.3s;
-      border-radius: 0;
     }
 
     .sidebar.collapsed {
       width: 60px;
     }
 
+    /* Links da sidebar */
     .sidebar a {
-      color: #fff;
-      padding: 15px 20px;
-      text-decoration: none;
       display: flex;
       align-items: center;
+      color: var(--primary-text);
+      text-decoration: none;
+      padding: 15px 20px;
       white-space: nowrap;
     }
 
     .sidebar a:hover {
-      background: #444;
+      background: var(--hover-bg);
     }
 
     .sidebar .icon {
       margin-right: 8px;
       font-size: 20px;
-      line-height: 1;
       display: flex;
       align-items: center;
     }
@@ -432,34 +437,21 @@ $produtos = $stmt->fetchAll();
       display: none;
     }
 
+    .sidebar.collapsed .icon {
+      margin-right: 0;
+      justify-content: center;
+    }
+
+    /* Botão de toggle */
     .toggle-btn {
       cursor: pointer;
       text-align: center;
       margin-bottom: 20px;
       font-size: 20px;
-      color: #fff;
+      color: var(--primary-text);
     }
 
-    /* Ajusta o conteúdo para a sidebar fixa */
-    .main-content {
-      margin-left: 240px;
-      padding: 20px;
-      width: calc(100% - 240px);
-      transition: margin-left 0.3s;
-    }
-
-    .main-content.collapsed {
-      margin-left: 60px;
-      width: calc(100% - 60px);
-    }
-
-
-    /* Esconde apenas o texto quando colapsada */
-    .sidebar.collapsed .text {
-      display: none;
-    }
-
-    /* Ajusta emojis quando a sidebar está colapsada */
+    /* Ajusta emojis */
     .sidebar .emoji {
       margin-right: 8px;
       display: inline-block;
@@ -472,28 +464,31 @@ $produtos = $stmt->fetchAll();
       width: 100%;
     }
 
+    /* Link de voltar */
     .back-link {
       display: flex;
       align-items: center;
       transition: all 0.3s;
-      /* suaviza posição e rotação */
     }
 
-    .back-link .icon {
-      transition: transform 0.3s;
+    /* Garante que a seta "Voltar" use o tamanho padrão (24px) */
+    .sidebar .icon {
       margin-right: 8px;
+      font-size: 24px;
+      /* mesmo tamanho do relatório */
+      display: flex;
+      align-items: center;
     }
 
-    /* Quando a sidebar estiver colapsada */
+
+
     .sidebar.collapsed .back-link {
       justify-content: center;
-      /* centraliza horizontalmente */
     }
 
     .sidebar.collapsed .back-link .icon {
       margin-right: 0;
       transform: rotate(180deg);
-      /* rotação da seta */
     }
   </style>
 </head>
@@ -547,13 +542,13 @@ $produtos = $stmt->fetchAll();
         <div class="grid">
           <?php if ($produtos): ?>
             <?php foreach ($produtos as $row): ?>
-              <div class="card">
+              <div class="card" data-category="<?= htmlspecialchars($row['id_categorias']) ?>">
                 <div class="info">
                   <h4><?= htmlspecialchars($row['Nome_prod']) ?></h4>
                   <div class="info-footer">
-                    <span class="price">R$ <?= number_format($row['Preco'], 2, ',', '.') ?></span>
+                    <span class="price">R$ <?= number_format($row['Preco_unitario'], 2, ',', '.') ?></span>
                     <button class="add-to-cart" data-name="<?= htmlspecialchars($row['Nome_prod']) ?>"
-                      data-price="<?= htmlspecialchars($row['Preco']) ?>" <?= !empty($row['Unid_medida']) ? 'data-unit="' . htmlspecialchars($row['Unid_medida']) . '"' : '' ?>>
+                      data-price="<?= htmlspecialchars($row['Preco_unitario']) ?>" <?= !empty($row['Unid_medida']) ? 'data-unit="' . htmlspecialchars($row['Unid_medida']) . '"' : '' ?>>
                       +
                     </button>
                   </div>
@@ -563,6 +558,7 @@ $produtos = $stmt->fetchAll();
           <?php else: ?>
             <p>Nenhum produto cadastrado.</p>
           <?php endif; ?>
+
         </div>
       </section>
 
