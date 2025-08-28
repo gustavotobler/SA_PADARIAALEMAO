@@ -10,19 +10,22 @@ try {
     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
     $sql = "
-        SELECT 
-            p.ID_produto,
-            p.Nome_prod,
-            f.Nome_forn,
-            p.Unid_medida,
-            p.Qntd_produto,
-            p.Preco,
-            (p.Qntd_produto * p.Preco) AS valor_total,
-            p.Validade
-        FROM produtos p
-        LEFT JOIN fornecedores f ON p.ID_forn = f.ID_forn
-        ORDER BY p.Nome_prod ASC
-    ";
+    SELECT 
+        p.ID_produto,
+        p.Nome_prod,
+        f.Nome_forn,
+        p.Unid_medida,
+        p.Qntd_produto,
+        p.Preco_unitario,
+        (p.Qntd_produto * p.Preco_unitario) AS valor_total,
+        p.Validade,
+        c.id_categorias,
+        c.nome_categoria
+    FROM produtos p
+    LEFT JOIN fornecedores f ON p.ID_forn = f.ID_forn
+    LEFT JOIN categorias c ON p.id_categorias = c.id_categorias
+    ORDER BY p.Nome_prod ASC
+";
     $stmt = $conn->query($sql);
     $rows = $stmt->fetchAll();
 
@@ -323,6 +326,7 @@ try {
                             <th>ID Produto</th>
                             <th>Nome</th>
                             <th>Fornecedor</th>
+                            <th>Categoria</th>
                             <th>Unidade</th>
                             <th>Quantidade</th>
                             <th>Preço Unitário</th>
@@ -336,14 +340,16 @@ try {
                                 <td><?= $row['ID_produto'] ?></td>
                                 <td><?= $row['Nome_prod'] ?></td>
                                 <td><?= $row['Nome_forn'] ?? '---' ?></td>
+                                <td><?= $row['nome_categoria'] ?? '---' ?></td>
                                 <td><?= $row['Unid_medida'] ?></td>
                                 <td><?= number_format($row['Qntd_produto'], 2, ',', '.') ?></td>
-                                <td><?= number_format($row['Preco'], 2, ',', '.') ?></td>
+                                <td><?= number_format($row['Preco_unitario'], 2, ',', '.') ?></td>
                                 <td><?= number_format($row['valor_total'], 2, ',', '.') ?></td>
                                 <td><?= date('d/m/Y', strtotime($row['Validade'])) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
+
                 </table>
             </div>
         </section>
@@ -373,6 +379,12 @@ try {
             <h2>Distribuição de Preços Unitários</h2>
             <div class="chart-container"><canvas id="precoChart"></canvas></div>
         </section>
+
+        <section id="grafico-categoria" class="chart-section">
+            <h2>Quantidade por Categoria</h2>
+            <div class="chart-container"><canvas id="categoriaChart"></canvas></div>
+        </section>
+
     </main>
 
     <script>
@@ -491,6 +503,19 @@ try {
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
+
+        // Quantidade por categoria
+        const categoriaMap = {};
+        visibleRows.forEach(r => {
+            const categoria = r.cells[3].textContent || '---'; // coluna Categoria
+            categoriaMap[categoria] = (categoriaMap[categoria] || 0) + parseFloat(r.cells[5].textContent.replace('.', '').replace(',', '.'));
+        });
+        charts.categoriaChart = new Chart(document.getElementById('categoriaChart'), {
+            type: 'bar',
+            data: { labels: Object.keys(categoriaMap), datasets: [{ label: 'Qtd por Categoria', data: Object.values(categoriaMap), backgroundColor: colors }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
 
         showSection('tabela');
         applyFilters();
