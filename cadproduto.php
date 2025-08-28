@@ -74,13 +74,14 @@
         </div>
         <div class="input-group">
           <label for="categoria">Categoria</label>
-          <select id="categoria" name="id_categorias">
+          <select id="categoria" name="nome_categoria">
             <option value="">Selecione</option>
-            <option value="padaria">Cafés</option>
-            <option value="laticinio">Sucos</option>
-            <option value="hortifruti">Pães</option>
-            <option value="bebidas">Bolos</option>
-            <option value="bebidas">Salgados</option>
+            <option>Cafés</option>
+            <option>Sucos</option>
+            <option>Pães</option>
+            <option>Bolos</option>
+            <option>Salgados</option>
+            <option>Laticíneos</option>
           </select>
         </div>
 
