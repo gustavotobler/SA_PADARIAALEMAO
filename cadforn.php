@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 <?php
 session_start();
 require_once("conexao.php"); 
@@ -83,8 +83,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-=======
->>>>>>> Stashed changes
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -92,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Fornecedor</title>
 <style>
-<<<<<<< Updated upstream
+
 * { 
   margin:0; 
   padding:0; 
@@ -305,7 +303,7 @@ form button[type="submit"]:hover{
   transform:translateY(-2px);
   box-shadow:0 5px 15px rgba(33,150,243,0.3);
   }
->>>>>>> Stashed changes
+
 </style>
 </head>
 <body>
@@ -315,7 +313,6 @@ form button[type="submit"]:hover{
 
 <h1>Cadastro de Fornecedor</h1>
 
-<<<<<<< Updated upstream
 <?php if (!empty($msg)): ?>
   <div class="msg"><?php echo $msg; ?></div>
 <?php endif; ?>
@@ -365,7 +362,7 @@ form button[type="submit"]:hover{
   <h2>Formas de Contato</h2>
   <label for="email">Email</label>
   <input type="email" id="email" name="email" maxlength="60" placeholder="Digite o e-mail" required>
-=======
+
 <form id="form-fornecedor">
 <h2>Dados da Empresa</h2>
 <label for="empresa">Nome da Empresa</label>
@@ -384,10 +381,6 @@ form button[type="submit"]:hover{
 <label for="email">Email</label>
 <input type="email" id="email" name="email" placeholder="Digite o e-mail">
 
-<label for="telefone">Telefone</label>
-<input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000">
->>>>>>> Stashed changes
-
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -397,10 +390,9 @@ form button[type="submit"]:hover{
     </label>
 </div>
 
-<<<<<<< Updated upstream
   <button type="submit">Cadastrar</button>
 </form>
-=======
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/inputmask.min.js"></script>
 <script>
 // Máscaras
@@ -471,14 +463,6 @@ document.getElementById("form-fornecedor").addEventListener("submit",function(e)
   alert("Formulário válido! Pode enviar via AJAX ou POST.");
   // Para enviar realmente: this.submit();
 });
-</script>
->>>>>>> Stashed changes
-
-</div>
-
-  
-
-<script>
   
 $(document).ready(function(){
     var SPMaskBehavior = function (val) {
