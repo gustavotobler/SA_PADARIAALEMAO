@@ -64,7 +64,7 @@ tbody td {padding:12px 15px; text-align:center; font-size:0.95rem; border-bottom
 
   <div class="search-container">
     <span class="material-icons">search</span>
-    <form method="POST" action="buscar_produtos.php">
+    <form method="POST" action="pesquisar/buscar_produtos.php">
       <input type="text" id="search-input" placeholder="Pesquisar...">
       <button id="search-btn" type="button">Pesquisar</button>
     </form>
@@ -99,7 +99,7 @@ tbody td {padding:12px 15px; text-align:center; font-size:0.95rem; border-bottom
           <td><?= htmlspecialchars($prod['Validade']) ?></td>
           <td><?= htmlspecialchars($prod['Qntd_produto']) ?></td>
           <td class="action-cell hidden">
-            <a href="alterar/alterar_produto.php?id=<?= $prod['ID_produto'] ?>" title="Editar"><span class="material-icons">edit</span></a>
+            <a href="alterar/alterar_produtos.php?id=<?= $prod['ID_produto'] ?>" title="Editar"><span class="material-icons">edit</span></a>
             <form action="exclusoes/excluir_produto.php" method="POST" style="display:inline;">
               <input type="hidden" name="id" value="<?= htmlspecialchars($prod['ID_produto']) ?>">
               <button type="submit" onclick="return confirm('Deseja realmente excluir este produto?')" title="Excluir">
