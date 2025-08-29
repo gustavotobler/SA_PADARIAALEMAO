@@ -1,3 +1,19 @@
+<?php 
+session_start();
+require_once 'conexao.php';
+
+// Se não estiver logado
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+    echo "<script>alert('Você precisa estar logado!');window.location.href='login.php';</script>";
+    exit;
+}
+
+// Se não for administrador
+if ($_SESSION['nivel'] != 1) {
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -22,11 +38,13 @@
       <!-- Centro: título e barra de pesquisa -->
       <div class="topo-center">
         <h1>FORNECEDORES</h1>
+        <form action="pesquisar/buscar_fornecedor.php" method="POST">
         <div class="search-container">
           <span class="material-icons">search</span>
           <input type="text" id="search-input" placeholder="Pesquisar...">
           <button id="search-btn" type="button">Pesquisar</button>
         </div>
+        </form>
       </div>
 
       <!-- Lado direito: botão de adicionar e de alternar ações -->
