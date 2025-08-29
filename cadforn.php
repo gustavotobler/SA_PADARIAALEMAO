@@ -154,8 +154,6 @@ form button[type="submit"]:hover{
   box-shadow:0 5px 15px rgba(33,150,243,0.3);
   }
 
-
-=======
 * {
    margin:0; 
    padding:0; 
@@ -251,7 +249,6 @@ form button[type="submit"]:hover{
   box-shadow:0 5px 15px rgba(33,150,243,0.3);
   }
 
-=======
 * {
    margin:0; 
    padding:0; 
@@ -355,9 +352,8 @@ form button[type="submit"]:hover{
 <button onclick="window.location.href='fornecedores.php'">Voltar</button>
 <h1>Cadastro de Fornecedor</h1>
 
-<<<<<<< Updated upstream
 <form method="POST" id="form-fornecedor">
-=======
+
 <?php if (!empty($msg)): ?>
   <div class="msg"><?php echo $msg; ?></div>
 <?php endif; ?>
@@ -408,69 +404,10 @@ form button[type="submit"]:hover{
   <label for="email">Email</label>
   <input type="email" id="email" name="email" maxlength="60" placeholder="Digite o e-mail" required>
 
-<form id="form-fornecedor">
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-<h2>Dados da Empresa</h2>
-<label for="nome_forn">Nome da Empresa</label>
-<input type="text" id="nome_forn" name="nome_forn" maxlength="40" placeholder="Nome da empresa" required>
-
-<label for="cnpj">CNPJ</label>
-<input type="text" id="cnpj" name="cnpj" maxlength="18" placeholder="00.000.000/0000-00">
-
-<label for="data_fundacao">Data de Fundação</label>
-<input type="date" id="data_fundacao" name="data_fundacao" min="1800-01-01" required>
-
-<label for="tipo">Tipo de Fornecedor</label>
-<input type="text" id="tipo" name="tipo" maxlength="30" placeholder="Categoria ou tipo" required>
-
-<h2>Endereço</h2>
-<label for="logradouro">Logradouro</label>
-<input type="text" id="logradouro" name="logradouro" maxlength="60" placeholder="Rua, Avenida..." required>
-
-<label for="num_empresa">Número</label>
-<input type="text" id="num_empresa" name="num_empresa" maxlength="5" placeholder="Número" required>
-
-<label for="bairro">Bairro</label>
-<input type="text" id="bairro" name="bairro" maxlength="30" placeholder="Bairro" required>
-
-<label for="cidade">Cidade</label>
-<input type="text" id="cidade" name="cidade" maxlength="30" placeholder="Cidade" required>
-
-<label for="uf">UF</label>
-<select id="uf" name="uf" required>
-<option value="">Selecione</option>
-<option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
-<option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
-<option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
-<option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
-<option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
-<option>SE</option><option>TO</option>
-</select>
-
-<label for="cep">CEP</label>
-<input type="text" id="cep" name="cep" maxlength="9" placeholder="00000-000">
-
-<h2>Formas de Contato</h2>
-<label for="email">Email</label>
-<input type="email" id="email" name="email" maxlength="60" placeholder="Digite o e-mail" required>
-
 <label for="telefone">Telefone ou Celular</label>
 <input type="text" id="telefone" name="telefone"  maxlength="15" placeholder="(00) 00000-0000">
 
-<<<<<<< Updated upstream
 <button type="submit">Cadastrar</button>
-=======
-<div class="uk-margin">
-    <label> <strong>Telefone ou Celular</strong>
-      <input class="uk-input sp_celphones" type="text" name="telefone" placeholder="Ex: (11) 90000-9999">
-    </label>
-</div>
-
-  <button type="submit">Cadastrar</button>
->>>>>>> Stashed changes
 </form>
 </div>
 <script>
