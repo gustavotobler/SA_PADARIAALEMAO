@@ -1,35 +1,28 @@
-<?php 
+<?php
 session_start();
-require_once '../conexao.php';
+require_once '../conexao.php'; // Ajuste o caminho se necessário
 
-//VERIFICA SE O USUARIO TEM PERMISSAO DE ADM
-If($_SESSION['nivel']!=1){
-    echo "<script>alert('Acesso Negado!');window.location.href='../inicial1.php'</script>";
-    exit();
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+    echo "<script>alert('Você precisa estar logado!');window.location.href='../inicial1.php';</script>";
+    exit;
 }
 
-//INICIALIZA A VARIAVEL PARA ARMAZENAR USUARIOS
-$produtos = [];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['id'])) {
+        $id = $_POST['id'];
 
-//BUSCA TODOS OS USUARIOS CADASTRADOS EM ORDEM ALFABETICA
-$sql = "SELECT * FROM produtos ORDER BY  Nome_prod ASC";
-$stmt = $pdo->prepare($sql);
-$stmt->execute();
-$funcionarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-//SE UM ID FOR PASSADO VIA GET EXCLUIR O USUARIO
-if(isset($_POST['id'])&& is_numeric($_POST['id'])){
-    $id_funcionario = $_POST['id'];
-
-    //EXCLUI O USUARIO DO BANCO DE DADOS
-    $sql = "DELETE FROM produtos WHERE ID_produto=:id";//Variável $sql que guarda um DELETE. Este comando serve para deletar informações do banco de dados, aqui no caso, será o funcionário desejado.
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':id',$id_produto,PDO::PARAM_INT);
-
-    if($stmt->execute()){
-        echo "<script>alert('Produto deletado com sucesso!');window.location.href='../produtos.php'</script>";
-    }else{
-        echo "<script>alert('Erro ao excluir produto!');</script>";
+        // Prepare e execute o DELETE
+        $stmt = $pdo->prepare("DELETE FROM produtos WHERE ID_produto = ?");
+        if ($stmt->execute([$id])) {
+            header('Location: ../produtos.php?msg=Produto excluído com sucesso');
+            exit;
+        } else {
+            echo "Erro ao excluir produto.";
+        }
+    } else {
+        echo "ID do produto não informado.";
     }
+} else {
+    echo "Método inválido.";
 }
 ?>

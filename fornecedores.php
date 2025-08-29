@@ -160,8 +160,11 @@ $fornecedores = [];
       cursor:pointer;
       font-weight:500;
       margin-left:6px;
-      font-size:1rem;
+      font-size:0.87rem;
       transition: background 0.3s;
+      max-height:30px;
+      max-width:90px;
+      margin-top:4px;
     }
     .search-container button:hover {
       background:#2980b9;
@@ -290,11 +293,7 @@ $fornecedores = [];
 
 <header>
   <div class="topo" style="align-items: center;">
-    <div class="topo-left">
-      <a href="inicial1.php" title="Voltar" style="color:#fff; text-decoration:none;">
-        <span class="material-icons">arrow_back</span>
-      </a>
-    </div>
+
 
     <div class="topo-center" style="flex-direction: column; align-items: center; flex: 1; margin-top:-5px;" >
       <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.4rem;">FORNECEDORES</h1>
@@ -347,8 +346,8 @@ $fornecedores = [];
               </a>
               <form action="exclusoes/excluir_fornecedor.php" method="POST" style="display:inline;">
                 <input type="hidden" name="id" value="<?= htmlspecialchars($fornecedor['ID_forn']) ?>">
-                <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este fornecedor?')">
-                  <span class="material-icons">delete</span>
+                <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este funcionário?')">
+                   <span class="material-icons">delete</span>
                 </button>
               </form>
             </td>
@@ -388,41 +387,6 @@ $fornecedores = [];
   searchInput.addEventListener('input', doSearch);
 
   // Função para criar botão Undo para exclusão temporária
-  function createUndoButton() {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'undo-btn icon-btn';
-    btn.title = 'Desfazer exclusão';
-    btn.innerHTML = '<span class="material-icons">undo</span>';
-    btn.style.display = 'none';
-    return btn;
-  }
-
-  // Inicializa botões editar e delete
-  function initActionButtons() {
-    document.querySelectorAll('td.action-cell').forEach(cell => {
-      const deleteBtn = cell.querySelector('.delete-btn');
-      if (!deleteBtn) return;
-
-      // Evitar adicionar várias vezes
-      if (cell.querySelector('.undo-btn')) return;
-
-      const undoBtn = createUndoButton();
-      cell.appendChild(undoBtn);
-
-      deleteBtn.addEventListener('click', function(e) {
-        // Confirmação já no HTML com onclick confirm, então aqui só estiliza
-        // Deixa botão deletar escondido e mostra Undo
-        e.preventDefault();
-        const tr = cell.parentElement;
-        tr.classList.add('disabled-row');
-        deleteBtn.style.display = 'none';
-        undoBtn.style.display = 'inline-block';
-
-        // Remove formulário da submissão real para simular exclusão temporária
-        tr.dataset.deleted = 'true';
-      });
-
       undoBtn.addEventListener('click', function() {
         const tr = cell.parentElement;
         tr.classList.remove('disabled-row');
@@ -430,8 +394,7 @@ $fornecedores = [];
         undoBtn.style.display = 'none';
         delete tr.dataset.deleted;
       });
-    });
-  }
+
 
   // Ativa/desativa ações ao carregar e ao clicar no toggle
   document.getElementById("edit-toggle").addEventListener("click", initActionButtons);

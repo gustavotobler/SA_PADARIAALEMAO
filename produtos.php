@@ -145,7 +145,7 @@ tbody tr:hover { background:#f0f4f8; }
         <td data-label="Quantidade"><?= htmlspecialchars($prod['Qntd_produto']) ?></td>
         <td class="action-cell hidden">
           <a href="alterar/alterar_produtos.php?id=<?= $prod['ID_produto'] ?>" title="Editar"><span class="material-icons">edit</span></a>
-          <form action="exclusoes/excluir_produto.php" method="POST" style="display:inline;">
+          <form action="exclusoes/excluir_produtos.php" method="POST" style="display:inline;">
             <input type="hidden" name="id" value="<?= htmlspecialchars($prod['ID_produto']) ?>">
             <button type="submit" onclick="return confirm('Deseja realmente excluir este produto?')" title="Excluir">
               <span class="material-icons">delete</span>
