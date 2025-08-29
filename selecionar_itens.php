@@ -4,397 +4,538 @@ require_once('conexao.php');
 // Buscar produtos
 $stmt = $pdo->prepare("
     SELECT p.*, c.nome_categoria
-    FROM produtos p
-    JOIN categorias c ON p.id_categorias = c.id_categorias
+FROM produtos p
+JOIN categorias c ON p.id_categorias = c.id_categorias
 ");
 $stmt->execute();
 $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Selecionar itens</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
-  /* Reset básico */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Reset básico */
 
-  :root {
-    --sidebar-bg: #2e2e2e;
-    --primary-text: #fff;
-    --hover-bg: #444;
-    --accent: #2a9d8f;
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f5f2ed;
-    color: #333;
-  }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f2ed;
+      color: #333;
+    }
 
-  a { text-decoration: none; color: inherit; }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
 
-  /* Layout principal */
-  .container{
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1rem;
-    padding: 1rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+    /* Layout principal */
+    .container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
 
-  .main-content{
-    margin-left: 240px; /* mesma largura da sidebar */
-    transition: margin-left 0.3s;
-  }
+    /* Área de produtos */
+    .product-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
 
-  /* Sidebar (consolidado) */
-  .sidebar{
-    width: 240px;
-    background: var(--sidebar-bg);
-    height: 100vh;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    padding-top: 20px;
-    transition: width 0.3s;
-  }
+    .controls {
+      display: flex;
+      gap: .5rem;
+    }
 
-  .sidebar.collapsed{ width: 60px; }
+    .controls input[type="text"] {
+      flex: 1;
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-  .sidebar a{
-    display: flex;
-    align-items: center;
-    color: var(--primary-text);
-    text-decoration: none;
-    padding: 15px 20px;
-    white-space: nowrap;
-  }
+    .controls select,
+    .controls button {
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+    }
 
-  .sidebar a:hover{ background: var(--hover-bg); }
+    /* Mini HUD de categorias */
+    .category-hud {
+      display: flex;
+      gap: .5rem;
+      padding: .5rem 0;
+      overflow-x: auto;
+    }
 
-  .sidebar .icon{ margin-right: 8px; font-size: 20px; display: flex; align-items: center; }
-  .sidebar .emoji{ margin-right: 8px; display: inline-block; width: 20px; text-align: center; }
-  .sidebar.collapsed .emoji{ margin-right: 0; width: 100%; }
+    .category-hud button {
+      padding: .5rem 1rem;
+      border: 1px solid #2a9d8f;
+      border-radius: 20px;
+      background: white;
+      color: #2a9d8f;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
 
-  .sidebar.collapsed .text{ display: none; }
-  .sidebar.collapsed .icon{ margin-right: 0; justify-content: center; }
+    .category-hud button.active {
+      background: #2a9d8f;
+      color: white;
+    }
 
-  .sidebar .back-link{ display: flex; align-items: center; transition: all 0.3s ease; }
-  .sidebar .back-link .icon{ font-size: 24px; display:flex; align-items:center; transition: transform 0.3s ease, margin 0.3s ease; margin-right: 8px; }
-  .sidebar.collapsed .back-link{ justify-content: center; }
-  .sidebar.collapsed .back-link .icon{ margin-right: 0; transform: rotate(180deg); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
 
-  /* Toggle button (consolidado) */
-  .toggle-btn{
-    cursor: pointer;
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 20px;
-    color: var(--primary-text);
-    padding: 15px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    line-height: 1;
-  }
+    .card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
 
-  .sidebar.collapsed ~ .main-content{ margin-left: 60px; }
+    .card img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+    }
 
-  /* Área de produtos */
-  .product-panel{ display: flex; flex-direction: column; gap: 1rem; }
+    .card .info {
+      padding: .5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
 
-  .controls{
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-  }
+    .card .info h4 {
+      font-size: .9rem;
+      margin-bottom: .5rem;
+    }
 
-  .controls input[type="text"]{
-    flex: 1;
-    padding: .5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
+    .card .info .price {
+      font-weight: bold;
+      color: #2a9d8f;
+    }
 
-  .controls select, .controls button{
-    padding: .5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-  }
+    /* Sidebar do carrinho */
+    /* Botão de toggle centralizado verticalmente */
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      height: 100vh;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      padding-top: 10px;
+      /* reduz o espaço do topo */
+      transition: width 0.3s;
+    }
 
-  .controls .back-button{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: .5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-  }
+    .toggle-btn {
+      cursor: pointer;
+      text-align: center;
+      font-size: 20px;
+      /* mantém o tamanho do ícone */
+      color: var(--primary-text);
+      margin-bottom: 20px;
+      /* espaço entre toggle e link Voltar */
+      height: 0px;
+      /* altura do botão mais compacta */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+    }
 
-  /* Mini HUD de categorias */
-  .category-hud{
-    display:flex;
-    gap:.5rem;
-    padding:.5rem 0;
-    overflow-x:auto;
-  }
 
-  .category-hud button{
-    padding:.5rem 1rem;
-    border:1px solid var(--accent);
-    border-radius:20px;
-    background:white;
-    color:var(--accent);
-    cursor:pointer;
-    flex-shrink:0;
-  }
 
-  .category-hud button.active{ background:var(--accent); color:#fff; }
 
-  /* Grid de produtos */
-  .grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap:1rem;
-  }
+    .sidebar .toggle-btn {
+      padding: 15px 20px;
+      /* mesmo padding dos links */
+      font-size: 20px;
+      color: #fff;
+      text-align: left;
+    }
 
-  .card{
-    background:white;
-    border-radius:8px;
-    overflow:hidden;
-    box-shadow:0 2px 4px rgba(0,0,0,0.1);
-    display:flex;
-    flex-direction:column;
-  }
+    .sidebar.collapsed {
+      width: 60px;
+    }
 
-  .card img{
-    width:100%;
-    height:100px;
-    object-fit:cover;
-  }
+    .sidebar.collapsed .text {
+      display: none;
+    }
 
-  /* Informações dentro do card (consolidado) */
-  .card .info{
-    padding:.5rem;
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    gap:.5rem;
-  }
+    .cart-items {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
 
-  .card .info h4{ font-size:.9rem; margin-bottom:.25rem; }
-  .card .info .price{ font-weight:bold; color:var(--accent); }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+    }
 
-  .card .info-footer{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
+    .cart-item span:first-child {
+      flex: 1;
+    }
 
-  .add-to-cart{
-    background:var(--accent);
-    color:#fff;
-    border:none;
-    border-radius:4px;
-    padding:.25rem .5rem;
-    cursor:pointer;
-    align-self:flex-end;
-  }
+    .totals {
+      border-top: 1px solid #eee;
+      padding-top: 1rem;
+      margin-bottom: 1rem;
+    }
 
-  .add-to-cart:hover{ background:#237c6f; }
+    .totals div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
 
-  .card .info-footer .add-to-cart{ padding:.25rem .5rem; }
+    .btn-pay {
+      display: block;
+      width: 100%;
+      padding: .75rem;
+      background: #2a9d8f;
+      color: white;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
-  /* Sidebar do carrinho (painel direito) */
-  .cart-sidebar{
-    padding:1rem;
-    background:#fff;
-    border-radius:8px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.06);
-    max-height: calc(100vh - 40px);
-    overflow:auto;
-  }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-  .cart-sidebar h3{ margin-bottom:.75rem; }
+    .cart-item .item-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
 
-  .cart-items{
-    display:flex;
-    flex-direction:column;
-    gap:.75rem;
-    margin-bottom:1rem;
-  }
+    /* Botões de quantidade */
+    .qty-btn {
+      flex: none;
+      background: none;
+      border: 1px solid #2a9d8f;
+      border-radius: 4px;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
 
-  .cart-item{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:.5rem;
-  }
+    .qty {
+      flex: none;
+      width: 36px;
+      /* largura suficiente para até 3 dígitos */
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-  .cart-item .item-info{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    flex:1;
-    min-width:0;
-  }
+    .item-subtotal {
+      font-weight: bold;
+    }
 
-  .item-name{
-    min-width:0;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    display:inline-block;
-  }
+    .card .info {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
 
-  /* Botões de quantidade */
-  .qty-btn{
-    background:none;
-    border:1px solid var(--accent);
-    border-radius:4px;
-    width:28px;
-    height:28px;
-    cursor:pointer;
-    font-size:1rem;
-    line-height:1;
-  }
+    .add-to-cart {
+      background: #2a9d8f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: .25rem .5rem;
+      cursor: pointer;
+      align-self: flex-end;
+    }
 
-  .qty{
-    width:40px;
-    text-align:center;
-    display:inline-block;
-  }
+    .add-to-cart:hover {
+      background: #237c6f;
+    }
 
-  .item-subtotal{ font-weight:bold; margin-left:8px; white-space:nowrap; }
+    /* empilha título + rodapé */
+    .card .info {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
 
-  /* Totais e pagamento */
-  .totals{
-    border-top:1px solid #eee;
-    padding-top:1rem;
-    margin-bottom:1rem;
-  }
+    /* alinha preço à esquerda e o + à direita */
+    .card .info-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  .totals div{ display:flex; justify-content:space-between; margin-bottom:.5rem; }
+    /* estilo do botão + */
+    .card .info-footer .add-to-cart {
+      background: #2a9d8f;
+      color: #fff;
+      border: none;
+      padding: .25rem .5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
-  .btn-pay{
-    display:block;
-    width:100%;
-    padding:.75rem;
-    background:var(--accent);
-    color:white;
-    text-align:center;
-    border-radius:4px;
-    cursor:pointer;
-    border:none;
-  }
+    .shortcut-hud {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: .5rem 1rem;
+      border-radius: 8px;
+      font-size: .9rem;
+      display: flex;
+      gap: 1rem;
+      z-index: 1000;
+    }
 
-  /* Modal (consolidado) */
-  .hidden{ display:none; }
+    .shortcut-hud kbd {
+      background: #333;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: .9rem;
+    }
 
-  .modal-backdrop{
-    position:fixed;
-    inset:0;
-    background: rgba(0,0,0,0.5);
-    z-index:1000;
-  }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
 
-  .modal{
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    background:#fff;
-    padding:1rem;
-    border-radius:8px;
-    z-index:1001;
-    width:360px;
-    max-width:95%;
-    box-shadow:0 8px 30px rgba(0,0,0,0.25);
-    text-align:left;
-  }
+    .controls .back-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: .5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
 
-  #scan-modal .modal-content{ width:300px; text-align:center; }
-  #scan-modal input{
-    width:100%; padding:.5rem; margin:1rem 0; border:1px solid #ccc; border-radius:4px;
-  }
-  #scan-modal button{
-    padding:.5rem 1rem; border:none; background:var(--accent); color:#fff; border-radius:4px; cursor:pointer;
-  }
+    .hidden {
+      display: none;
+    }
 
-  .modal h3{ margin-bottom:.5rem; }
-  .modal .modal-body{ max-height:60vh; overflow:auto; margin-bottom:.75rem; }
-  .modal .modal-footer{ display:flex; gap:.5rem; justify-content:flex-end; }
+    #scan-modal .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
 
-  .btn-secondary{
-    padding:.5rem .75rem; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;
-  }
-  .btn-primary{
-    padding:.5rem .75rem; border-radius:6px; border:none; background:var(--accent); color:white; cursor:pointer;
-  }
+    #scan-modal .modal-content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      width: 300px;
+      text-align: center;
+    }
 
-  /* HUD de atalhos */
-  .shortcut-hud{
-    position:fixed;
-    bottom:10px;
-    right:10px;
-    background:rgba(0,0,0,0.7);
-    color:white;
-    padding:.5rem 1rem;
-    border-radius:8px;
-    font-size:.9rem;
-    display:flex;
-    gap:1rem;
-    z-index:1000;
-  }
+    #scan-modal input {
+      width: 100%;
+      padding: .5rem;
+      margin: 1rem 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-  .shortcut-hud kbd{
-    background:#333;
-    color:#fff;
-    padding:2px 6px;
-    border-radius:4px;
-    font-size:.9rem;
-  }
+    #scan-modal button {
+      padding: .5rem 1rem;
+      border: none;
+      background: #2a9d8f;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
-  /* pequenas helpers */
-  .item-name{ min-width:0; }
+    :root {
+      --sidebar-bg: #2e2e2e;
+      --primary-text: #fff;
+      --hover-bg: #444;
+    }
 
-</style>
+    /* Sidebar fixa padrão */
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      height: 100vh;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      transition: width 0.3s;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    /* Links da sidebar */
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      color: var(--primary-text);
+      text-decoration: none;
+      padding: 15px 20px;
+      white-space: nowrap;
+    }
+
+    .sidebar a:hover {
+      background: var(--hover-bg);
+    }
+
+    .sidebar .icon {
+      margin-right: 8px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar.collapsed .text {
+      display: none;
+    }
+
+    .sidebar.collapsed .icon {
+      margin-right: 0;
+      justify-content: center;
+    }
+
+    /* Botão de toggle */
+    .toggle-btn {
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: var(--primary-text);
+    }
+
+    /* Ajusta emojis */
+    .sidebar .emoji {
+      margin-right: 8px;
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar.collapsed .emoji {
+      margin-right: 0;
+      width: 100%;
+    }
+
+    .sidebar .back-link {
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+      /* anima margem, rotação, etc */
+    }
+
+    .sidebar .back-link .icon {
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease, margin 0.3s ease;
+      /* anima rotação e margem */
+      margin-right: 8px;
+    }
+
+    .sidebar.collapsed .back-link {
+      justify-content: center;
+      /* centraliza quando colapsa */
+    }
+
+    .sidebar.collapsed .back-link .icon {
+      margin-right: 0;
+      transform: rotate(180deg);
+    }
+
+    .main-content {
+      margin-left: 240px;
+      /* mesma largura da sidebar */
+      transition: margin-left 0.3s;
+    }
+
+    .sidebar.collapsed~.main-content {
+      margin-left: 60px;
+      /* quando colapsa */
+    }
+  </style>
 </head>
 
 <body>
   <!-- Sidebar fixa lateral -->
-  <nav class="sidebar" id="sidebar"
-    style="--sidebar-bg:#2e2e2e; color:#fff; position:fixed; height:100vh; width:240px; padding-top:20px;">
+  <nav class="sidebar" id="sidebar">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
-    <a href="inicial1.php" class="back-link"
-      style="display:flex; align-items:center; padding:12px 16px; color:inherit;">
+    <a href="inicial1.php" class="back-link">
       <span class="material-icons icon">arrow_back</span>
       <span class="text">Voltar</span>
     </a>
 
-    <a href="#" onclick="showSection('tabela')"
-      style="display:flex; align-items:center; padding:12px 16px; color:inherit;">
+    <a href="#" onclick="showSection('tabela')">
       <span class="emoji">🍞</span>
       <span class="text">Produtos</span>
     </a>
 
-    <a href="#" onclick="showSection('comanda.php')"
-      style="display:flex; align-items:center; padding:12px 16px; color:inherit;">
+    <a href="#" onclick="showSection('comanda.php')">
       <span class="emoji">🧾</span>
       <span class="text">Comanda</span>
     </a>
+
+    <a href="#" onclick="openPaymentModal(); return false;">
+      <span class="emoji">💳</span>
+      <span class="text">Pagamento</span>
+    </a>
   </nav>
 
+
   <!-- Conteúdo principal -->
-  <main class="main-content" id="mainContent" style="margin-left:240px; padding:18px;">
+  <main class="main-content" id="mainContent">
     <div class="container">
       <!-- Painel de Produtos -->
       <section class="product-panel">
@@ -405,14 +546,14 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <!-- HUD de categorias -->
         <div class="category-hud">
           <button data-cat="all" class="active">Todas</button>
-          <button data-cat="Café">Cafés</button>
-          <button data-cat="Sucos">Sucos</button>
-          <button data-cat="bebidas">Bebidas</button>
           <button data-cat="Pães">Pães</button>
           <button data-cat="Bolos">Bolos</button>
           <button data-cat="Salgados">Salgados</button>
+          <button data-cat="Café">Cafés</button>
           <button data-cat="Laticínios">Laticínios</button>
+          <button data-cat="bebidas">Bebidas</button>
         </div>
+
 
         <!-- Lista de produtos -->
         <div class="grid">
@@ -434,345 +575,418 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <?php else: ?>
             <p>Nenhum produto cadastrado.</p>
           <?php endif; ?>
+
         </div>
       </section>
 
-      <!-- Sidebar do carrinho -->
-      <aside class="cart-sidebar" style="width:320px;">
+      <!-- Sidebar do carrinho (fica na direita por causa do grid) -->
+      <aside class="cart-sidebar">
         <h3>Carrinho</h3>
-        <div class="cart-items" id="cart-items"></div>
-
+        <div class="cart-items"></div>
         <div class="totals">
-          <div><span>Subtotal:</span><span id="subtotal-display">R$ 0,00</span></div>
-          <div><span>Taxa balcão:</span><span id="tax-display" data-tax="0">R$ 0,00</span></div>
+          <div><span>Subtotal:</span><span>R$ 0,00</span></div>
+          <div><span>Taxa balcão:</span><span>R$ 0,00</span></div>
         </div>
-
-        <button class="btn-pay" id="open-payment-modal">Ir para Pagamento</button>
+        <div class="btn-pay" id="btnPay" role="button" tabindex="0">Ir para pagamento → (Total: R$ 0,00)</div>
       </aside>
     </div>
-  </main>
 
-  <!-- Modal de Pagamento -->
-  <div id="payment-modal-backdrop" class="hidden modal-backdrop"></div>
-  <div id="payment-modal" class="hidden modal" role="dialog" aria-modal="true" aria-labelledby="payment-title">
-    <h3 id="payment-title">Finalizar Pagamento</h3>
-    <div class="modal-body">
-      <div id="modal-items-list">
-        <!-- itens serão renderizados aqui -->
-      </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // ELEMENTOS
+        const searchInput = document.querySelector('.controls input[type="text"]');
+        const cards = document.querySelectorAll('.grid .card');
+        const hudButtons = document.querySelectorAll('.category-hud button');
+        const cartItemsContainer = document.querySelector('.cart-items');
+        const totalsSubtotalEl = document.querySelector('.totals div:first-child span:last-child');
+        const totalsTaxEl = document.querySelector('.totals div:nth-child(2) span:last-child');
+        const btnPay = document.getElementById('btnPay') || document.querySelector('.btn-pay');
 
-      <div style="margin-top:8px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><strong>Subtotal:</strong><span
-            id="modal-subtotal">R$ 0,00</span></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><strong>Taxa:</strong><span
-            id="modal-tax">R$ 0,00</span></div>
-        <div style="display:flex; justify-content:space-between; font-size:1.1rem; margin-top:8px;">
-          <strong>Total:</strong><span id="modal-total">R$ 0,00</span></div>
-      </div>
+        // FORMATAÇÃO DE MOEDA
+        function formatReal(v) {
+          const n = Number(v) || 0;
+          return 'R$ ' + n.toFixed(2).replace('.', ',');
+        }
 
-      <div style="margin-top:10px;">
-        <label for="payment-method">Meio de pagamento</label>
-        <select id="payment-method" style="width:100%; padding:.5rem; margin-top:6px;">
-          <option value="dinheiro">Dinheiro</option>
-          <option value="cartao">Cartão</option>
-          <option value="pix">PIX</option>
-        </select>
-      </div>
+        // 3) ATUALIZA TODOS OS TOTAIS (agora suporta decimal)
+        function updateTotals() {
+          let sub = 0;
+          cartItemsContainer.querySelectorAll('.cart-item').forEach(item => {
+            const price = parseFloat(item.dataset.price) || 0;
+            const qty = parseFloat(item.querySelector('.qty').textContent) || 0;
+            const itemSub = price * qty;
+            item.querySelector('.item-subtotal').textContent = formatReal(itemSub);
+            sub += itemSub;
+          });
+          totalsSubtotalEl.textContent = formatReal(sub);
 
-      <div id="payment-message" style="margin-top:10px; color:green; display:none;"></div>
-    </div>
+          const tax = parseFloat(totalsTaxEl.dataset.tax || 0) || 0;
+          totalsTaxEl.textContent = formatReal(tax);
 
-    <div class="modal-footer">
-      <button class="btn-secondary" id="close-payment-modal">Cancelar</button>
-      <button class="btn-primary" id="confirm-payment">Confirmar pagamento</button>
-    </div>
-  </div>
+          const total = sub + tax;
+          if (btnPay) {
+            btnPay.textContent = `Ir para pagamento → (Total: ${formatReal(total)})`;
+            btnPay.dataset.total = total.toFixed(2); // salva valor numérico
+          }
+        }
 
-  <!-- (Opcional) Modal de Scan — CSS existe; se quiser habilitar inclua marcação similar -->
-  <!-- Observação: este markup de scan-modal não estava no original — mantive referências JS assumindo que exista -->
-  <div id="scan-modal" class="hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <h3>Scanner</h3>
-      <input id="scan-input" placeholder="Escaneie ou digite o código" />
-      <div style="display:flex; gap:.5rem; justify-content:center;">
-        <button id="close-scan">Fechar</button>
-      </div>
-    </div>
-  </div>
+        // FILTRO DE BUSCA
+        if (searchInput) {
+          searchInput.addEventListener('input', () => {
+            const term = searchInput.value.toLowerCase();
+            const activeCat = document.querySelector('.category-hud button.active').dataset.cat;
+            cards.forEach(card => {
+              const title = card.querySelector('h4').textContent.toLowerCase();
+              const match = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
+              card.style.display = match ? '' : 'none';
+            });
+          });
+        }
 
-  <script>
-    // ---------- UTILITÁRIOS ----------
-    function formatReal(v) {
-      return 'R$ ' + v.toFixed(2).replace('.', ',');
-    }
-    function parseRealString(str) {
-      // Recebe strings tipo "R$ 1.234,56" ou "1.234,56"
-      if (!str) return 0;
-      let s = String(str).replace('R$', '').trim();
-      // remove pontos de milhar
-      s = s.replace(/\./g, '').replace(',', '.');
-      const n = parseFloat(s);
-      return isNaN(n) ? 0 : n;
-    }
+        // FILTRO DE CATEGORIA
+        hudButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            hudButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (searchInput) searchInput.dispatchEvent(new Event('input'));
+          });
+        });
 
-    // ---------- ESTADO DO CARRINHO ----------
-    const cart = []; // array de objetos {name, price, qty}
+        // BOTÃO “＋” NOS CARDS (pede peso para produtos por kg)
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const name = btn.dataset.name;
+            const price = parseFloat(btn.dataset.price) || 0;
+            let qty = 1;
 
-    // Elements
-    const cartItemsContainer = document.getElementById('cart-items');
-    const subtotalDisplay = document.getElementById('subtotal-display');
-    const taxDisplay = document.getElementById('tax-display');
-    const openPaymentBtn = document.getElementById('open-payment-modal');
+            if (btn.dataset.unit === 'kg') {
+              const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
+              if (!input) return;
+              qty = parseFloat(input.replace(',', '.'));
+              if (isNaN(qty) || qty <= 0) {
+                alert('Peso inválido!');
+                return;
+              }
+            }
 
-    // Taxa fixa — você pode ajustar dinamicamente
-    const TAX_VALUE = parseFloat(taxDisplay.dataset.tax || '0');
+            let existing = Array.from(cartItemsContainer.children)
+              .find(el => el.querySelector('.item-name').textContent === name);
 
-    // Atualiza visual do carrinho e totals
-    function renderCart() {
-      cartItemsContainer.innerHTML = '';
-      let sub = 0;
-      cart.forEach((it, idx) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'cart-item';
-        itemEl.dataset.index = idx;
-        itemEl.innerHTML = `
+            if (existing) {
+              const qtyEl = existing.querySelector('.qty');
+              const newQty = parseFloat(qtyEl.textContent) + qty;
+              qtyEl.textContent = newQty.toFixed(2);
+            } else {
+              const div = document.createElement('div');
+              div.className = 'cart-item';
+              div.dataset.price = price;
+              div.innerHTML = `
           <div class="item-info">
             <button class="qty-btn decrease">−</button>
-            <span class="qty">${(+it.qty).toFixed(2)}</span>
+            <span class="qty">${qty.toFixed(2)}</span>
             <button class="qty-btn increase">＋</button>
-            <span class="item-name" title="${it.name}">${it.name}</span>
+            <span class="item-name">${name}</span>
           </div>
-          <span class="item-subtotal">${formatReal(it.price * it.qty)}</span>
+          <span class="item-subtotal">${formatReal(price * qty)}</span>
         `;
-        cartItemsContainer.appendChild(itemEl);
-        sub += it.price * it.qty;
-      });
-
-      subtotalDisplay.textContent = formatReal(sub);
-      taxDisplay.textContent = formatReal(TAX_VALUE);
-      openPaymentBtn.textContent = `Ir para pagamento → (Total: ${formatReal(sub + TAX_VALUE)})`;
-    }
-
-    // Adiciona item (ou incrementa)
-    function addToCart(name, price, qty = 1) {
-      // procura pelo mesmo nome
-      const existing = cart.find(i => i.name === name);
-      if (existing) {
-        existing.qty = +(existing.qty + qty).toFixed(2);
-      } else {
-        cart.push({ name, price: +price, qty: +qty });
-      }
-      renderCart();
-    }
-
-    // Remove item por índice
-    function removeCartIndex(index) {
-      cart.splice(index, 1);
-      renderCart();
-    }
-
-    // ---------- INTERAÇÕES PRINCIPAIS ----------
-    document.addEventListener('DOMContentLoaded', () => {
-      // Elements iniciais
-      const searchInput = document.querySelector('.controls input[type="text"]');
-      const cards = document.querySelectorAll('.grid .card');
-      const hudButtons = document.querySelectorAll('.category-hud button');
-
-      // Filtro busca
-      searchInput.addEventListener('input', () => {
-        const term = searchInput.value.toLowerCase();
-        const activeCat = document.querySelector('.category-hud button.active').dataset.cat;
-        cards.forEach(card => {
-          const title = card.querySelector('h4').textContent.toLowerCase();
-          const match = title.includes(term) && (activeCat === 'all' || card.dataset.category === activeCat);
-          card.style.display = match ? '' : 'none';
-        });
-      });
-
-      // Filtro categoria
-      hudButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          hudButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          searchInput.dispatchEvent(new Event('input'));
-        });
-      });
-
-      // Botões + nos cards
-      document.querySelectorAll('.add-to-cart').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const name = btn.dataset.name;
-          const price = parseFloat(btn.dataset.price);
-          let qty = 1;
-
-          if (btn.dataset.unit === 'kg') {
-            const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
-            if (!input) return;
-            qty = parseFloat(input.replace(',', '.'));
-            if (isNaN(qty) || qty <= 0) { alert('Peso inválido!'); return; }
-          }
-          addToCart(name, price, qty);
-        });
-      });
-
-      // Controle + / - clicando no container do carrinho
-      cartItemsContainer.addEventListener('click', (e) => {
-        const itemEl = e.target.closest('.cart-item');
-        if (!itemEl) return;
-        const idx = parseInt(itemEl.dataset.index, 10);
-        if (e.target.matches('.increase')) {
-          cart[idx].qty = +(cart[idx].qty + 1).toFixed(2);
-          renderCart();
-        } else if (e.target.matches('.decrease')) {
-          cart[idx].qty = +(cart[idx].qty - 1).toFixed(2);
-          if (cart[idx].qty <= 0.0001) removeCartIndex(idx);
-          else renderCart();
-        }
-      });
-
-      // Scan input (se existir)
-      const scanInput = document.getElementById('scan-input');
-      if (scanInput) {
-        scanInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            const code = e.target.value.trim();
-            if (code === '1234') {
-              addToCart('Doritos', 7.50, 1);
+              cartItemsContainer.appendChild(div);
             }
-            e.target.value = '';
+
+            updateTotals();
+          });
+        });
+
+        // CONTROLE DE +/− NA SIDEBAR
+        cartItemsContainer.addEventListener('click', e => {
+          const itemEl = e.target.closest('.cart-item');
+          if (!itemEl) return;
+
+          if (e.target.matches('.increase')) {
+            const qtyEl = itemEl.querySelector('.qty');
+            const newQty = parseFloat(qtyEl.textContent) + 1;
+            qtyEl.textContent = newQty.toFixed(2);
+            updateTotals();
+          }
+          if (e.target.matches('.decrease')) {
+            const qtyEl = itemEl.querySelector('.qty');
+            const newQty = parseFloat(qtyEl.textContent) - 1;
+            if (newQty <= 0) itemEl.remove();
+            else qtyEl.textContent = newQty.toFixed(2);
+            updateTotals();
           }
         });
 
-        document.getElementById('close-scan')?.addEventListener('click', () => {
-          document.getElementById('scan-modal').classList.add('hidden');
-        });
-      }
+        // INSERIR PRODUTO POR CÓDIGO ESCANEADO
+        const scanInput = document.getElementById('scan-input');
+        if (scanInput) {
+          scanInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              const code = e.target.value.trim();
 
-      // Atualiza inicial
-      renderCart();
+              // Código para "Doritos" (exemplo)
+              if (code === '1234') {
+                const name = 'Doritos';
+                const price = 7.50;
+                const qty = 1;
 
-      // --- EVENTOS DO MODAL DE PAGAMENTO ---
-      const paymentModal = document.getElementById('payment-modal');
-      const paymentBackdrop = document.getElementById('payment-modal-backdrop');
-      const openPaymentModalBtn = document.getElementById('open-payment-modal');
-      const closePaymentModalBtn = document.getElementById('close-payment-modal');
-      const confirmPaymentBtn = document.getElementById('confirm-payment');
-      const modalItemsList = document.getElementById('modal-items-list');
-      const modalSubtotal = document.getElementById('modal-subtotal');
-      const modalTax = document.getElementById('modal-tax');
-      const modalTotal = document.getElementById('modal-total');
-      const paymentMessage = document.getElementById('payment-message');
-      const paymentMethodEl = document.getElementById('payment-method');
+                let existing = Array.from(cartItemsContainer.children)
+                  .find(el => el.querySelector('.item-name').textContent === name);
 
-      function openPaymentModal() {
-        if (cart.length === 0) {
-          alert('O carrinho está vazio!');
-          return;
+                if (existing) {
+                  const qtyEl = existing.querySelector('.qty');
+                  const newQty = parseFloat(qtyEl.textContent) + qty;
+                  qtyEl.textContent = newQty.toFixed(2);
+                } else {
+                  const div = document.createElement('div');
+                  div.className = 'cart-item';
+                  div.dataset.price = price;
+                  div.innerHTML = `
+              <div class="item-info">
+                <button class="qty-btn decrease">−</button>
+                <span class="qty">${qty.toFixed(2)}</span>
+                <button class="qty-btn increase">＋</button>
+                <span class="item-name">${name}</span>
+              </div>
+              <span class="item-subtotal">${formatReal(price * qty)}</span>
+            `;
+                  cartItemsContainer.appendChild(div);
+                }
+
+                updateTotals();
+              }
+
+              e.target.value = '';
+            }
+          });
         }
 
-        // monta a lista
-        modalItemsList.innerHTML = '';
-        let sub = 0;
-        cart.forEach(i => {
-          const row = document.createElement('div');
-          row.style.display = 'flex';
-          row.style.justifyContent = 'space-between';
-          row.style.marginBottom = '6px';
-          row.innerHTML = `<span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i.name} × ${(+i.qty).toFixed(2)}</span><span>${formatReal(i.price * i.qty)}</span>`;
-          modalItemsList.appendChild(row);
-          sub += i.price * i.qty;
+        // Fecha scan modal (se existir)
+        const btnCloseScan = document.getElementById('close-scan');
+        if (btnCloseScan) {
+          btnCloseScan.addEventListener('click', () => {
+            const sm = document.getElementById('scan-modal');
+            if (sm) sm.classList.add('hidden');
+          });
+        }
+
+        // --- MODAL DE PAGAMENTO (cria dinamicamente se não existir) ---
+        let paymentModal = document.getElementById('payment-modal');
+        if (!paymentModal) {
+          paymentModal = document.createElement('div');
+          paymentModal.id = 'payment-modal';
+          paymentModal.className = 'hidden';
+          paymentModal.innerHTML = `
+      <div class="modal-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="payment-title"
+           style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:1.2rem;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:1001;width:320px;max-width:90%;">
+        <h3 id="payment-title" style="margin-bottom:8px;">Confirmar pagamento</h3>
+        <div>
+          <div style="margin-bottom:8px;"><strong>Total:</strong> <span id="pm-total">R$ 0,00</span></div>
+          <label style="display:block; margin-top:6px; font-size:0.95rem;">
+            Método de pagamento:
+            <select id="pm-method" style="width:100%; padding:.45rem; margin-top:6px;">
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao">Cartão</option>
+              <option value="pix">PIX</option>
+            </select>
+          </label>
+
+          <label id="pm-paid-label" style="display:block; margin-top:10px; font-size:0.95rem;">
+            Valor recebido:
+            <input id="pm-paid" type="text" placeholder="0,00" style="width:100%; padding:.4rem; margin-top:6px;" />
+          </label>
+
+          <div id="pm-change-wrap" style="margin-top:8px; display:none;">
+            <strong>Troco:</strong> <span id="pm-change">R$ 0,00</span>
+          </div>
+
+          <div style="display:flex; gap:.5rem; margin-top:12px; justify-content:flex-end;">
+            <button id="pm-cancel" style="padding:.45rem .8rem; border-radius:6px; background:#ddd; border:none; cursor:pointer;">Cancelar</button>
+            <button id="pm-confirm" style="padding:.45rem .8rem; border-radius:6px; background:#2a9d8f; color:#fff; border:none; cursor:pointer;">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    `;
+          document.body.appendChild(paymentModal);
+        }
+
+        // refs modal
+        const pmTotalEl = document.getElementById('pm-total');
+        const pmMethod = document.getElementById('pm-method');
+        const pmPaid = document.getElementById('pm-paid');
+        const pmPaidLabel = document.getElementById('pm-paid-label');
+        const pmChangeWrap = document.getElementById('pm-change-wrap');
+        const pmChange = document.getElementById('pm-change');
+        const pmCancel = document.getElementById('pm-cancel');
+        const pmConfirm = document.getElementById('pm-confirm');
+        const pmBackdrop = paymentModal.querySelector('.modal-backdrop');
+
+        function openPaymentModal() {
+          const total = parseFloat(btnPay.dataset.total || '0');
+          pmTotalEl.textContent = formatReal(total);
+          pmPaid.value = '';
+          pmChange.textContent = formatReal(0);
+          pmChangeWrap.style.display = 'none';
+          paymentModal.classList.remove('hidden');
+          pmMethod.focus();
+        }
+
+        function closePaymentModal() {
+          paymentModal.classList.add('hidden');
+        }
+
+        function updatePaidFieldVisibility() {
+          const method = pmMethod.value;
+          if (method === 'dinheiro') {
+            pmPaidLabel.style.display = 'block';
+            pmChangeWrap.style.display = pmPaid.value ? '' : 'none';
+          } else {
+            pmPaidLabel.style.display = 'none';
+            pmChangeWrap.style.display = 'none';
+          }
+        }
+
+        pmPaid.addEventListener('input', () => {
+          const raw = pmPaid.value.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+          const paid = parseFloat(raw || '0');
+          const total = parseFloat(btnPay.dataset.total || '0');
+          if (!isNaN(paid)) {
+            const change = paid - total;
+            pmChange.textContent = formatReal(change > 0 ? change : 0);
+            pmChangeWrap.style.display = change > 0 ? '' : 'none';
+          } else {
+            pmChange.textContent = formatReal(0);
+            pmChangeWrap.style.display = 'none';
+          }
         });
 
-        modalSubtotal.textContent = formatReal(sub);
-        modalTax.textContent = formatReal(TAX_VALUE);
-        modalTotal.textContent = formatReal(sub + TAX_VALUE);
+        pmMethod.addEventListener('change', updatePaidFieldVisibility);
+        pmCancel.addEventListener('click', closePaymentModal);
+        if (pmBackdrop) pmBackdrop.addEventListener('click', closePaymentModal);
 
-        paymentMessage.style.display = 'none';
-        paymentMessage.textContent = '';
+        // Confirmar pagamento (sem enviar para pagamento.php) — simula confirmação e limpa carrinho
+        pmConfirm.addEventListener('click', () => {
+          const total = parseFloat(btnPay.dataset.total || '0');
 
-        paymentBackdrop.classList.remove('hidden');
-        paymentModal.classList.remove('hidden');
-      }
+          // coleta itens do carrinho
+          const itens = [];
+          document.querySelectorAll('.cart-item').forEach(item => {
+            itens.push({
+              nome: item.querySelector('.item-name').textContent,
+              qtd: item.querySelector('.qty').textContent,
+              preco: item.dataset.price
+            });
+          });
 
-      function closePaymentModal() {
-        paymentBackdrop.classList.add('hidden');
-        paymentModal.classList.add('hidden');
-      }
-
-      openPaymentModalBtn.addEventListener('click', openPaymentModal);
-      closePaymentModalBtn.addEventListener('click', closePaymentModal);
-      paymentBackdrop.addEventListener('click', closePaymentModal);
-
-      // Confirmar pagamento -> envia para pagamento.php via POST (fetch)
-      confirmPaymentBtn.addEventListener('click', () => {
-        if (cart.length === 0) { alert('Carrinho vazio'); return; }
-
-        // prepara dados
-        const itens = cart.map(it => ({ nome: it.name, qtd: it.qty, preco: it.price }));
-        const subtotal = parseRealString(modalSubtotal.textContent);
-        const total = parseRealString(modalTotal.textContent);
-        const metodo = paymentMethodEl.value;
-
-        // bloqueia botão
-        confirmPaymentBtn.disabled = true;
-        confirmPaymentBtn.textContent = 'Enviando...';
-
-        // envia para pagamento.php (espera texto/JSON de retorno)
-        fetch('pagamento.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-          body: JSON.stringify({ itens, subtotal, total, metodo })
-        }).then(async res => {
-          confirmPaymentBtn.disabled = false;
-          confirmPaymentBtn.textContent = 'Confirmar pagamento';
-          if (!res.ok) {
-            const txt = await res.text().catch(() => 'Erro no servidor');
-            paymentMessage.style.display = 'block';
-            paymentMessage.style.color = 'red';
-            paymentMessage.textContent = 'Erro: ' + txt;
+          if (itens.length === 0) {
+            alert("O carrinho está vazio!");
+            closePaymentModal();
             return;
           }
-          const text = await res.text().catch(() => '');
-          paymentMessage.style.display = 'block';
-          paymentMessage.style.color = 'green';
-          paymentMessage.textContent = text || 'Pagamento registrado com sucesso.';
 
-          // limpar carrinho local (se desejar)
-          cart.length = 0;
-          renderCart();
+          const method = pmMethod.value;
+          if (method === 'dinheiro') {
+            const raw = pmPaid.value.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+            const paid = parseFloat(raw || '0');
+            if (isNaN(paid) || paid < total) {
+              alert('Valor recebido insuficiente.');
+              return;
+            }
+          }
 
-          // atualiza modal valores para zero
-          modalItemsList.innerHTML = '';
-          modalSubtotal.textContent = 'R$ 0,00';
-          modalTax.textContent = 'R$ 0,00';
-          modalTotal.textContent = 'R$ 0,00';
+          // Ação: simular sucesso — limpar carrinho e atualizar totais
+          cartItemsContainer.innerHTML = '';
+          updateTotals();
+          closePaymentModal();
+          alert('Pagamento confirmado com sucesso!');
 
-          // opcional: fechar modal após 2s
-          setTimeout(closePaymentModal, 1500);
-        }).catch(err => {
-          confirmPaymentBtn.disabled = false;
-          confirmPaymentBtn.textContent = 'Confirmar pagamento';
-          paymentMessage.style.display = 'block';
-          paymentMessage.style.color = 'red';
-          paymentMessage.textContent = 'Erro de conexão: ' + err.message;
+          // Se quiser gravar no servidor, descomente e ajuste o endpoint:
+          /*
+          fetch("/api/salvar_pedido.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ itens, total, metodo: method })
+          })
+          .then(r => r.json())
+          .then(resp => { console.log(resp); })
+          .catch(err => console.error(err));
+          */
         });
+
+        // abrir modal pelo botão
+        if (btnPay) {
+          btnPay.addEventListener('click', (e) => {
+            openPaymentModal();
+          });
+        }
+
+        // Atalhos globais F1/F2 (F1 abre scan modal, F2 abre modal de pagamento)
+        window.addEventListener('keydown', function (e) {
+          if (e.key === 'F1') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const scanModal = document.getElementById('scan-modal');
+            const scanInputEl = document.getElementById('scan-input');
+            if (scanModal) {
+              scanModal.classList.remove('hidden');
+              if (scanInputEl) scanInputEl.focus();
+            }
+          }
+          if (e.key === 'F2') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            openPaymentModal();
+          }
+        }, true);
+
+        // inicial
+        updateTotals();
       });
 
-      // Atalho teclado: F1 abre scanner (se houver), F2 abre modal de pagamento
-      window.addEventListener('keydown', function (e) {
-        if (e.key === 'F1') {
-          e.preventDefault();
-          document.getElementById('scan-modal')?.classList.remove('hidden');
-          document.getElementById('scan-input')?.focus();
-        }
-        if (e.key === 'F2') {
-          e.preventDefault();
-          openPaymentModal();
-        }
-      }, true);
-    });
-  </script>
+      // Sidebar toggle (mantive tua função)
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      function toggleSidebar() {
+        if (sidebar) sidebar.classList.toggle('collapsed');
+        if (mainContent) mainContent.classList.toggle('collapsed');
+      }
+    </script>
+
+    <!-- MODAL DE PAGAMENTO -->
+    <div id="payment-modal" class="hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="payment-title">
+        <h3 id="payment-title">Confirmar pagamento</h3>
+
+        <div style="margin:8px 0;">
+          <div><strong>Total:</strong> <span id="pm-total">R$ 0,00</span></div>
+          <label style="display:block; margin-top:8px;">
+            Método de pagamento:
+            <select id="pm-method" style="width:100%; padding:.4rem; margin-top:4px;">
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao">Cartão</option>
+              <option value="pix">PIX</option>
+            </select>
+          </label>
+
+          <label id="pm-paid-label" style="display:block; margin-top:8px;">
+            Valor recebido:
+            <input id="pm-paid" type="text" placeholder="0,00" style="width:100%; padding:.4rem; margin-top:4px;" />
+          </label>
+
+          <div id="pm-change-wrap" style="margin-top:8px; display:none;">
+            <strong>Troco:</strong> <span id="pm-change">R$ 0,00</span>
+          </div>
+
+          <div style="display:flex; gap:.5rem; margin-top:12px; justify-content:flex-end;">
+            <button id="pm-cancel"
+              style="padding:.5rem .8rem; border-radius:6px; background:#ddd; border:none; cursor:pointer;">Cancelar</button>
+            <button id="pm-confirm"
+              style="padding:.5rem .8rem; border-radius:6px; background:#2a9d8f; color:#fff; border:none; cursor:pointer;">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 </body>
 
