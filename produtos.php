@@ -43,7 +43,7 @@ header { background: linear-gradient(90deg,#2c3e50,#34495e); color:#fff; padding
 header .search-container { display:flex; align-items:center; background:#fff; border-radius:25px; padding:0 10px; box-shadow:0 1px 3px rgba(0,0,0,0.2); max-width:350px; margin:0 auto; }
 header .search-container span { color:#888; }
 header .search-container input { border:none; outline:none; padding:0.5rem; flex:1; }
-header .search-container button { background:#3498db; border:none; padding:6px 14px; border-radius:20px; color:#fff; cursor:pointer; font-weight:500; margin-left:6px; transition:background 0.2s; }
+header .search-container button { background:#3498db; border:none; padding:6px 14px; border-radius:20px; color:#fff; cursor:pointer; font-weight:500; margin-left:48px; transition:background 0.2s; }
 header .search-container button:hover { background:#2980b9; }
 
 /* ===== Botões ===== */
@@ -86,7 +86,7 @@ tbody tr:hover { background:#f0f4f8; }
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-logo" id="sidebar-logo">
     <img src="img/Logopadaria.png" alt="Padaria do Alemão">
-    <span>Padaria do Alemão</span>
+    <span style="color:white;">Padaria do Alemão</span>
   </div>
   <a href="produtos.php" class="menu-item"><span class="material-icons menu-icon">bakery_dining</span><span class="text">Produtos</span></a>
   <a href="funcionarios.php" class="menu-item"><span class="material-icons menu-icon">person</span><span class="text">Funcionários</span></a>

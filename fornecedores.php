@@ -18,192 +18,189 @@ if ($_SESSION['nivel'] != 1) {
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Fornecedores</title>
-  <!-- Estilo da página -->
-  <link rel="stylesheet" href="css/site3.css">
-  <!-- Ícones do Material Icons -->
+  <title>Fornecedores - Padaria do Alemão</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    /* ===== Reset e base ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+    body { background:#f5f7fa; color:#333; line-height:1.5; }
+
+    /* ===== Sidebar ===== */
+    .sidebar { width:220px; background:#2c3e50; position:fixed; top:0; left:0; bottom:0; padding-top:1rem; overflow:hidden; }
+    .sidebar-logo { display:flex; align-items:center; gap:10px; padding:0 1rem 1rem; cursor:pointer; }
+    .sidebar-logo img { width:40px; }
+    .menu-item { display:flex; align-items:center; gap:10px; padding:0.8rem 1rem; color:#fff; text-decoration:none; transition:background 0.2s; }
+    .menu-item:hover { background:rgba(255,255,255,0.1); }
+
+    /* ===== Topo/Header ===== */
+    header { background: linear-gradient(90deg, #2c3e50, #34495e); color:#fff; padding:0.8rem 1.5rem; box-shadow:0 2px 6px rgba(0,0,0,0.2); margin-left:220px; }
+    .topo { display:flex; align-items:center; justify-content:space-between; }
+    .topo-center { text-align:center; flex:1; }
+    .topo-center h1 { font-size:1.5rem; font-weight:600; margin-bottom:0.4rem; letter-spacing:1px; }
+
+    /* ===== Botões ===== */
+    .icon-btn { background:none; border:none; cursor:pointer; font-size:22px; transition:0.2s; }
+    .icon-btn:hover { color:#2980b9; transform:scale(1.2); }
+    .add-btn { background:#2ecc71; border-radius:50%; padding:8px; color:#fff; display:inline-block; }
+    .add-btn:hover { background:#27ae60; }
+    .edit-toggle { color:#fff; cursor:pointer; font-size:26px; transition:0.2s; }
+    .edit-toggle:hover { transform:rotate(20deg); }
+
+    /* ===== Search ===== */
+    .search-container { background:#fff; display:flex; align-items:center; border-radius:25px; padding:0 10px; box-shadow:0 1px 3px rgba(0,0,0,0.2); max-width:350px; margin:0 auto 20px; }
+    .search-container span { color:#888; }
+    .search-container input { border:none; outline:none; padding:0.5rem; flex:1; }
+    .search-container button { background:#3498db; border:none; padding:6px 14px; border-radius:20px; color:#fff; cursor:pointer; font-weight:500; margin-left:6px; transition:background 0.2s; }
+    .search-container button:hover { background:#2980b9; }
+
+    /* ===== Main/Tabela ===== */
+    main { padding:2rem; margin-left:220px; }
+    table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
+    thead { background:#34495e; color:#fff; }
+    thead th { padding:14px 10px; text-align:left; font-size:0.9rem; font-weight:600; }
+    tbody td { padding:12px 10px; border-bottom:1px solid #eee; font-size:0.9rem; }
+    tbody tr:nth-child(even) { background:#f9fbfd; }
+    tbody tr:hover { background:#f0f4f8; }
+    .action-cell { text-align:center; }
+    .delete-btn { color:#e74c3c; }
+    .delete-btn:hover { color:#c0392b; }
+    .hidden { display:none; }
+    .disabled-row { opacity: 0.5; }
+
+    /* ===== Responsividade ===== */
+    @media(max-width:768px){
+      header { margin-left:0; }
+      main { margin-left:0; padding:1rem; }
+      .search-container input { width:100px; }
+      table { font-size:0.8rem; }
+      thead { display:none; }
+      tbody td { display:block; text-align:right; padding:8px; }
+      tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
+    }
+  </style>
 </head>
 <body>
-  <!-- Cabeçalho da página -->
-  <header>
-    <div class="topo">
-      <!-- Lado esquerdo: botão de voltar -->
-      <div class="topo-left">
-        <a href="inicial1.php">
-          <span class="material-icons icon" title="Voltar">arrow_back</span>
-        </a>
-      </div>
 
-      <!-- Centro: título e barra de pesquisa -->
-      <div class="topo-center">
-        <h1>FORNECEDORES</h1>
-        <form action="pesquisar/buscar_fornecedor.php" method="POST">
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="img/Logopadaria.png" alt="Padaria do Alemão">
+    <span style="color:white;">Padaria do Alemão</span>
+  </div>
+  <a href="produtos.php" class="menu-item"><span class="material-icons">bakery_dining</span><span>Produtos</span></a>
+  <a href="funcionarios.php" class="menu-item"><span class="material-icons">person</span><span>Funcionários</span></a>
+  <a href="fornecedores.php" class="menu-item"><span class="material-icons">work</span><span>Fornecedores</span></a>
+  <a href="vendas.php" class="menu-item"><span class="material-icons">analytics</span><span>Vendas</span></a>
+  <a href="pagamento.php" class="menu-item"><span class="material-icons">shopping_cart</span><span>Pagamento</span></a>
+  <a href="inicial1.php"  class="menu-item">Tela principal</a>
+</nav>
+
+<header>
+  <div class="topo">
+    <div class="topo-center">
+      <h1>FORNECEDORES</h1>
+      <form action="pesquisar/buscar_fornecedor.php" method="POST" style="margin:0;">
         <div class="search-container">
           <span class="material-icons">search</span>
-          <input type="text" id="search-input" placeholder="Pesquisar...">
+          <input type="text" id="search-input" placeholder="Pesquisar..." name="search">
           <button id="search-btn" type="button">Pesquisar</button>
         </div>
-        </form>
-      </div>
-
-      <!-- Lado direito: botão de adicionar e de alternar ações -->
-      <div class="topo-right">
-        <!-- Botão de adicionar fornecedor (oculto por padrão) -->
-        <a href="cadforn.php" id="add-button" class="hidden">
-          <button class="icon-btn add-btn" title="Adicionar">
-            <span class="material-icons">add</span>
-          </button>
-        </a>
-        <!-- Botão para mostrar/ocultar ações -->
-        <span class="material-icons icon edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
-      </div>
+      </form>
     </div>
-  </header>
+    <div class="topo-right">
+      <a href="cadforn.php" id="add-button" class="hidden">
+        <button class="icon-btn add-btn" title="Adicionar">
+          <span class="material-icons">add</span>
+        </button>
+      </a>
+      <span class="material-icons edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
+    </div>
+  </div>
+</header>
 
-  <!-- Conteúdo principal: tabela de fornecedores -->
-  <main>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Fornecedores</th>
-          <th>Produto fornecido</th>
-          <th>Reabastecimento</th>
-          <!-- Cabeçalho das ações (oculto por padrão) -->
-          <th class="action-header hidden">Ações</th>
-        </tr>
-      </thead>
-      <tbody id="supplier-table-body">
-        <!-- Exemplo de linha de fornecedor -->
-        <tr>
-          <td>FR01</td><td>CARLINHOS</td><td>Trigo, leite...</td><td>12/03/2025</td>
-          <!-- Coluna de ações (oculta por padrão) -->
-          <td class="action-cell hidden">
-            <div class="action-icons">
-              <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
-              <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
-              <button class="undo-btn"><span class="material-icons">undo</span></button>
-          </td>
-        </tr>
-        <!-- Outras linhas seguem o mesmo padrão... -->
-        <tr>
-          <td>FR02</td><td>BOLOS MAIDEN</td><td>Bolos, açúcares...</td><td>08/03/2025</td>
-          <td class="action-cell hidden">
-            <div class="action-icons">
-              <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
-              <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
-              <button class="undo-btn"><span class="material-icons">undo</span></button>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>FR03</td><td>DOCES MARIAS</td><td>Leite condensado</td><td>28/03/2025</td>
-          <td class="action-cell hidden">
-            <div class="action-icons">
-              <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
-              <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
-              <button class="undo-btn"><span class="material-icons">undo</span></button>
-          </td>
-        </tr>
-        <tr>
-          <td>FR04</td><td>DONA BENTA</td><td>Chocolates, tortas...</td><td>08/03/2025</td>
-          <td class="action-cell hidden">
-            <div class="action-icons">
-              <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
-              <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
-              <button class="undo-btn"><span class="material-icons">undo</span></button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </main>
-  <!-- Scripts JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const toggleBtn = document.querySelector('.edit-toggle');
-      const actionHeader = document.querySelector('th.action-header');
-      const tableBody = document.getElementById('supplier-table-body');
-      const searchBtn = document.getElementById('search-btn');
-      const searchInput = document.getElementById('search-input');
-      const addButton = document.getElementById('add-button');
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fornecedor</th>
+        <th>Produto fornecido</th>
+        <th>Reabastecimento</th>
+        <th class="action-header hidden">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="supplier-table-body">
+      <tr>
+        <td data-label="ID">FR01</td>
+        <td data-label="Fornecedor">CARLINHOS</td>
+        <td data-label="Produto fornecido">Trigo, leite...</td>
+        <td data-label="Reabastecimento">12/03/2025</td>
+        <td class="action-cell hidden">
+          <a href="alterar/alterar_fornecedor.php?id=FR01" class="icon-btn" title="Editar">
+            <span class="material-icons">edit</span>
+          </a>
+          <form action="exclusoes/excluir_fornecedores.php" method="POST" style="display:inline;">
+            <input type="hidden" name="id" value="FR01">
+            <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este fornecedor?')">
+              <span class="material-icons">delete</span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      <!-- Outras linhas de exemplo -->
+      <tr>
+        <td data-label="ID">FR02</td>
+        <td data-label="Fornecedor">BOLOS MAIDEN</td>
+        <td data-label="Produto fornecido">Bolos, açúcares...</td>
+        <td data-label="Reabastecimento">08/03/2025</td>
+        <td class="action-cell hidden">
+          <a href="alterar/alterar_fornecedor.php?id=FR02" class="icon-btn" title="Editar">
+            <span class="material-icons">edit</span>
+          </a>
+          <form action="exclusoes/excluir_fornecedores.php" method="POST" style="display:inline;">
+            <input type="hidden" name="id" value="FR02">
+            <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este fornecedor?')">
+              <span class="material-icons">delete</span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      <!-- Adicione mais fornecedores aqui -->
+    </tbody>
+  </table>
+</main>
 
-      const getActionCells = () => document.querySelectorAll('td.action-cell');
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('edit-toggle');
+    const actionHeader = document.querySelector('th.action-header');
+    const addButton = document.getElementById('add-button');
+    const tableBody = document.getElementById('supplier-table-body');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
 
-      // Alterna visibilidade das ações (editar/excluir) e botão "Adicionar"
-      toggleBtn.addEventListener('click', () => {
-        actionHeader.classList.toggle('hidden');
-        getActionCells().forEach(td => td.classList.toggle('hidden'));
-        addButton.classList.toggle('hidden');
-      });
+    const getActionCells = () => document.querySelectorAll('td.action-cell');
 
-      // Função de busca nos dados da tabela
-      function doSearch() {
-        const term = searchInput.value.trim().toLowerCase();
-        Array.from(tableBody.rows).forEach(row => {
-          const match = Array.from(row.cells)
-                             .slice(0, 4) // Apenas colunas de dados, não de ações
-                             .some(td => td.textContent.toLowerCase().includes(term));
-          row.style.display = match ? '' : 'none';
-          const cell = row.querySelector('td.action-cell');
-          if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
-        });
-      }
-
-      // Dispara a busca ao digitar ou clicar no botão
-      searchBtn.addEventListener('click', doSearch);
-      searchInput.addEventListener('input', doSearch);
-
-      // Vincula ações aos botões de edição, exclusão e desfazer
-      function bindActions() {
-        // Botão de editar/salvar
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-          btn.onclick = () => {
-            const row = btn.closest('tr');
-            const icon = btn.querySelector('.material-icons');
-            const editing = row.classList.toggle('editing');
-            icon.textContent = editing ? 'save' : 'edit';
-            const numCols = row.cells.length - 1;
-            for (let i = 0; i < numCols; i++) {
-              const cell = row.cells[i];
-              if (editing) {
-                const inp = document.createElement('input');
-                inp.type = 'text';
-                inp.value = cell.textContent;
-                cell.textContent = '';
-                cell.appendChild(inp);
-              } else {
-                const inp = cell.querySelector('input');
-                if (inp) cell.textContent = inp.value;
-              }
-            }
-          };
-        });
-
-        // Botão de exclusão com opção de desfazer (undo)
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-          btn.onclick = () => {
-            const row = btn.closest('tr');
-            row.classList.add('disabled-row'); // Aplica estilo visual de desativado
-            const deleteBtn = row.querySelector('.delete-btn');
-            const undoBtn = row.querySelector('.undo-btn');
-
-            deleteBtn.style.display = 'none';
-            undoBtn.style.display = 'inline-block'; // Mostra o botão "undo"
-
-            undoBtn.onclick = () => {
-              row.classList.remove('disabled-row');
-              deleteBtn.style.display = 'inline-block';
-              undoBtn.style.display = 'none';
-            };
-          };
-        });
-      }
-
-      // Executa o binding inicial
-      bindActions();
+    toggleBtn.addEventListener('click', () => {
+      actionHeader.classList.toggle('hidden');
+      getActionCells().forEach(td => td.classList.toggle('hidden'));
+      addButton.classList.toggle('hidden');
     });
-  </script>
+
+    function doSearch() {
+      const term = searchInput.value.trim().toLowerCase();
+      Array.from(tableBody.rows).forEach(row => {
+        const match = Array.from(row.cells).slice(0,4)
+          .some(td => td.textContent.toLowerCase().includes(term));
+        row.style.display = match ? '' : 'none';
+        const cell = row.querySelector('td.action-cell');
+        if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
+      });
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('input', doSearch);
+  });
+</script>
+
 </body>
 </html>
