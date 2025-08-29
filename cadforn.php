@@ -340,6 +340,9 @@ form button[type="submit"]:hover{
   box-shadow:0 5px 15px rgba(33,150,243,0.3);
   }
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </style>
 </head>
@@ -403,6 +406,9 @@ form button[type="submit"]:hover{
   <input type="email" id="email" name="email" maxlength="60" placeholder="Digite o e-mail" required>
 
 <form id="form-fornecedor">
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 <h2>Dados da Empresa</h2>
 <label for="nome_forn">Nome da Empresa</label>
@@ -522,6 +528,9 @@ function mascaraCEP(input) {
     const valor = input.value.replace(/\D/g, '');  // Remove caracteres não numéricos
     input.value = valor.replace(/^(\d{5})(\d)/, '$1-$2');  // Adiciona o hífen após o quinto dígito
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </script>
 
