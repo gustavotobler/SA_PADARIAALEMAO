@@ -111,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Fornecedor</title>
 <style>
-<<<<<<< Updated upstream
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 body{background:linear-gradient(135deg,#fff,#e9d2b4);display:flex;justify-content:center;align-items:center;min-height:100vh;}
 .container{background:#fff;padding:40px 35px;border-radius:15px;box-shadow:0 15px 40px rgba(0,0,0,0.1);width:100%;max-width:500px;}
@@ -340,13 +340,7 @@ form button[type="submit"]:hover{
   box-shadow:0 5px 15px rgba(33,150,243,0.3);
   }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 </style>
 </head>
 <body>
@@ -355,7 +349,6 @@ form button[type="submit"]:hover{
 <button onclick="window.location.href='fornecedores.php'">Voltar</button>
 <h1>Cadastro de Fornecedor</h1>
 
-<<<<<<< Updated upstream
 <form method="POST" id="form-fornecedor">
 =======
 <?php if (!empty($msg)): ?>
@@ -409,13 +402,7 @@ form button[type="submit"]:hover{
   <input type="email" id="email" name="email" maxlength="60" placeholder="Digite o e-mail" required>
 
 <form id="form-fornecedor">
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 <h2>Dados da Empresa</h2>
 <label for="nome_forn">Nome da Empresa</label>
 <input type="text" id="nome_forn" name="nome_forn" maxlength="40" placeholder="Nome da empresa" required>
@@ -463,17 +450,7 @@ form button[type="submit"]:hover{
 <label for="telefone">Telefone ou Celular</label>
 <input type="text" id="telefone" name="telefone" placeholder="(11) 90000-9999" required>
 
-<<<<<<< Updated upstream
 <button type="submit">Cadastrar</button>
-=======
-<div class="uk-margin">
-    <label> <strong>Telefone ou Celular</strong>
-      <input class="uk-input sp_celphones" type="text" name="telefone" placeholder="Ex: (11) 90000-9999">
-    </label>
-</div>
-
-  <button type="submit">Cadastrar</button>
->>>>>>> Stashed changes
 </form>
 </div>
 
@@ -493,8 +470,7 @@ document.getElementById("form-fornecedor").addEventListener("submit", function(e
         document.getElementById("cnpj").focus();
     }
 });
-<<<<<<< Updated upstream
-=======
+
   
 $(document).ready(function(){
     var SPMaskBehavior = function (val) {
@@ -534,13 +510,7 @@ function mascaraCEP(input) {
     const valor = input.value.replace(/\D/g, '');  // Remove caracteres não numéricos
     input.value = valor.replace(/^(\d{5})(\d)/, '$1-$2');  // Adiciona o hífen após o quinto dígito
 }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 </script>
 
 </body>
