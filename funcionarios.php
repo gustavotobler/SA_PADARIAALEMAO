@@ -83,7 +83,7 @@ if ($_SESSION['nivel'] != 1) {
 <nav class="sidebar">
   <div class="sidebar-logo">
     <img src="img/Logopadaria.png" alt="Padaria do Alemão">
-    <span>Padaria do Alemão</span>
+    <span style="color:white;">Padaria do Alemão</span>
   </div>
   <a href="produtos.php" class="menu-item"><span class="material-icons">bakery_dining</span><span>Produtos</span></a>
   <a href="funcionarios.php" class="menu-item"><span class="material-icons">person</span><span>Funcionários</span></a>
