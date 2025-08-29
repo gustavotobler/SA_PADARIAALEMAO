@@ -100,7 +100,7 @@ tbody tr:hover { background:#f0f4f8; }
 <header>
   <div class="topo">
     <div class="topo-center">
-      <h1>Produtos</h1>
+      <h1>PRODUTOS</h1>
       <div class="search-container">
         <span class="material-icons">search</span>
         <form action="pesquisar/buscar_produtos.php">
