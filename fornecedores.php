@@ -24,6 +24,7 @@ $fornecedores = [];
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     /* ===== Reset e base ===== */
     * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
     body { background:#f5f7fa; color:#333; line-height:1.5; }
@@ -80,6 +81,8 @@ $fornecedores = [];
       tbody td { display:block; text-align:right; padding:8px; }
       tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
 =======
+=======
+>>>>>>> Stashed changes
     * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
     body { background:#f5f7fa; color:#333; line-height:1.5; }
 
@@ -275,12 +278,16 @@ $fornecedores = [];
       header { margin-left:0; }
       main { margin-left:0; padding:1rem; }
       .topo { flex-direction:column; gap:1rem; }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
   </style>
 </head>
 <body>
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <nav class="sidebar">
   <div class="sidebar-logo">
@@ -297,6 +304,8 @@ $fornecedores = [];
 </nav>
 
 =======
+=======
+>>>>>>> Stashed changes
 <!-- Sidebar -->
 <nav class="sidebar">
   <div class="sidebar-logo">
@@ -310,6 +319,9 @@ $fornecedores = [];
 </nav>
 
 <!-- Header -->
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 <header>
   <div class="topo">
@@ -317,6 +329,7 @@ $fornecedores = [];
       <a href="inicial1.php" title="Voltar"><span class="material-icons">arrow_back</span></a>
     </div>
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     <div class="topo-center">
       <h1>FORNECEDORES</h1>
@@ -465,6 +478,73 @@ document.getElementById("search-btn").addEventListener("click", function() {
 
     const getActionCells = () => document.querySelectorAll('td.action-cell');
 
+=======
+    <div class="topo-center" style="flex-direction: column; align-items: center;">
+      <h1 style="color: white; margin-bottom: 10px;">FORNECEDORES</h1>
+      <div class="search-container">
+        <span class="material-icons">search</span>
+        <form action="pesquisar/buscar_fornecedor.php"
+        <input type="text" id="search-input" placeholder="Pesquisar...">
+        <button id="search-btn" type="button">Pesquisar</button>
+      </div>
+    </div>
+
+
+    <div class="topo-right">
+      <a href="cadforn.php" id="add-button" class="add-btn hidden" title="Adicionar">
+        <span class="material-icons">add</span>
+      </a>
+      <span class="material-icons edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fornecedores</th>
+        <th>Produto fornecido</th>
+        <th>Reabastecimento</th>
+        <th class="action-header hidden">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="supplier-table-body">
+      <tr>
+        <td>FR01</td><td>CARLINHOS</td><td>Trigo, leite...</td><td>12/03/2025</td>
+        <td class="action-cell hidden">
+          <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
+          <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
+          <button class="undo-btn"><span class="material-icons">undo</span></button>
+        </td>
+      </tr>
+      <tr>
+        <td>FR02</td><td>BOLOS MAIDEN</td><td>Bolos, açúcares...</td><td>08/03/2025</td>
+        <td class="action-cell hidden">
+          <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
+          <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
+          <button class="undo-btn"><span class="material-icons">undo</span></button>
+        </td>
+      </tr>
+      <!-- Adicione mais linhas conforme necessário -->
+    </tbody>
+  </table>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('edit-toggle');
+    const actionHeader = document.querySelector('th.action-header');
+    const tableBody = document.getElementById('supplier-table-body');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const addButton = document.getElementById('add-button');
+
+    const getActionCells = () => document.querySelectorAll('td.action-cell');
+
+>>>>>>> Stashed changes
     toggleBtn.addEventListener('click', () => {
       actionHeader.classList.toggle('hidden');
       getActionCells().forEach(td => td.classList.toggle('hidden'));
@@ -525,6 +605,9 @@ document.getElementById("search-btn").addEventListener("click", function() {
     });
   });
 </script>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </body>
 </html>
