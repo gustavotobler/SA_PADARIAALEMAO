@@ -12,20 +12,19 @@ try {
     // Consulta de vendas com join corrigida
     $sql = "
     SELECT 
-        v.ID_vendas,
-        v.venda_data,
-        f.Nome_func,
-        p.Nome_prod,
-        iv.Quantidade AS quant_vendas,
-        p.Preco_unitario AS preco_unit,
-        iv.valor_total AS preco_total,
-        v.forma_pagamento
-    FROM vendas v
-    JOIN funcionario f ON v.ID_func = f.ID_func
-    JOIN itens_vendas iv ON v.ID_vendas = iv.ID_vendas
-    JOIN produtos p ON iv.ID_produto = p.ID_produto
-    ORDER BY v.venda_data DESC
-    ";
+    v.ID_vendas,
+    v.venda_data,
+    f.Nome_func,
+    p.Nome_prod,
+    iv.Quantidade AS quant_vendas,
+    p.Preco_unitario AS preco_unit,
+    iv.valor_total AS preco_total,
+    v.forma_pagamento
+FROM vendas v
+LEFT JOIN funcionario f ON v.ID_func = f.ID_func
+LEFT JOIN itens_vendas iv ON v.ID_vendas = iv.ID_vendas
+LEFT JOIN produtos p ON iv.ID_produto = p.ID_produto
+ORDER BY v.venda_data DESC";
 
     $stmt = $conn->query($sql);
     $rows = $stmt->fetchAll();
