@@ -23,6 +23,7 @@ $fornecedores = [];
   <title>Fornecedores - Padaria do Alemão</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
+<<<<<<< Updated upstream
     /* ===== Reset e base ===== */
     * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
     body { background:#f5f7fa; color:#333; line-height:1.5; }
@@ -78,11 +79,209 @@ $fornecedores = [];
       thead { display:none; }
       tbody td { display:block; text-align:right; padding:8px; }
       tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
+=======
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+    body { background:#f5f7fa; color:#333; line-height:1.5; }
+
+    .sidebar {
+      width:220px;
+      background:#2c3e50;
+      position:fixed;
+      top:0;
+      left:0;
+      bottom:0;
+      padding-top:1rem;
+      overflow:hidden;
+    }
+    .sidebar-logo {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:0 1rem 1rem;
+      color:white;
+      font-weight:600;
+    }
+    .menu-item {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:0.8rem 1rem;
+      color:#fff;
+      text-decoration:none;
+      transition:background 0.2s;
+    }
+    .menu-item:hover,
+    .menu-item.active {
+      background:rgba(255,255,255,0.1);
+    }
+
+    header {
+      background: linear-gradient(90deg,#2c3e50,#34495e);
+      color:#fff;
+      padding:0.8rem 1.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+      margin-left:220px;
+    }
+    .topo {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap: wrap;
+    }
+    .topo-left {
+      display:flex;
+      align-items:center;
+      gap:15px;
+    }
+    .topo-left h1 {
+      font-size:1.5rem;
+    }
+
+    .topo-center {
+      flex:1;
+      display:flex;
+      justify-content:center;
+      margin-top:10px;
+    }
+
+    .search-container {
+      display:flex;
+      align-items:center;
+      background:#fff;
+      border-radius:25px;
+      padding:0 10px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.2);
+      max-width:350px;
+      width:100%;
+    }
+
+    .search-container span {
+      color:#888;
+    }
+
+    .search-container input {
+      border:none;
+      outline:none;
+      padding:0.5rem;
+      flex:1;
+    }
+
+    .search-container button {
+      background:#3498db;
+      border:none;
+      padding:6px 14px;
+      border-radius:20px;
+      color:#fff;
+      cursor:pointer;
+      font-weight:500;
+      margin-left:6px;
+    }
+
+    .search-container button:hover {
+      background:#2980b9;
+    }
+
+    .topo-right {
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .add-btn {
+      background:#2ecc71;
+      border-radius:50%;
+      padding:8px;
+      color:#fff;
+      transition:0.3s;
+      display:inline-block;
+    }
+
+    .add-btn:hover {
+      background:#27ae60;
+    }
+
+    .edit-toggle {
+      color:#fff;
+      cursor:pointer;
+      font-size:26px;
+    }
+
+    main {
+      padding:2rem;
+      margin-left:220px;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    thead {
+      background:#34495e;
+      color:#fff;
+    }
+
+    thead th {
+      padding:14px 10px;
+      text-align:left;
+      font-size:0.9rem;
+    }
+
+    tbody td {
+      padding:12px 10px;
+      border-bottom:1px solid #eee;
+    }
+
+    tbody tr:nth-child(even) {
+      background:#f9fbfd;
+    }
+
+    tbody tr:hover {
+      background:#f0f4f8;
+    }
+
+    .action-cell {
+      text-align:center;
+    }
+
+    .disabled-row {
+      opacity:0.5;
+      text-decoration:line-through;
+    }
+
+    .icon-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .undo-btn {
+      display: none;
+      cursor: pointer;
+      color: #007700;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media(max-width:768px){
+      header { margin-left:0; }
+      main { margin-left:0; padding:1rem; }
+      .topo { flex-direction:column; gap:1rem; }
+>>>>>>> Stashed changes
     }
   </style>
 </head>
 <body>
 
+<<<<<<< Updated upstream
 <nav class="sidebar">
   <div class="sidebar-logo">
   <img src="img/Logopadaria.png" alt="Padaria do Alemão" style="height:34px; width:auto;">
@@ -97,12 +296,28 @@ $fornecedores = [];
   <a href="inicial1.php" class="menu-item">Tela principal</a>
 </nav>
 
+=======
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <span class="material-icons">local_cafe</span> Padaria
+  </div>
+  <a href="inicial1.php" class="menu-item"><span class="material-icons">home</span> Início</a>
+  <a href="fornecedores.php" class="menu-item active"><span class="material-icons">store</span> Fornecedores</a>
+  <a href="produtos.php" class="menu-item"><span class="material-icons">inventory</span> Produtos</a>
+  <a href="relatorios.php" class="menu-item"><span class="material-icons">bar_chart</span> Relatórios</a>
+  <a href="logout.php" class="menu-item"><span class="material-icons">logout</span> Sair</a>
+</nav>
+
+<!-- Header -->
+>>>>>>> Stashed changes
 <header>
   <div class="topo">
     <div class="topo-left">
       <a href="inicial1.php" title="Voltar"><span class="material-icons">arrow_back</span></a>
     </div>
 
+<<<<<<< Updated upstream
     <div class="topo-center">
       <h1>FORNECEDORES</h1>
       <div class="search-container">
@@ -184,6 +399,133 @@ document.getElementById("search-btn").addEventListener("click", function() {
 });
 </script>
 
+=======
+    <div class="topo-center" style="flex-direction: column; align-items: center;">
+      <h1 style="color: white; margin-bottom: 10px;">FORNECEDORES</h1>
+      <div class="search-container">
+        <span class="material-icons">search</span>
+        <form action="pesquisar/buscar_fornecedor.php"
+        <input type="text" id="search-input" placeholder="Pesquisar...">
+        <button id="search-btn" type="button">Pesquisar</button>
+      </div>
+    </div>
+
+
+    <div class="topo-right">
+      <a href="cadforn.php" id="add-button" class="add-btn hidden" title="Adicionar">
+        <span class="material-icons">add</span>
+      </a>
+      <span class="material-icons edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fornecedores</th>
+        <th>Produto fornecido</th>
+        <th>Reabastecimento</th>
+        <th class="action-header hidden">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="supplier-table-body">
+      <tr>
+        <td>FR01</td><td>CARLINHOS</td><td>Trigo, leite...</td><td>12/03/2025</td>
+        <td class="action-cell hidden">
+          <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
+          <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
+          <button class="undo-btn"><span class="material-icons">undo</span></button>
+        </td>
+      </tr>
+      <tr>
+        <td>FR02</td><td>BOLOS MAIDEN</td><td>Bolos, açúcares...</td><td>08/03/2025</td>
+        <td class="action-cell hidden">
+          <button class="icon-btn edit-btn"><span class="material-icons">edit</span></button>
+          <button class="icon-btn delete-btn"><span class="material-icons">delete</span></button>
+          <button class="undo-btn"><span class="material-icons">undo</span></button>
+        </td>
+      </tr>
+      <!-- Adicione mais linhas conforme necessário -->
+    </tbody>
+  </table>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('edit-toggle');
+    const actionHeader = document.querySelector('th.action-header');
+    const tableBody = document.getElementById('supplier-table-body');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const addButton = document.getElementById('add-button');
+
+    const getActionCells = () => document.querySelectorAll('td.action-cell');
+
+    toggleBtn.addEventListener('click', () => {
+      actionHeader.classList.toggle('hidden');
+      getActionCells().forEach(td => td.classList.toggle('hidden'));
+      addButton.classList.toggle('hidden');
+    });
+
+    function doSearch() {
+      const term = searchInput.value.trim().toLowerCase();
+      Array.from(tableBody.rows).forEach(row => {
+        const match = Array.from(row.cells).slice(0, 4)
+          .some(td => td.textContent.toLowerCase().includes(term));
+        row.style.display = match ? '' : 'none';
+      });
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('input', doSearch);
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.onclick = () => {
+        const row = btn.closest('tr');
+        const icon = btn.querySelector('.material-icons');
+        const editing = row.classList.toggle('editing');
+        icon.textContent = editing ? 'save' : 'edit';
+        const numCols = row.cells.length - 1;
+        for (let i = 0; i < numCols; i++) {
+          const cell = row.cells[i];
+          if (editing) {
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.value = cell.textContent;
+            cell.textContent = '';
+            cell.appendChild(inp);
+          } else {
+            const inp = cell.querySelector('input');
+            if (inp) cell.textContent = inp.value;
+          }
+        }
+      };
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.onclick = () => {
+        const row = btn.closest('tr');
+        row.classList.add('disabled-row');
+        const deleteBtn = row.querySelector('.delete-btn');
+        const undoBtn = row.querySelector('.undo-btn');
+
+        deleteBtn.style.display = 'none';
+        undoBtn.style.display = 'inline-block';
+
+        undoBtn.onclick = () => {
+          row.classList.remove('disabled-row');
+          deleteBtn.style.display = 'inline-block';
+          undoBtn.style.display = 'none';
+        };
+      };
+    });
+  });
+</script>
+>>>>>>> Stashed changes
 </body>
 </html>
 
