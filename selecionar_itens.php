@@ -546,7 +546,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <!-- HUD de categorias -->
         <div class="category-hud">
           <button data-cat="all" class="active">Todas</button>
-          <button data-cat="Pães">Pães</button>
+          <button data-cat="Pães">Pães</button> 
           <button data-cat="Bolos">Bolos</button>
           <button data-cat="Salgados">Salgados</button>
           <button data-cat="Café">Cafés</button>
@@ -899,18 +899,6 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
           updateTotals();
           closePaymentModal();
           alert('Pagamento confirmado com sucesso!');
-
-          // Se quiser gravar no servidor, descomente e ajuste o endpoint:
-          /*
-          fetch("/api/salvar_pedido.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ itens, total, metodo: method })
-          })
-          .then(r => r.json())
-          .then(resp => { console.log(resp); })
-          .catch(err => console.error(err));
-          */
         });
 
         // abrir modal pelo botão
