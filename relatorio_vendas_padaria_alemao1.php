@@ -5,33 +5,36 @@ $user = 'root';
 $pass = '';
 
 try {
-    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    // Consulta de vendas com join
+    // Consulta de vendas com join corrigida
     $sql = "
     SELECT 
         v.ID_vendas,
         v.venda_data,
         f.Nome_func,
         p.Nome_prod,
-        v.quant_vendas,
-        v.preco_unit,
-        v.preco_total,
+        iv.Quantidade AS quant_vendas,
+        p.Preco_unitario AS preco_unit,
+        iv.valor_total AS preco_total,
         v.forma_pagamento
     FROM vendas v
     JOIN funcionario f ON v.ID_func = f.ID_func
-    JOIN compras c ON v.ID_vendas = c.ID_vendas
-    JOIN produtos p ON c.ID_produto = p.ID_produto
+    JOIN itens_vendas iv ON v.ID_vendas = iv.ID_vendas
+    JOIN produtos p ON iv.ID_produto = p.ID_produto
     ORDER BY v.venda_data DESC
-";
+    ";
+
     $stmt = $conn->query($sql);
     $rows = $stmt->fetchAll();
+
 } catch (PDOException $e) {
     die("Erro na conexão: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 

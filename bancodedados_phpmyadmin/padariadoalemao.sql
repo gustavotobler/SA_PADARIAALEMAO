@@ -3,7 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
+<<<<<<< HEAD
+-- Tempo de geração: 28/08/2025 às 19:56
+=======
 -- Tempo de geração: 28/08/2025 às 21:11
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -26,11 +30,16 @@ SET time_zone = "+00:00";
 --
 -- Estrutura para tabela `categorias`
 --
+<<<<<<< HEAD
+-- Erro ao ler a estrutura para a tabela padariadoalemao.categorias: #1932 - Table &#039;padariadoalemao.categorias&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.categorias: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`categorias`&#039; na linha 1
+=======
 
 CREATE TABLE `categorias` (
   `id_categorias` int(11) NOT NULL,
   `nome_categoria` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 
 --
 -- Despejando dados para a tabela `categorias`
@@ -50,6 +59,10 @@ INSERT INTO `categorias` (`id_categorias`, `nome_categoria`) VALUES
 --
 -- Estrutura para tabela `fornecedores`
 --
+<<<<<<< HEAD
+-- Erro ao ler a estrutura para a tabela padariadoalemao.fornecedores: #1932 - Table &#039;padariadoalemao.fornecedores&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.fornecedores: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`fornecedores`&#039; na linha 1
+=======
 
 CREATE TABLE `fornecedores` (
   `ID_forn` int(11) NOT NULL,
@@ -65,6 +78,7 @@ CREATE TABLE `fornecedores` (
   `Email` varchar(60) DEFAULT NULL,
   `Data_fundacao` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 
 --
 -- Despejando dados para a tabela `fornecedores`
@@ -78,7 +92,12 @@ INSERT INTO `fornecedores` (`ID_forn`, `Nome_forn`, `Telefone`, `CNPJ`, `UF`, `C
 --
 -- Estrutura para tabela `funcionario`
 --
+-- Erro ao ler a estrutura para a tabela padariadoalemao.funcionario: #1932 - Table &#039;padariadoalemao.funcionario&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.funcionario: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`funcionario`&#039; na linha 1
 
+<<<<<<< HEAD
+-- --------------------------------------------------------
+=======
 CREATE TABLE `funcionario` (
   `ID_func` int(11) NOT NULL,
   `Nome_func` varchar(40) NOT NULL,
@@ -100,10 +119,15 @@ CREATE TABLE `funcionario` (
   `Data_admissao` date DEFAULT NULL,
   `Cargo` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 
 --
--- Despejando dados para a tabela `funcionario`
+-- Estrutura para tabela `itens_vendas`
 --
+<<<<<<< HEAD
+-- Erro ao ler a estrutura para a tabela padariadoalemao.itens_vendas: #1932 - Table &#039;padariadoalemao.itens_vendas&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.itens_vendas: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`itens_vendas`&#039; na linha 1
+=======
 
 INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
 (1, 'Kerry King', NULL, 'Masculino', NULL, NULL, 'Solteiro', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', 'admin123', 'kerryking@padaria.com', 1, '1974-06-03', '2025-08-19', 'Gerente'),
@@ -130,31 +154,25 @@ CREATE TABLE `itens_vendas` (
 
 INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quantidade`, `valor_total`) VALUES
 (1, 0, 1, 1, 2.00);
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 
 -- --------------------------------------------------------
 
 --
 -- Estrutura para tabela `nivel`
 --
-
-CREATE TABLE `nivel` (
-  `nivel_de_acesso` int(1) NOT NULL,
-  `nome_acesso` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-
---
--- Despejando dados para a tabela `nivel`
---
-
-INSERT INTO `nivel` (`nivel_de_acesso`, `nome_acesso`) VALUES
-(1, 'NIVEL_1'),
-(2, 'NIVEL_2');
+-- Erro ao ler a estrutura para a tabela padariadoalemao.nivel: #1932 - Table &#039;padariadoalemao.nivel&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.nivel: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`nivel`&#039; na linha 1
 
 -- --------------------------------------------------------
 
 --
 -- Estrutura para tabela `produtos`
 --
+<<<<<<< HEAD
+-- Erro ao ler a estrutura para a tabela padariadoalemao.produtos: #1932 - Table &#039;padariadoalemao.produtos&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.produtos: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`produtos`&#039; na linha 1
+=======
 
 CREATE TABLE `produtos` (
   `ID_produto` int(11) NOT NULL,
@@ -166,6 +184,7 @@ CREATE TABLE `produtos` (
   `Validade` varchar(15) DEFAULT NULL,
   `Qntd_produto` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 
 --
 -- Despejando dados para a tabela `produtos`
@@ -179,6 +198,10 @@ INSERT INTO `produtos` (`ID_produto`, `ID_forn`, `id_categorias`, `Nome_prod`, `
 --
 -- Estrutura para tabela `vendas`
 --
+<<<<<<< HEAD
+-- Erro ao ler a estrutura para a tabela padariadoalemao.vendas: #1932 - Table &#039;padariadoalemao.vendas&#039; doesn&#039;t exist in engine
+-- Erro ao ler dados para tabela padariadoalemao.vendas: #1064 - Você tem um erro de sintaxe no seu SQL próximo a &#039;FROM `padariadoalemao`.`vendas`&#039; na linha 1
+=======
 
 CREATE TABLE `vendas` (
   `ID_vendas` int(11) NOT NULL,
@@ -304,6 +327,7 @@ ALTER TABLE `produtos`
 --
 ALTER TABLE `vendas`
   ADD CONSTRAINT `vendas_ibfk_1` FOREIGN KEY (`ID_func`) REFERENCES `funcionario` (`ID_func`);
+>>>>>>> 0ec6334156b2fb6153ba4786c22a19ceccb6d118
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
