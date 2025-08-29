@@ -1,265 +1,251 @@
 <?php
 session_start();
-require_once '../conexao.php'; // aqui sua conexão deve instanciar PDO, ex: $pdo
+require_once '../conexao.php';
 
-// Verifica permissão do usuário (se usar controle de nível)
-if ($_SESSION['nivel'] != 1) {
-    echo "<script>alert('Acesso negado!');window.location.href='../inicial1.php'</script>";
+if (empty($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
+    echo "Acesso negado!";
     exit;
 }
 
-// Verifica se recebeu o ID do produto
-if (!isset($_POST['ID_produto'])) {
-    echo "<script>alert('Produto não especificado!');window.location.href='../produtos.php'</script>";
+$id = filter_input(INPUT_GET, 'ID_produto', FILTER_VALIDATE_INT);
+if (!$id) {
+    echo "ID do produto inválido.";
     exit;
 }
 
-$id_produto = intval($_POST['ID_produto']);
-$nome       = $_POST['Nome_prod'] ?? '';
-$preco      = $_POST['Preco_unitario'] ?? 0;
-$unidade    = $_POST['Unid_medida'] ?? '';
-$quantidade = $_POST['Qntd_produto'] ?? 0;
-$fornecedor = $_POST['ID_forn'] ?? '';
-$categoria  = $_POST['id_categorias'] ?? '';
-$validade   = $_POST['Validade'] ?? '';
+$stmt = $pdo->prepare("SELECT * FROM produtos WHERE ID_produto = :id");
+$stmt->execute([':id' => $id]);
+$prod = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Converte validade para formato MySQL (YYYY-MM-DD)
-if (!empty($validade)) {
-    $partes = explode("/", $validade);
-    if (count($partes) === 3) {
-        $validade = $partes[2] . "-" . $partes[1] . "-" . $partes[0];
-    }
+if (!$prod) {
+    echo "Produto não encontrado.";
+    exit;
 }
 
-try {
-    $sql = "UPDATE produtos 
-            SET Nome_prod = :nome, 
-                Preco_unitario = :preco, 
-                Unid_medida = :unidade, 
-                Qntd_produto = :quantidade, 
-                ID_forn = :fornecedor, 
-                id_categorias = :categoria, 
-                Validade = :validade 
-            WHERE ID_produto = :id";
+// Função para formatar a data
+function formatarData($data_sql) {
+    if (!$data_sql) return '';
+    $data_sql = trim($data_sql);
+    if ($data_sql === '0000-00-00' || $data_sql === '0000-00-00 00:00:00') return '';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':nome', $nome);
-    $stmt->bindParam(':preco', $preco);
-    $stmt->bindParam(':unidade', $unidade);
-    $stmt->bindParam(':quantidade', $quantidade, PDO::PARAM_INT);
-    $stmt->bindParam(':fornecedor', $fornecedor);
-    $stmt->bindParam(':categoria', $categoria);
-    $stmt->bindParam(':validade', $validade);
-    $stmt->bindParam(':id', $id_produto, PDO::PARAM_INT);
-
-    if ($stmt->execute()) {
-        echo "<script>alert('Produto atualizado com sucesso!');window.location.href='../produtos.php'</script>";
-        exit;
-    } else {
-        echo "<script>alert('Erro ao atualizar produto!');window.location.href='../produtos.php'</script>";
-        exit;
+    if (preg_match('/\d{4}-\d{2}-\d{2}/', $data_sql, $m)) {
+        $dt = DateTime::createFromFormat('Y-m-d', $m[0]);
+        if ($dt) return $dt->format('d/m/Y');
     }
-} catch (PDOException $e) {
-    echo "Erro: " . $e->getMessage();
+
+    $ts = strtotime($data_sql);
+    if ($ts !== false) return date('d/m/Y', $ts);
+
+    return '';
 }
+
+$validade_formatada = formatarData($prod['Validade'] ?? null);
+$unid_medida = trim($prod['Unid_medida'] ?? '');
+
+// Carregar fornecedores e categorias
+$fornecedores = $pdo->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER BY Nome_forn")->fetchAll(PDO::FETCH_ASSOC);
+$categorias = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cadastro de Produto</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Editar Produto</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  body {
+    background: #eef2f7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-  <!-- Ícones do Material Design -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <!-- CSS da página -->
-  <link href="css/cadprod.css" rel="stylesheet"/>
+  /* Header */
+  header {
+    background:rgb(27, 68, 95);
+    padding: 15px 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  }
+  header .back-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 24px;
+  }
+  header h1 {
+    flex: 1;
+    font-weight: 700;
+    font-size: 1.5rem;
+    user-select: none;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 25px 15px;
+  }
+
+  form {
+    background: #fff;
+    padding: 30px 35px;
+    border-radius: 15px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    max-width: 600px;
+    width: 100%;
+  }
+  form h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+    font-size: 1.8rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #34495e;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: rgb(27, 68, 95);
+    box-shadow: 0 0 8px rgba(52,152,219,0.3);
+    outline: none;
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    background: rgb(27, 68, 95);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button[type="submit"]:hover {
+    background: rgb(0, 153, 255);
+  }
+
+  .flex-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .flex-group > div {
+    flex: 1;
+  }
+
+  .erro {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  @media(max-width: 600px) {
+    .flex-group {
+      flex-direction: column;
+    }
+  }
+</style>
 </head>
 <body>
 
-  <!-- Verifica o nível do usuário. Se não for 'admin', redireciona. -->
+<header>
+  <button class="back-btn" onclick="window.location.href='../produtos.php'" title="Voltar">
+    <span class="material-icons">arrow_back</span>
+  </button>
+  <h1>Editar Produto</h1>
+</header>
 
-  <div class="page">
-    <div class="form-box">
-      <!-- Botão de voltar -->
-      <a href="produtos.php"><button class="back-button"><span class="material-icons">arrow_back</span></button></a>
+<main>
+  <form method="POST" action="alterar_produtos.php" novalidate>
+      <h2>Editar Produto</h2>
+      <input type="hidden" name="ID_produto" value="<?= htmlspecialchars($prod['ID_produto'], ENT_QUOTES) ?>" />
 
-      <!-- Título e subtítulo -->
-      <h2>Cadastro de Produto</h2>
-      <div class="section-subtitle">INFORMAÇÕES DO PRODUTO</div>
+      <label for="ID_forn">Fornecedor:</label>
+      <select name="ID_forn" id="ID_forn" required>
+          <option value="">-- Nenhum --</option>
+          <?php foreach ($fornecedores as $forn): ?>
+              <option value="<?= $forn['ID_forn'] ?>" <?= ($prod['ID_forn'] == $forn['ID_forn']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($forn['Nome_forn'], ENT_QUOTES) ?>
+              </option>
+          <?php endforeach; ?>
+      </select>
 
-      <!-- Formulário de cadastro -->
-      <form id="formCadastro" method="POST" action="cadastros/cadastro_produto.php">
+      <label for="id_categorias">Categoria:</label>
+      <select name="id_categorias" id="id_categorias" required>
+          <option value="">Selecione</option>
+          <?php foreach ($categorias as $cat): ?>
+              <option value="<?= $cat['id_categorias'] ?>" <?= ($prod['id_categorias'] == $cat['id_categorias']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($cat['nome_categoria'], ENT_QUOTES) ?>
+              </option>
+          <?php endforeach; ?>
+      </select>
 
-        <!-- Linha com nome do produto e preço -->
-        <div class="row">
-          <div class="input-group">
-            <label for="nome">Nome do Produto</label>
-            <input type="text" id="nome" name="Nome_prod" />
-          </div>
-          <div class="input-group">
-            <label for="preco">Preço</label>
-            <input type="number" id="preco" name="Preco_unitario" step="0.01" min="0.10" />
-          </div>
-        </div>
+      <label for="Nome_prod">Nome do Produto:</label>
+      <input type="text" name="Nome_prod" id="Nome_prod" maxlength="60" required value="<?= htmlspecialchars($prod['Nome_prod'], ENT_QUOTES) ?>" />
 
-        <!-- Linha com unidade de medida, quantidade e fornecedor -->
-        <div class="row">
-          <div class="input-group">
-            <label for="escolha">Unidade M.</label>
-            <select id="escolha" name="Unid_medida">
-              <option value="">Selecione</option>
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="mL">mL</option>
-              <option value="L">L</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label for="Quantidade">Quantidade</label>
-            <input type="number" id="Quantidade" name="Qntd_produto" step="1" min="1" />
-          </div>
-          <div class="input-group">
-            <label for="categoria">Fornecedor</label>
-            <select id="categoria" name="ID_forn">
-              <option value="">Selecione</option>
-              <option value="padaria">CARLINHOS</option>
-              <option value="laticinio">BOLOS MAIDEN</option>
-              <option value="hortifruti">DOCES MARIA</option>
-              <option value="bebidas">DONA BENTA</option>
-            </select>
-          </div>
-        </div>
-        <div class="input-group">
-          <label for="categoria">Categoria</label>
-          <select id="categoria" name="id_categorias">
-            <option value="">Selecione</option>
-            <option value="padaria">Cafés</option>
-            <option value="laticinio">Sucos</option>
-            <option value="hortifruti">Pães</option>
-            <option value="bebidas">Bolos</option>
-            <option value="bebidas">Salgados</option>
-          </select>
-        </div>
+      <label for="Preco_unitario">Preço Unitário (R$):</label>
+      <input type="number" step="0.01" min="0" name="Preco_unitario" id="Preco_unitario" value="<?= htmlspecialchars($prod['Preco_unitario'], ENT_QUOTES) ?>" />
 
-        <!-- Campo de validade com máscara de data -->
-        <div class="input-group" style="flex:1 1 100%">
-          <label for="validade">Validade</label>
-          <input type="text" id="validade" name="Validade" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatarData(this)" required />
-        </div>
+      <label for="Unid_medida">Unidade de medida:</label>
+      <select name="Unid_medida" id="Unid_medida" required>
+        <option value="">Selecione</option>
+        <option value="kg" <?= (strtolower($unid_medida) === 'kg') ? 'selected' : '' ?>>kg</option>
+        <option value="mL" <?= (strtolower($unid_medida) === 'ml') ? 'selected' : '' ?>>mL</option>
+        <option value="g" <?= (strtolower($unid_medida) === 'g') ? 'selected' : '' ?>>g</option>
+      </select>
 
-        <!-- Botão de envio -->
-        <div class="btn-container"><button type="submit">Cadastrar</button></div>
-      </form>
-    </div>
-  </div>
+      <label for="Validade">Validade (dd/mm/aaaa):</label>
+      <input type="text" name="Validade" id="Validade" maxlength="10" placeholder="dd/mm/aaaa" value="<?= htmlspecialchars($validade_formatada, ENT_QUOTES) ?>" />
 
-  <!-- Mensagem de erro personalizada -->
-  <div class="mensagem-erro" id="mensagem-erro">
-    <strong id="erro-titulo"></strong>
-    <p id="erro-texto"></p>
-    <button onclick="fecharErro()">OK</button>
-  </div>
+      <label for="Qntd_produto">Quantidade em Estoque:</label>
+      <input type="number" name="Qntd_produto" id="Qntd_produto" min="0" value="<?= htmlspecialchars($prod['Qntd_produto'], ENT_QUOTES) ?>" />
 
-  <!-- Modal de confirmação de sucesso -->
-  <div id="confirmacao">
-    <div class="box">
-      <h2>Tudo certo!</h2>
-      <p>Cadastro realizado com sucesso</p>
-      <button onclick="fecharConfirmacao()">OK</button>
-    </div>
-  </div>
+      <button type="submit">Alterar Produto</button>
+  </form>
+</main>
 
-  <!-- Scripts -->
-  <script>
-    // Máscara para o campo de data (formato DD/MM/AAAA)
-    function formatarData(input) {
-      let v = input.value.replace(/\D/g, '').slice(0,8);
-      if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
-      else if (v.length >= 3) v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2');
-      input.value = v;
-    }
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const validade = document.getElementById("Validade");
+  validade.addEventListener("input", () => {
+    let v = validade.value.replace(/\D/g,"").slice(0,8);
+    if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+    if(v.length > 5) v = v.slice(0,5) + '/' + v.slice(5);
+    validade.value = v;
+  });
+});
+</script> 
 
-    // Exibe mensagem de erro customizada
-    function showError(titulo, texto) {
-      document.getElementById('erro-titulo').innerText = titulo;
-      document.getElementById('erro-texto').innerText = texto;
-      document.getElementById('mensagem-erro').style.display = 'block';
-    }
-
-    // Fecha a mensagem de erro
-    function fecharErro() {
-      document.getElementById('mensagem-erro').style.display = 'none';
-    }
-
-        // Coleta os valores dos campos
-        const nome      = document.getElementById('nome').value.trim();
-        const precoVal  = parseFloat(document.getElementById('preco').value);
-        const escolha   = document.getElementById('escolha').value;
-        const categoria = document.getElementById('categoria').value;
-        const valStr    = document.getElementById('validade').value.trim();
-
-        // Valida nome
-        if (!nome) {
-          showError('Nome inválido','O nome do produto é obrigatório.');
-          return;
-        }
-        if (nome.length < 3) {
-          showError('Nome muito curto','O nome deve ter ao menos 3 caracteres.');
-          return;
-        }
-
-        // Valida preço
-        if (isNaN(precoVal)) {
-          showError('Preço inválido','Informe um preço válido.');
-          return;
-        }
-        if (precoVal < 0.10) {
-          showError('Preço muito baixo','O preço mínimo é R$ 0,10.');
-          return;
-        }
-
-        // Valida unidade de medida e fornecedor
-        if (!escolha) {
-          showError('Unidade não selecionada','Escolha uma unidade de medida.');
-          return;
-        }
-        if (!categoria) {
-          showError('Fornecedor não selecionado','Selecione um fornecedor.');
-          return;
-        }
-
-        // Validação da data (formato e valor futuro)
-        const partes = valStr.split('/');
-        if (partes.length !== 3) {
-          showError('Data inválida','Use o formato DD/MM/AAAA na validade.');
-          return;
-        }
-        const [dd, mm, yyyy] = partes.map(n=>parseInt(n,10));
-        if ([dd,mm,yyyy].some(isNaN) || dd<1||dd>31||mm<1||mm>12) {
-          showError('Data inválida','Verifique dia e mês da validade.');
-          return;
-        }
-
-        const dataVal = new Date(yyyy, mm-1, dd);
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0); // Ignora horário
-        if (dataVal < hoje) {
-          showError('Data anterior','Validade não pode ser anterior a hoje.');
-          return;
-        }
-
-        // Se todas as validações passarem, exibe modal de sucesso
-        document.getElementById('confirmacao').style.display='flex';
-      });
-    });
-
-    // Fecha o modal de confirmação e reseta o formulário
-    function fecharConfirmacao() {
-      document.getElementById('confirmacao').style.display='none';
-      document.getElementById('formCadastro').reset();
-    }
-  </script>
 </body>
 </html>
