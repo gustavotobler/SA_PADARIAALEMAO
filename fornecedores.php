@@ -21,6 +21,7 @@ if ($_SESSION['nivel'] != 1) {
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     /* ===== Reset e base ===== */
     * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
     body { background:#f5f7fa; color:#333; line-height:1.5; }
@@ -77,6 +78,8 @@ if ($_SESSION['nivel'] != 1) {
       tbody td { display:block; text-align:right; padding:8px; }
       tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
 =======
+=======
+>>>>>>> Stashed changes
     * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
     body { background:#f5f7fa; color:#333; line-height:1.5; }
 
@@ -272,12 +275,16 @@ if ($_SESSION['nivel'] != 1) {
       header { margin-left:0; }
       main { margin-left:0; padding:1rem; }
       .topo { flex-direction:column; gap:1rem; }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
   </style>
 </head>
 <body>
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <nav class="sidebar">
   <div class="sidebar-logo">
@@ -391,6 +398,20 @@ if ($_SESSION['nivel'] != 1) {
   <a href="logout.php" class="menu-item"><span class="material-icons">logout</span> Sair</a>
 </nav>
 
+=======
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <span class="material-icons">local_cafe</span> Padaria
+  </div>
+  <a href="inicial1.php" class="menu-item"><span class="material-icons">home</span> Início</a>
+  <a href="fornecedores.php" class="menu-item active"><span class="material-icons">store</span> Fornecedores</a>
+  <a href="produtos.php" class="menu-item"><span class="material-icons">inventory</span> Produtos</a>
+  <a href="relatorios.php" class="menu-item"><span class="material-icons">bar_chart</span> Relatórios</a>
+  <a href="logout.php" class="menu-item"><span class="material-icons">logout</span> Sair</a>
+</nav>
+
+>>>>>>> Stashed changes
 <!-- Header -->
 <header>
   <div class="topo">
@@ -463,6 +484,9 @@ if ($_SESSION['nivel'] != 1) {
 
     const getActionCells = () => document.querySelectorAll('td.action-cell');
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     toggleBtn.addEventListener('click', () => {
       actionHeader.classList.toggle('hidden');
@@ -474,11 +498,17 @@ if ($_SESSION['nivel'] != 1) {
       const term = searchInput.value.trim().toLowerCase();
       Array.from(tableBody.rows).forEach(row => {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         const match = Array.from(row.cells).slice(0,4)
           .some(td => td.textContent.toLowerCase().includes(term));
         row.style.display = match ? '' : 'none';
         const cell = row.querySelector('td.action-cell');
         if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
+=======
+        const match = Array.from(row.cells).slice(0, 4)
+          .some(td => td.textContent.toLowerCase().includes(term));
+        row.style.display = match ? '' : 'none';
+>>>>>>> Stashed changes
 =======
         const match = Array.from(row.cells).slice(0, 4)
           .some(td => td.textContent.toLowerCase().includes(term));
@@ -490,10 +520,13 @@ if ($_SESSION['nivel'] != 1) {
     searchBtn.addEventListener('click', doSearch);
     searchInput.addEventListener('input', doSearch);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   });
 </script>
 
 =======
+=======
+>>>>>>> Stashed changes
 
     document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.onclick = () => {
@@ -537,6 +570,9 @@ if ($_SESSION['nivel'] != 1) {
     });
   });
 </script>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </body>
 </html>
