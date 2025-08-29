@@ -228,9 +228,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <label for="Preco_unitario">Preço Unitário (R$):</label>
     <input type="number" step="0.01" min="0" name="Preco_unitario" id="Preco_unitario" />
+      
+    <label for="Unid_medida">Unidade de medida</label>
+    <select name="Unid_medida" id="Unid_medida"required>
+      <option value="">Selecione</option>
+      <option>kg</option>
+      <option>mL</option>
+      <option>g</option>
 
-    <label for="Unid_medida">Unidade de Medida (ex: kg, un):</label>
-    <input type="text" name="Unid_medida" id="Unid_medida" maxlength="2" />
+    </select>
+    
 
     <label for="Validade">Validade (dd/mm/aaaa):</label>
     <input type="text" name="Validade" id="Validade" maxlength="15" placeholder="dd/mm/aaaa" />
