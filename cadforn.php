@@ -5,23 +5,23 @@ require_once("conexao.php");
 $msg = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Pegando e tratando os dados do formulário
-    $nome_forn    = trim($_POST["Nome_forn"]);
-    $telefone     = preg_replace("/\D/", "", $_POST["Telefone"]); // apenas números
-    $cnpj         = preg_replace("/\D/", "", $_POST["CNPJ"]);     // apenas números
-    $uf           = strtoupper(trim($_POST["UF"]));
-    $cidade       = trim($_POST["Cidade"]);
-    $bairro       = trim($_POST["Bairro"]);
-    $cep          = preg_replace("/\D/", "", $_POST["CEP"]);
-    $num_empresa  = (int)$_POST["Num_empresa"];
-    $logradouro   = trim($_POST["Logradouro"]);
-    $email        = trim($_POST["Email"]);
+    // Mantém as máscaras
+    $nome_forn     = trim($_POST["Nome_forn"]);
+    $telefone      = trim($_POST["Telefone"]); 
+    $cnpj          = trim($_POST["CNPJ"]);     
+    $uf            = strtoupper(trim($_POST["UF"]));
+    $cidade        = trim($_POST["Cidade"]);
+    $bairro        = trim($_POST["Bairro"]);
+    $cep           = trim($_POST["CEP"]);
+    $num_empresa   = (int)$_POST["Num_empresa"];
+    $logradouro    = trim($_POST["Logradouro"]);
+    $email         = trim($_POST["Email"]);
     $data_fundacao = !empty($_POST["Data_fundacao"]) ? $_POST["Data_fundacao"] : null;
 
     // Verifica se os obrigatórios foram preenchidos
-    if ($nome_forn) {
+    if ($nome_forn && $telefone && $cnpj && $cep) {
         $sql = "INSERT INTO fornecedores 
-                (Nome_forn, Telefone, CNPJ, UF, Cidade, Bairro,CEP, Num_empresa, Logradouro, Email, Data_fundacao) 
+                (Nome_forn, Telefone, CNPJ, UF, Cidade, Bairro, CEP, Num_empresa, Logradouro, Email, Data_fundacao) 
                 VALUES 
                 (:Nome_forn, :Telefone, :CNPJ, :UF, :Cidade, :Bairro, :CEP, :Num_empresa, :Logradouro, :Email, :Data_fundacao)";
         
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $msg = "<script>alert('Erro ao cadastrar fornecedor!');</script>";
         }
     } else {
-        $msg = "<script>alert('O campo Nome do Fornecedor é obrigatório!');</script>";
+        $msg = "<script>alert('Preencha todos os campos obrigatórios!');</script>";
     }
 }
 ?>
@@ -56,137 +56,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Cadastro de Fornecedor</title>
 <style>
-/* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-  background: #eef2f7;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-header {
-  background: rgb(27, 68, 95);
-  padding: 15px 20px;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-}
-header .back-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 24px;
-  font-weight: 700;
-  user-select: none;
-}
-header h1 {
-  flex: 1;
-  font-weight: 700;
-  font-size: 1.5rem;
-  user-select: none;
-  text-align: center;
-}
-
-/* Container principal */
-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: 25px 15px;
-}
-
-/* Formulário estilo card */
-form {
-  background: #fff;
-  padding: 30px 35px;
-  border-radius: 15px;
-  box-shadow: 0 12px 25px rgba(0,0,0,0.12);
-  max-width: 600px;
-  width: 100%;
-}
-form h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #2c3e50;
-  font-size: 1.8rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #34495e;
-}
-
-input, select {
-  width: 100%;
-  padding: 12px 15px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-input:focus, select:focus {
-  border-color: rgb(27, 68, 95);
-  box-shadow: 0 0 8px rgba(27, 68, 95, 0.3);
-  outline: none;
-}
-
-button[type="submit"] {
-  width: 100%;
-  padding: 14px;
-  background: rgb(27, 68, 95);
-  border: none;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button[type="submit"]:hover {
-  background: rgb(0, 153, 255);
-}
-
-/* Flex container para inputs lado a lado */
-.flex-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.flex-group > div {
-  flex: 1;
-}
-
-/* Mensagens de erro */
-.erro {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-top: -10px;
-  margin-bottom: 10px;
-  display: block;
-}
-
-@media(max-width: 600px) {
-  .flex-group {
-    flex-direction: column;
-  }
-}
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+body { background:#eef2f7; min-height:100vh; display:flex; flex-direction:column; }
+header { background:rgb(27,68,95); padding:15px 20px; color:white; display:flex; align-items:center; gap:15px; box-shadow:0 3px 10px rgba(0,0,0,0.15);}
+header .back-btn { background:transparent; border:none; color:white; cursor:pointer; font-size:24px; font-weight:700;}
+header h1 { flex:1; text-align:center; font-weight:700; font-size:1.5rem;}
+main { flex:1; display:flex; justify-content:center; padding:25px 15px;}
+form { background:#fff; padding:30px 35px; border-radius:15px; box-shadow:0 12px 25px rgba(0,0,0,0.12); max-width:600px; width:100%; }
+form h2 { text-align:center; margin-bottom:30px; color:#2c3e50; font-size:1.8rem;}
+label { display:block; margin-bottom:6px; font-weight:600; color:#34495e; }
+input, select { width:100%; padding:12px 15px; margin-bottom:15px; border:1px solid #ccc; border-radius:10px; font-size:0.95rem; transition:all 0.3s;}
+input:focus, select:focus { border-color:rgb(27,68,95); box-shadow:0 0 8px rgba(27,68,95,0.3); outline:none;}
+button[type="submit"] { width:100%; padding:14px; background:rgb(27,68,95); border:none; color:white; font-size:1rem; font-weight:600; border-radius:10px; cursor:pointer; transition:background-color 0.3s;}
+button[type="submit"]:hover { background:rgb(0,153,255);}
+.flex-group { display:flex; gap:10px; margin-bottom:15px;}
+.flex-group>div { flex:1;}
+.erro { color:#e74c3c; font-size:0.85rem; margin-top:-10px; margin-bottom:10px; display:block;}
+@media(max-width:600px){ .flex-group { flex-direction:column; } }
 </style>
 </head>
 <body>
@@ -197,7 +83,7 @@ button[type="submit"]:hover {
 </header>
 
 <main>
-  <form method="POST" id="form-fornecedor" action="cadforn.php">
+  <form method="POST" id="form-fornecedor" action="">
     <?php echo $msg; ?>
 
     <h2>Dados da Empresa</h2>
@@ -226,12 +112,13 @@ button[type="submit"]:hover {
     <label for="uf">UF</label>
     <select id="uf" name="UF" required>
       <option value="">Selecione</option>
-      <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
-      <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
-      <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
-      <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
-      <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
-      <option>SE</option><option>TO</option>
+      <?php
+        $ufs = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB",
+                "PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+        foreach($ufs as $u){
+            echo "<option value='$u'>$u</option>";
+        }
+      ?>
     </select>
 
     <label for="cep">CEP</label>
@@ -249,44 +136,38 @@ button[type="submit"]:hover {
 </main>
 
 <script>
-// Máscara para CNPJ
-document.getElementById("cnpj").addEventListener("input", function(e) {
-    let valor = e.target.value.replace(/\D/g, ""); // só números
-    if (valor.length > 14) valor = valor.slice(0,14);
-    valor = valor.replace(/^(\d{2})(\d)/, "$1.$2");
-    valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
-    valor = valor.replace(/\.(\d{3})(\d)/, ".$1/$2");
-    valor = valor.replace(/(\d{4})(\d)/, "$1-$2");
-    e.target.value = valor;
+// CNPJ
+document.getElementById("cnpj").addEventListener("input", function(e){
+    let v = e.target.value.replace(/\D/g,"").slice(0,14);
+    v = v.replace(/^(\d{2})(\d)/,"$1.$2");
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3");
+    v = v.replace(/\.(\d{3})(\d)/,".$1/$2");
+    v = v.replace(/(\d{4})(\d)/,"$1-$2");
+    e.target.value = v;
 });
 
-// Máscara para CEP
-document.getElementById("cep").addEventListener("input", function(e) {
-    let valor = e.target.value.replace(/\D/g, ""); // só números
-    if (valor.length > 8) valor = valor.slice(0,8);
-    valor = valor.replace(/^(\d{5})(\d)/, "$1-$2");
-    e.target.value = valor;
-});
-
-// Máscara para telefone
-document.getElementById("telefone").addEventListener("input", function(e) {
-    let valor = e.target.value.replace(/\D/g, ""); // só números
-
-    if (valor.length > 11) valor = valor.slice(0,11);
-
-    if (valor.length > 10) {
-        // Celular com 9 dígitos: (99) 99999-9999
-        valor = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-    } else if (valor.length > 6) {
-        // Telefone fixo: (99) 9999-9999
-        valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
-    } else if (valor.length > 2) {
-        valor = valor.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
-    } else if (valor.length > 0) {
-        valor = valor.replace(/^(\d*)$/, "($1");
+// CEP - corrige o problema do último dígito
+document.getElementById("cep").addEventListener("input", function(e){
+    let v = e.target.value.replace(/\D/g,"").slice(0,8); // só 8 dígitos
+    if(v.length > 5){
+        v = v.replace(/^(\d{5})(\d{1,3})$/,"$1-$2"); // adiciona hífen
     }
+    e.target.value = v;
+});
 
-    e.target.value = valor;
+// Telefone
+document.getElementById("telefone").addEventListener("input", function(e){
+    let v = e.target.value.replace(/\D/g,"").slice(0,11);
+    if(v.length > 10){
+        v = v.replace(/^(\d{2})(\d{5})(\d{4})$/,"($1) $2-$3");
+    } else if(v.length > 6){
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/,"($1) $2-$3");
+    } else if(v.length > 2){
+        v = v.replace(/^(\d{2})(\d{0,5})$/,"($1) $2");
+    } else {
+        v = v.replace(/^(\d*)$/,"($1");
+    }
+    e.target.value = v;
 });
 </script>
 

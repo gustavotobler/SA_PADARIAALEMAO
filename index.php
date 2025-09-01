@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Debug: ver os valores da senha e resultado do password_verify
-    if ($usuario ) {
+    if ($usuario && password_verify($senha,$usuario['Senha'])) {
         $_SESSION['funcionario'] = $usuario['ID_func'];
         $_SESSION['nivel'] = $usuario['nivel_de_acesso'];
         $_SESSION['nome_func'] = $usuario['Nome_func'];
