@@ -40,6 +40,40 @@ def gerar_nome():
     sobrenomes = ["Silva", "Souza", "Oliveira", "Pereira", "Costa", "Almeida"]
     return f"{random.choice(nomes)} {random.choice(sobrenomes)}"
 
+def gerar_cep():
+    return f"{random.randint(10000, 99999)}{random.randint(100, 999)}"
+
+def gerar_cidade():
+    cidade = [
+        "Araquari","Barra do Sul","Garuva",
+        "Guaramirim","Itapoá","Jaraguá do Sul",
+        "Massaranduba","Schroeder","São Francisco do Sul"
+    ]
+    return random.choice(cidade)
+
+
+def gerar_bairro():
+    bairro  = [
+        "Centro","Atiradores","Bucarein",
+        "Floresta","Glória","Iririú",
+        "Saguaçu","Costa e Silva","Anita Garibaldi",
+        "Boa Vista","Comasa","Cidade Nova",
+        "Parque Guarani","América","Bom Retiro",
+        "Itaum","Nova Brasília","Zona Industrial Norte"
+    ]
+    return random.choice(bairro)
+
+def gerar_logradouro():
+    ruas = [
+        "Rua das Palmeiras","Rua XV de Novembro","Rua 7 de Setembro",
+        "Rua Visconde de Taunay","Rua Benjamin Constant","Rua dos Estados",
+        "Rua Nove de Março","Rua Iririú","Rua São Paulo","Rua Almirante Barroso",
+        "Rua Amazonas","Rua das Flores","Rua do Príncipe","Rua Anita Garibaldi",
+        "Rua das Nações"
+    ]
+    return random.choice(ruas)
+
+
 # --- Configuração Selenium ---
 driver = webdriver.Chrome()
 wait = WebDriverWait(driver, 10)
@@ -79,12 +113,12 @@ digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Nome_func
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "telefone"))), gerar_telefone())
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "rg"))), gerar_rg())
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "cpf"))), gerar_cpf())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "cep"))), "12345678")
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "UF"))), "SP")
+digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "cep"))), gerar_cep())
+digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "UF"))), "SC")
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Num_casa"))), str(random.randint(1,500)))
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Cidade"))), "São Paulo")
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Bairro"))), "Centro")
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Logradouro"))), "Rua Aleatória")
+digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Cidade"))), gerar_cidade())
+digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Bairro"))), gerar_bairro())
+digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Logradouro"))), gerar_logradouro())
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "email"))), f"teste{random.randint(1,999)}@email.com")
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "senha"))), "senha1234")
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "nascimento"))), gerar_data_nascimento())
