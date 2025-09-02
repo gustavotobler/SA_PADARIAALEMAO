@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 01/09/2025 às 18:47
+-- Tempo de geração: 02/09/2025 às 19:28
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -84,7 +84,7 @@ CREATE TABLE `funcionario` (
   `ID_func` int(11) NOT NULL,
   `Nome_func` varchar(40) NOT NULL,
   `Telefone` varchar(20) DEFAULT NULL,
-  `Sexo` enum('Masculino','Feminino','Outro') DEFAULT NULL,
+  `Sexo` enum('Masculino','Feminino') DEFAULT NULL,
   `RG` varchar(15) DEFAULT NULL,
   `CPF` varchar(15) DEFAULT NULL,
   `Esta_civil` enum('Solteiro','Casado','Divorciado','Viúvo') DEFAULT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE `funcionario` (
 --
 
 INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
-(1, 'Kerry King', NULL, 'Masculino', NULL, NULL, 'Solteiro', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', 'admin123', 'kerryking@padaria.com', 1, '1974-06-03', '2025-08-19', 'Gerente'),
+(1, 'Kerry King', '(47) 99685-5520', 'Masculino', '01.203.4013', '141.554.709-26', 'Casado', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', '$2y$10$zrHZZaNu.qCLV1noijw2teTQVtNHG84cc0InEEL1fOjUIz5iEicMK', 'kerryking@padaria.com', 1, '0000-00-00', '0000-00-00', 'Gerente'),
 (2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$i.FGwrLPX5JIt9jk98EXoOWOdhj2Yc82rVbFfvh7P33.pYz6uDdp2', 'ian@gmail.com', 0, '0000-00-00', '0000-00-00', 'Padeiro'),
 (3, 'Lucas Borba', '(51) 98765-4321', '', '123456789', '123.456.789-00', 'Solteiro', 'RS', 'Porto Alegre', 'Centro', '90000-00', 101, 'Rua das Flores', 'SenhaForte@123', 'lucas.borba@email.com', 2, '1990-05-15', '2025-08-01', 'Analista de Sistemas');
 
