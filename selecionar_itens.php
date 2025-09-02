@@ -921,529 +921,492 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- toast (adicionado - invisível até mostrar) -->
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+
     <script>
-      /*
-        Script unificado e robusto para: carrinho, totais e modal de pagamento (PIX/dinheiro/cartão).
-      */
-      if (window._paymentScriptLoaded) {
-        console.warn('Payment script já carregado — evitando carregamento duplo.');
-      } else {
-        window._paymentScriptLoaded = true;
+      (function () {
+        'use strict';
 
-        (function () {
-          'use strict';
+        // Stubs globais rápidos (evitam problemas se for chamado antes da inicialização)
+        window.openPaymentModal = window.openPaymentModal || function (opts) {
+          window.__pending_open = opts === undefined ? true : opts;
+          console.warn('[PAYMENT-STUB] openPaymentModal chamado antes da inicialização; pendente.');
+        };
+        window.closePaymentModal = window.closePaymentModal || function () {
+          window.__pending_close = true;
+          console.warn('[PAYMENT-STUB] closePaymentModal chamado antes da inicialização; pendente.');
+        };
 
-          /* ---------- util ---------- */
-          const $ = (sel, root = document) => (root || document).querySelector(sel);
-          const $$ = (sel, root = document) => Array.from((root || document).querySelectorAll(sel));
+        /* ---------------- utils ---------------- */
+        const $ = (sel, root = document) => (root || document).querySelector(sel);
+        const $$ = (sel, root = document) => Array.from((root || document).querySelectorAll(sel));
 
-          function formatReal(v) {
-            const n = Number(v) || 0;
-            return 'R$ ' + n.toFixed(2).replace('.', ',');
-          }
-          function parseBR(value) {
-            if (value == null) return 0;
-            const plain = String(value).replace(/\s/g, '').replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
-            return parseFloat(plain) || 0;
-          }
-          function escapeHtml(s = '') {
-            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&#39;" }[c]));
-          }
+        function formatReal(v) {
+          const n = Number(v) || 0;
+          return 'R$ ' + n.toFixed(2).replace('.', ',');
+        }
+        function parseBR(value) {
+          if (value == null) return 0;
+          const plain = String(value).replace(/\s/g, '').replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
+          return parseFloat(plain) || 0;
+        }
+        function escapeHtml(s = '') {
+          return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&#39;" }[c]));
+        }
 
-          /* ---------- helper para carregar scripts externos ---------- */
-          function loadScript(url, timeout = 8000) {
-            return new Promise((resolve, reject) => {
-              if (typeof QRCode === 'function') return resolve();
-              const existing = Array.from(document.scripts).find(s => s.src && s.src.includes(url));
-              if (existing) {
-                existing.addEventListener('load', () => resolve());
-                existing.addEventListener('error', () => reject(new Error('load error')));
+        // carrega script externo (resolve se já disponível)
+        function loadScript(url, timeout = 6000) {
+          return new Promise((resolve, reject) => {
+            if (window.QRCode && typeof window.QRCode === 'function') return resolve();
+            const existing = Array.from(document.scripts).find(s => s.src && s.src.includes(url));
+            if (existing) {
+              if (existing.getAttribute('data-loaded-ok')) return resolve();
+              existing.addEventListener('load', () => { existing.setAttribute('data-loaded-ok', '1'); resolve(); });
+              existing.addEventListener('error', () => reject(new Error('load error')));
+              return;
+            }
+            const s = document.createElement('script');
+            s.src = url;
+            s.async = true;
+            let t = setTimeout(() => { reject(new Error('timeout')); }, timeout);
+            s.onload = () => { clearTimeout(t); s.setAttribute('data-loaded-ok', '1'); resolve(); };
+            s.onerror = () => { clearTimeout(t); reject(new Error('load error')); };
+            document.head.appendChild(s);
+          });
+        }
+
+        /* ---------------- main (após DOM estar pronto) ---------------- */
+        document.addEventListener('DOMContentLoaded', () => {
+          try {
+            // refs
+            const cartItemsContainer = $('.cart-items');
+            const totalsSubtotalEl = document.querySelector('.totals div:first-child span:last-child');
+            const totalsTaxEl = document.querySelector('.totals div:nth-child(2) span:last-child');
+            const btnPay = document.getElementById('btnPay');
+
+            const modal = document.getElementById('paymentModal');
+            const backdrop = modal ? modal.querySelector('.modal-backdrop') : null;
+            const pmMethod = modal ? modal.querySelector('#pmMethod') : null;
+            const pmPaid = modal ? modal.querySelector('#pmPaid') : null;
+            const paidField = modal ? modal.querySelector('#paidField') : null;
+            const pmChangeWrapEl = modal ? modal.querySelector('#pmChangeWrap') : null;
+            const itemsList = modal ? modal.querySelector('#itemsList') : null;
+            const pmSubtotal = modal ? modal.querySelector('#pmSubtotal') : null;
+            const pmTax = modal ? modal.querySelector('#pmTax') : null;
+            const pmTotal = modal ? modal.querySelector('#pmTotal') : null;
+            const pmTotalHeader = modal ? modal.querySelector('#pmTotalHeader') : null;
+            const pmConfirm = modal ? modal.querySelector('#pmConfirm') : null;
+            const pmCancel = modal ? modal.querySelector('#pmCancel') : null;
+            const pmCloseTop = modal ? modal.querySelector('#pmCloseTop') : null;
+            const toast = document.getElementById('toast');
+
+            const pixBox = modal ? modal.querySelector('#pixBox') : null;
+            const pixQr = modal ? modal.querySelector('#pixQr') : null;
+            const pixCopiaCola = modal ? modal.querySelector('#pixCopiaCola') : null;
+            const btnCopyPix = modal ? modal.querySelector('#btnCopyPix') : null;
+
+            const searchInput = document.getElementById('searchInput');
+            const categoryHud = document.getElementById('categoryHud');
+            const productCards = () => $$('#productsGrid .card');
+
+            /* ---------- totals ---------- */
+            function updateTotals() {
+              if (!cartItemsContainer) return;
+              let sub = 0;
+              $$('.cart-item', cartItemsContainer).forEach(item => {
+                const price = parseFloat(item.dataset.price || 0) || 0;
+                const qtyEl = item.querySelector('.qty');
+                const qty = qtyEl ? parseFloat(qtyEl.textContent.replace(',', '.')) || 0 : 0;
+                const itemSub = price * qty;
+                const itSubEl = item.querySelector('.item-subtotal');
+                if (itSubEl) itSubEl.textContent = formatReal(itemSub);
+                sub += itemSub;
+              });
+              if (totalsSubtotalEl) totalsSubtotalEl.textContent = formatReal(sub);
+
+              const taxRaw = totalsTaxEl && totalsTaxEl.dataset && totalsTaxEl.dataset.tax ? totalsTaxEl.dataset.tax : (totalsTaxEl ? totalsTaxEl.textContent : '0');
+              const tax = parseBR(taxRaw) || 0;
+              if (totalsTaxEl) totalsTaxEl.textContent = formatReal(tax);
+
+              const total = sub + tax;
+              if (btnPay) {
+                btnPay.textContent = `Ir para pagamento → (Total: ${formatReal(total)})`;
+                btnPay.dataset.total = Number(total).toFixed(2);
+              }
+            }
+
+            /* ---------- add-to-cart handlers (se já existirem no DOM) ---------- */
+            $$('.add-to-cart').forEach(btn => {
+              btn.addEventListener('click', () => {
+                if (!cartItemsContainer) return;
+                const name = btn.dataset.name || 'Produto';
+                const price = parseFloat(btn.dataset.price) || 0;
+                let qty = 1;
+                if (btn.dataset.unit && String(btn.dataset.unit).toLowerCase().includes('kg')) {
+                  const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
+                  if (!input) return;
+                  qty = parseFloat(input.replace(',', '.'));
+                  if (isNaN(qty) || qty <= 0) { alert('Peso inválido!'); return; }
+                }
+                let existing = Array.from(cartItemsContainer.children).find(el => el.querySelector('.item-name') && el.querySelector('.item-name').textContent === name);
+                if (existing) {
+                  const qtyEl = existing.querySelector('.qty');
+                  const newQty = (parseFloat(qtyEl.textContent.replace(',', '.')) || 0) + qty;
+                  qtyEl.textContent = String(newQty).replace('.', ',');
+                } else {
+                  const div = document.createElement('div');
+                  div.className = 'cart-item';
+                  div.dataset.price = String(price);
+                  div.innerHTML = `
+              <div class="item-info">
+                <button class="qty-btn decrease">−</button>
+                <span class="qty">${String(qty).replace('.', ',')}</span>
+                <button class="qty-btn increase">＋</button>
+                <span class="item-name">${escapeHtml(name)}</span>
+              </div>
+              <span class="item-subtotal">${formatReal(price * qty)}</span>
+            `;
+                  cartItemsContainer.appendChild(div);
+                }
+                updateTotals();
+              });
+            });
+
+            /* ---------- qty handlers ---------- */
+            if (cartItemsContainer) {
+              cartItemsContainer.addEventListener('click', e => {
+                const itemEl = e.target.closest('.cart-item');
+                if (!itemEl) return;
+                if (e.target.matches('.increase')) {
+                  const qtyEl = itemEl.querySelector('.qty');
+                  const newQty = (parseFloat(qtyEl.textContent.replace(',', '.')) || 0) + 1;
+                  qtyEl.textContent = newQty.toFixed(2).replace(/\.00$/, '').replace('.', ',');
+                  updateTotals();
+                } else if (e.target.matches('.decrease')) {
+                  const qtyEl = itemEl.querySelector('.qty');
+                  const newQty = (parseFloat(qtyEl.textContent.replace(',', '.')) || 0) - 1;
+                  if (newQty <= 0) itemEl.remove();
+                  else qtyEl.textContent = newQty.toFixed(2).replace(/\.00$/, '').replace('.', ',');
+                  updateTotals();
+                }
+              });
+            }
+
+            /* ---------- collect helpers ---------- */
+            function collectCartItems() {
+              return $$('.cart-item').map(el => {
+                const nome = el.querySelector('.item-name') ? el.querySelector('.item-name').textContent.trim() : 'Produto';
+                const qtd = el.querySelector('.qty') ? el.querySelector('.qty').textContent.replace(',', '.') : '1';
+                const preco = el.dataset.price || '0';
+                return { nome, qtd: String(qtd), preco: String(preco) };
+              });
+            }
+            function collectTotals() {
+              const cartEls = $$('.cart-item');
+              const subtotal = cartEls.reduce((acc, el) => {
+                const price = parseFloat(el.dataset.price || 0) || 0;
+                const qty = parseFloat((el.querySelector('.qty') || { textContent: '1' }).textContent.replace(',', '.')) || 1;
+                return acc + (price * qty);
+              }, 0);
+              const tax = parseBR(totalsTaxEl ? totalsTaxEl.textContent : 0) || 0;
+              return { total: subtotal + tax, subtotal, tax };
+            }
+
+            /* ---------- modal open/close ---------- */
+            let lastFocused = null;
+            function renderItems(items) {
+              if (!itemsList) return;
+              itemsList.innerHTML = '';
+              if (!items || items.length === 0) {
+                itemsList.innerHTML = '<div style="color:var(--muted)">Nenhum item no carrinho.</div>';
                 return;
               }
-              const s = document.createElement('script');
-              s.src = url;
-              s.async = true;
-              let timer = setTimeout(() => { reject(new Error('timeout')); }, timeout);
-              s.onload = () => { clearTimeout(timer); resolve(); };
-              s.onerror = () => { clearTimeout(timer); reject(new Error('load error')); };
-              document.head.appendChild(s);
-            });
-          }
-
-          /* ---------- main ---------- */
-          document.addEventListener('DOMContentLoaded', () => {
-            try {
-              // refs
-              const cartItemsContainer = $('.cart-items');
-              const totalsSubtotalEl = document.querySelector('.totals div:first-child span:last-child');
-              const totalsTaxEl = document.querySelector('.totals div:nth-child(2) span:last-child');
-              const btnPay = document.getElementById('btnPay');
-
-              const modal = $('#paymentModal');
-              const backdrop = modal ? $('.modal-backdrop', modal) : null;
-              const pmMethod = modal ? $('#pmMethod', modal) : null;
-              const pmPaid = modal ? $('#pmPaid', modal) : null;
-              const paidField = modal ? $('#paidField', modal) : null;
-              const pmChangeWrapEl = modal ? $('#pmChangeWrap', modal) : null;
-              const itemsList = modal ? $('#itemsList', modal) : null;
-              const pmSubtotal = modal ? $('#pmSubtotal', modal) : null;
-              const pmTax = modal ? $('#pmTax', modal) : null;
-              const pmTotal = modal ? $('#pmTotal', modal) : null;
-              const pmTotalHeader = modal ? $('#pmTotalHeader', modal) : null;
-              const pmConfirm = modal ? $('#pmConfirm', modal) : null;
-              const pmCancel = modal ? $('#pmCancel', modal) : null;
-              const pmCloseTop = modal ? $('#pmCloseTop', modal) : null;
-              const toast = $('#toast');
-
-              const pixArea = modal ? $('#pixBox', modal) : null;
-              const pixQr = modal ? $('#pixQr', modal) : null;
-              const pixCopiaCola = modal ? $('#pixCopiaCola', modal) : null;
-              const btnCopyPix = modal ? $('#btnCopyPix', modal) : null;
-
-              const searchInput = $('#searchInput');
-              const categoryHud = $('#categoryHud');
-              const productCards = () => $$('#productsGrid .card');
-
-              /* ---------- totals ---------- */
-              function updateTotals() {
-                if (!cartItemsContainer) return;
-                let sub = 0;
-                $$('.cart-item', cartItemsContainer).forEach(item => {
-                  const price = parseFloat(item.dataset.price || 0) || 0;
-                  const qtyEl = item.querySelector('.qty');
-                  const qty = qtyEl ? parseFloat(qtyEl.textContent.replace(',', '.')) || 0 : 0;
-                  const itemSub = price * qty;
-                  const itSubEl = item.querySelector('.item-subtotal');
-                  if (itSubEl) itSubEl.textContent = formatReal(itemSub);
-                  sub += itemSub;
-                });
-                if (totalsSubtotalEl) totalsSubtotalEl.textContent = formatReal(sub);
-
-                const taxRaw = totalsTaxEl && totalsTaxEl.dataset && totalsTaxEl.dataset.tax ? totalsTaxEl.dataset.tax : (totalsTaxEl ? totalsTaxEl.textContent : '0');
-                const tax = parseBR(taxRaw) || 0;
-                if (totalsTaxEl) totalsTaxEl.textContent = formatReal(tax);
-
-                const total = sub + tax;
-                if (btnPay) {
-                  btnPay.textContent = `Ir para pagamento → (Total: ${formatReal(total)})`;
-                  btnPay.dataset.total = Number(total).toFixed(2);
-                }
-              }
-
-              /* ---------- tornar modal arrastável (drag) ---------- */
-              const modalPanel = modal ? modal.querySelector('.modal-panel') : null;
-              if (modal && modalPanel) {
-                let isDragging = false;
-                let startX = 0, startY = 0;
-                let origLeft = 0, origTop = 0;
-                // área que o utilizador pode agarrar (cabeçalho) - fallback pro painel
-                const dragHandle = modalPanel.querySelector('.modal-header') || modalPanel;
-
-                // Usa pointer events (funciona para mouse + touch)
-                dragHandle.style.touchAction = 'none';
-                dragHandle.style.cursor = 'grab';
-
-                dragHandle.addEventListener('pointerdown', (ev) => {
-                  // só arrasta com botão primário
-                  if (ev.button && ev.button !== 0) return;
-                  ev.preventDefault();
-                  isDragging = true;
-                  modal.classList.add('dragging');
-                  try { dragHandle.setPointerCapture(ev.pointerId); } catch (e) { }
-                  startX = ev.clientX;
-                  startY = ev.clientY;
-
-                  // forçar posição fixa mantendo a posição atual na tela
-                  const rect = modalPanel.getBoundingClientRect();
-                  modalPanel.style.position = 'fixed';
-                  modalPanel.style.left = rect.left + 'px';
-                  modalPanel.style.top = rect.top + 'px';
-                  modalPanel.style.transform = 'none';
-                  modalPanel.style.margin = '0';
-
-                  origLeft = rect.left;
-                  origTop = rect.top;
-                  dragHandle.style.cursor = 'grabbing';
-                });
-
-                document.addEventListener('pointermove', (ev) => {
-                  if (!isDragging) return;
-                  ev.preventDefault();
-                  const dx = ev.clientX - startX;
-                  const dy = ev.clientY - startY;
-                  let newLeft = origLeft + dx;
-                  let newTop = origTop + dy;
-
-                  // limitar ao viewport com folga de 8px
-                  const vw = window.innerWidth, vh = window.innerHeight;
-                  const w = modalPanel.offsetWidth, h = modalPanel.offsetHeight;
-                  newLeft = Math.min(Math.max(8, newLeft), vw - w - 8);
-                  newTop = Math.min(Math.max(8, newTop), vh - h - 8);
-
-                  modalPanel.style.left = newLeft + 'px';
-                  modalPanel.style.top = newTop + 'px';
-                });
-
-                function stopDrag(ev) {
-                  if (!isDragging) return;
-                  isDragging = false;
-                  modal.classList.remove('dragging');
-                  try { dragHandle.releasePointerCapture && dragHandle.releasePointerCapture(ev && ev.pointerId); } catch (e) { }
-                  dragHandle.style.cursor = 'grab';
-                  // mantém left/top para posicionamento persistente enquanto o modal ficar aberto
-                }
-                document.addEventListener('pointerup', stopDrag);
-                document.addEventListener('pointercancel', stopDrag);
-
-                // Ao fechar o modal, limpa estilos (volta a centralizar ao abrir de novo)
-                const originalClose = closePaymentModal;
-                window.closePaymentModal = function () {
-                  try {
-                    if (modalPanel) {
-                      modalPanel.style.position = '';
-                      modalPanel.style.left = '';
-                      modalPanel.style.top = '';
-                      modalPanel.style.transform = '';
-                      modalPanel.style.margin = '';
-                    }
-                  } catch (e) { /* ignore */ }
-                  // chama a função original para fechar
-                  originalClose && originalClose();
-                };
-              }
-
-
-              /* ---------- add-to-cart ---------- */
-              $$('.add-to-cart').forEach(btn => {
-                btn.addEventListener('click', () => {
-                  if (!cartItemsContainer) return;
-                  const name = btn.dataset.name || 'Produto';
-                  const price = parseFloat(btn.dataset.price) || 0;
-                  let qty = 1;
-                  if (btn.dataset.unit && String(btn.dataset.unit).toLowerCase().includes('kg')) {
-                    const input = prompt('Digite o peso em kg (ex: 0.250 para 250 g):');
-                    if (!input) return;
-                    qty = parseFloat(input.replace(',', '.'));
-                    if (isNaN(qty) || qty <= 0) { alert('Peso inválido!'); return; }
-                  }
-                  let existing = Array.from(cartItemsContainer.children).find(el => el.querySelector('.item-name') && el.querySelector('.item-name').textContent === name);
-                  if (existing) {
-                    const qtyEl = existing.querySelector('.qty');
-                    const newQty = (parseFloat(qtyEl.textContent.replace(',', '.')) || 0) + qty;
-                    // manter formato simples: se era decimal com vírgula, deixa com 2 decimais; senão inteiro
-                    qtyEl.textContent = String(newQty).replace('.', ',');
-                  } else {
-                    const div = document.createElement('div');
-                    div.className = 'cart-item';
-                    div.dataset.price = String(price);
-                    div.innerHTML = `
-                <div class="item-info">
-                  <button class="qty-btn decrease">−</button>
-                  <span class="qty">${String(qty).replace('.', ',')}</span>
-                  <button class="qty-btn increase">＋</button>
-                  <span class="item-name">${escapeHtml(name)}</span>
-                </div>
-                <span class="item-subtotal">${formatReal(price * qty)}</span>
-              `;
-                    cartItemsContainer.appendChild(div);
-                  }
-                  updateTotals();
-                });
+              items.forEach(it => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `<div>
+                <div class="item-name">${escapeHtml(it.nome)}</div>
+                <div class="item-meta">${String(it.qtd).replace('.', ',')} × ${formatReal(it.preco)}</div>
+              </div>
+              <div style="font-weight:700">${formatReal(Number(it.preco) * Number(it.qtd))}</div>`;
+                itemsList.appendChild(div);
               });
-
-              /* ---------- increase/decrease ---------- */
-              if (cartItemsContainer) {
-                cartItemsContainer.addEventListener('click', e => {
-                  const itemEl = e.target.closest('.cart-item');
-                  if (!itemEl) return;
-                  if (e.target.matches('.increase')) {
-                    const qtyEl = itemEl.querySelector('.qty');
-                    const newQty = (parseFloat(qtyEl.textContent.replace(',', '.')) || 0) + 1;
-                    qtyEl.textContent = newQty.toFixed(2).replace(/\.00$/, '').replace('.', ',');
-                    updateTotals();
-                  } else if (e.target.matches('.decrease')) {
-                    const qtyEl = itemEl.querySelector('.qty');
-                    const newQty = (parseFloat(qtyEl.textContent.replace(',', '.')) || 0) - 1;
-                    if (newQty <= 0) itemEl.remove();
-                    else qtyEl.textContent = newQty.toFixed(2).replace(/\.00$/, '').replace('.', ',');
-                    updateTotals();
-                  }
-                });
-              }
-
-              /* ---------- coletar itens/totais ---------- */
-              function collectCartItems() {
-                return $$('.cart-item').map(el => {
-                  const nome = el.querySelector('.item-name') ? el.querySelector('.item-name').textContent.trim() : 'Produto';
-                  const qtd = el.querySelector('.qty') ? el.querySelector('.qty').textContent.replace(',', '.') : '1';
-                  const preco = el.dataset.price || '0';
-                  return { nome, qtd: String(qtd), preco: String(preco) };
-                });
-              }
-              function collectTotals() {
-                const cartEls = $$('.cart-item');
-                const subtotal = cartEls.reduce((acc, el) => {
-                  const price = parseFloat(el.dataset.price || 0) || 0;
-                  const qty = parseFloat((el.querySelector('.qty') || { textContent: '1' }).textContent.replace(',', '.')) || 1;
-                  return acc + (price * qty);
-                }, 0);
-                const tax = parseBR(totalsTaxEl ? totalsTaxEl.textContent : 0) || 0;
-                return { total: subtotal + tax, subtotal, tax };
-              }
-
-              /* ---------- modal open/close ---------- */
-              let lastFocused = null;
-              function renderItems(items) {
-                if (!itemsList) return;
-                itemsList.innerHTML = '';
-                if (!items || items.length === 0) {
-                  itemsList.innerHTML = '<div style="color:var(--muted)">Nenhum item no carrinho.</div>';
-                  return;
-                }
-                items.forEach(it => {
-                  const div = document.createElement('div');
-                  div.className = 'item-row';
-                  div.innerHTML = `<div>
-              <div class="item-name">${escapeHtml(it.nome)}</div>
-              <div class="item-meta">${String(it.qtd).replace('.', ',')} × ${formatReal(it.preco)}</div>
-            </div>
-            <div style="font-weight:700">${formatReal(Number(it.preco) * Number(it.qtd))}</div>`;
-                  itemsList.appendChild(div);
-                });
-              }
-
-              function openPaymentModal(opts = {}) {
-                if (!modal) return;
-                lastFocused = document.activeElement;
-                modal.setAttribute('data-open', 'true');
-                modal.removeAttribute('aria-hidden');
-
-                const totals = opts.total != null ? opts : collectTotals();
-                const items = opts.items || collectCartItems();
-                const tax = opts.tax != null ? opts.tax : (totals.tax || 0);
-                const total = opts.total != null ? opts.total : totals.total;
-
-                renderItems(items);
-                pmSubtotal && (pmSubtotal.textContent = formatReal(total - tax));
-                pmTax && (pmTax.textContent = formatReal(tax));
-                pmTotal && (pmTotal.textContent = formatReal(total));
-                pmTotalHeader && (pmTotalHeader.textContent = formatReal(total));
-                if (pmMethod) pmMethod.value = 'dinheiro';
-                if (pmPaid) pmPaid.value = '';
-                pmChangeWrapEl && pmChangeWrapEl.classList.add('sr-only');
-                if (pixArea) pixArea.style.display = 'none';
-
-                modal.dataset.total = String(Number(total).toFixed(2));
-                modal.dataset.tax = String(Number(tax).toFixed(2));
-              }
-              function closePaymentModal() {
-                if (!modal) return;
-                modal.setAttribute('data-open', 'false');
-                modal.setAttribute('aria-hidden', 'true');
-                if (lastFocused) lastFocused.focus();
-              }
-              window.openPaymentModal = (opts) => openPaymentModal(opts);
-
-              if (btnPay) btnPay.addEventListener('click', e => { e.preventDefault(); openPaymentModal(collectTotals()); });
-
-              /* ---------- PIX ---------- */
-              async function gerarPix() {
-                try {
-                  if (!modal) return;
-                  const valorStr = String(modal.dataset.total || '0').replace(',', '.');
-                  const valorNum = Number(valorStr) || 0;
-                  const amount = valorNum > 0 ? valorNum.toFixed(2) : null;
-
-                  let chavePix = "139.138.019-36";
-                  if (/^[\d.\-() ]+$/.test(chavePix)) chavePix = chavePix.replace(/\D/g, '');
-                  const nome = "Padaria do Alemão";
-                  const cidade = "JOINVILLE";
-
-                  function tlv(tag, value) {
-                    const v = String(value || '');
-                    const len = String(v.length).padStart(2, '0');
-                    return tag + len + v;
-                  }
-                  const mfiGui = tlv('00', 'BR.GOV.BCB.PIX');
-                  const mfiKey = tlv('01', chavePix);
-                  const merchantAccountInfo = tlv('26', mfiGui + mfiKey);
-                  const payloadFormatIndicator = tlv('00', '01');
-                  const merchantCategoryCode = tlv('52', '0000');
-                  const transactionCurrency = tlv('53', '986');
-                  const amountField = amount ? tlv('54', amount) : '';
-                  const countryCode = tlv('58', 'BR');
-                  const merchantName = tlv('59', nome);
-                  const merchantCity = tlv('60', cidade.toUpperCase());
-                  const txidValue = '***';
-                  const additionalDataField = tlv('62', tlv('05', txidValue));
-
-                  let payload = payloadFormatIndicator
-                    + merchantAccountInfo
-                    + merchantCategoryCode
-                    + transactionCurrency
-                    + amountField
-                    + countryCode
-                    + merchantName
-                    + merchantCity
-                    + additionalDataField;
-                  payload += '6304';
-
-                  function crc16(str) {
-                    const pol = 0x1021;
-                    let crc = 0xFFFF;
-                    for (let i = 0; i < str.length; i++) {
-                      crc ^= str.charCodeAt(i) << 8;
-                      for (let j = 0; j < 8; j++) {
-                        crc = (crc & 0x8000) ? ((crc << 1) ^ pol) & 0xFFFF : (crc << 1) & 0xFFFF;
-                      }
-                    }
-                    return crc.toString(16).toUpperCase().padStart(4, '0');
-                  }
-                  const crc = crc16(payload);
-                  const fullPayload = payload + crc;
-
-                  if (pixCopiaCola) pixCopiaCola.value = fullPayload;
-
-                  if (pixQr) {
-                    pixQr.innerHTML = '';
-                    try {
-                      if (typeof QRCode !== 'function') {
-                        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
-                      }
-                      if (typeof QRCode === 'function') {
-                        const el = document.createElement('div');
-                        pixQr.appendChild(el);
-                        new QRCode(el, { text: fullPayload, width: 300, height: 300, correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.H : 3 });
-                      } else {
-                        throw new Error("QRCode lib indisponível");
-                      }
-                    } catch (err) {
-                      const qrUrl = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(fullPayload)}`;
-                      pixQr.innerHTML = `<img alt="QR PIX" src="${qrUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
-                    }
-                  }
-                  if (pixArea) pixArea.style.display = 'block';
-                  return fullPayload;
-                } catch (err) {
-                  console.error('Erro em gerarPix():', err);
-                  if (pixArea) pixArea.style.display = 'none';
-                }
-              }
-
-              /* ---------- eventos PIX ---------- */
-              if (pmMethod) {
-                pmMethod.addEventListener('change', () => {
-                  if (pmMethod.value === 'pix') {
-                    if (paidField) paidField.style.display = 'none';
-                    gerarPix();
-                  } else if (pmMethod.value === 'dinheiro') {
-                    if (paidField) paidField.style.display = '';
-                    if (pixArea) pixArea.style.display = 'none';
-                  } else {
-                    if (paidField) paidField.style.display = 'none';
-                    if (pixArea) pixArea.style.display = 'none';
-                  }
-                });
-              }
-
-              if (btnCopyPix && pixCopiaCola) {
-                btnCopyPix.addEventListener('click', async () => {
-                  try {
-                    if (!pixCopiaCola.value) return;
-                    if (navigator.clipboard) await navigator.clipboard.writeText(pixCopiaCola.value);
-                    else { pixCopiaCola.select(); document.execCommand('copy'); }
-                    showToast('Código PIX copiado!');
-                  } catch { alert('Não foi possível copiar automaticamente.'); }
-                });
-              }
-
-              /* ---------- confirm/cancel ---------- */
-              pmCancel && pmCancel.addEventListener('click', closePaymentModal);
-              pmCloseTop && pmCloseTop.addEventListener('click', closePaymentModal);
-              backdrop && backdrop.addEventListener('click', e => { if (e.target.dataset.dismiss !== undefined) closePaymentModal(); });
-              pmConfirm && pmConfirm.addEventListener('click', () => { closePaymentModal(); showToast('Pagamento confirmado!'); });
-
-              /* ---------- toast ---------- */
-              let toastTimer = null;
-              function showToast(msg, ms = 2200) {
-                if (!toast) return alert(msg);
-                toast.textContent = msg;
-                toast.classList.add('show');
-                clearTimeout(toastTimer);
-                toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
-              }
-
-              updateTotals();
-
-              /* ---------- Search & Category filtering (mantendo nomes/case originais) ---------- */
-              function filterProducts() {
-                const q = (searchInput && searchInput.value || '').trim().toLowerCase();
-                const activeBtn = categoryHud ? categoryHud.querySelector('button.active') : null;
-                const cat = activeBtn ? activeBtn.dataset.cat : 'all';
-                productCards().forEach(card => {
-                  const name = (card.dataset.name || '').toLowerCase();
-                  const category = (card.dataset.category || '').toLowerCase();
-                  const matchesQuery = !q || name.includes(q) || (card.dataset.code && card.dataset.code.toLowerCase().includes(q));
-                  // comparo lowercased, mas não alterei o texto dos botões
-                  const matchesCat = (cat === 'all') || (category === String(cat).toLowerCase());
-                  card.style.display = (matchesQuery && matchesCat) ? '' : 'none';
-                });
-              }
-
-              if (searchInput) {
-                searchInput.addEventListener('input', () => filterProducts());
-              }
-              if (categoryHud) {
-                categoryHud.addEventListener('click', (e) => {
-                  const btn = e.target.closest('button[data-cat]');
-                  if (!btn) return;
-                  categoryHud.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                  btn.classList.add('active');
-                  filterProducts();
-                });
-              }
-
-              /* ---------- showSection helper (evita erros showSection undefined) ---------- */
-              window.showSection = function (nameOrUrl) {
-                // se parecer com um arquivo php -> navega
-                if (typeof nameOrUrl === 'string' && nameOrUrl.match(/\.php$/i)) {
-                  window.location.href = nameOrUrl;
-                  return;
-                }
-                // senão, tenta mostrar uma seção na página por id
-                const el = document.getElementById(nameOrUrl);
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                  return;
-                }
-                console.warn('showSection: seção não encontrada', nameOrUrl);
-              };
-
-              /* ---------- toggleSidebar (preserva aparência original) ---------- */
-              window.toggleSidebar = function () {
-                const sb = document.getElementById('sidebar');
-                if (!sb) return;
-                sb.classList.toggle('collapsed');
-                // ajusta main-content margin-left para combinar
-                const main = document.getElementById('mainContent');
-                if (main) {
-                  if (sb.classList.contains('collapsed')) main.style.marginLeft = '60px';
-                  else main.style.marginLeft = '240px';
-                }
-              };
-
-              /* ---------- keyboard shortcuts modal (Esc/Enter) ---------- */
-              document.addEventListener('keydown', (ev) => {
-                if (ev.key === 'Escape') closePaymentModal();
-                if (ev.key === 'Enter' && modal && modal.getAttribute('data-open') === 'true') { pmConfirm && pmConfirm.click(); }
-              });
-
-            } catch (err) {
-              console.error('Erro inicializando script:', err);
             }
-          });
-        })();
-      }
+
+            function openPaymentModal(opts) {
+              if (!modal) return;
+              lastFocused = document.activeElement;
+              modal.setAttribute('data-open', 'true');
+              modal.removeAttribute('aria-hidden');
+
+              const totals = opts && opts.total != null ? opts : collectTotals();
+              const items = opts && opts.items ? opts.items : collectCartItems();
+              const tax = opts && opts.tax != null ? opts.tax : (totals.tax || 0);
+              const total = opts && opts.total != null ? opts.total : totals.total;
+
+              renderItems(items);
+              if (pmSubtotal) pmSubtotal.textContent = formatReal(total - tax);
+              if (pmTax) pmTax.textContent = formatReal(tax);
+              if (pmTotal) pmTotal.textContent = formatReal(total);
+              if (pmTotalHeader) pmTotalHeader.textContent = formatReal(total);
+              if (pmMethod) pmMethod.value = 'dinheiro';
+              if (pmPaid) pmPaid.value = '';
+              if (pmChangeWrapEl) pmChangeWrapEl.classList.add('sr-only');
+              if (pixBox) pixBox.style.display = 'none';
+
+              modal.dataset.total = String(Number(total).toFixed(2));
+              modal.dataset.tax = String(Number(tax).toFixed(2));
+            }
+
+            function closePaymentModal() {
+              if (!modal) return;
+              modal.setAttribute('data-open', 'false');
+              modal.setAttribute('aria-hidden', 'true');
+              if (lastFocused) lastFocused.focus();
+              if (pixQr) pixQr.innerHTML = '';
+            }
+
+            // expõe globalmente
+            try {
+              window.openPaymentModal = (opts) => openPaymentModal(opts);
+              window.closePaymentModal = () => closePaymentModal();
+              if (window.__pending_open) {
+                const pending = window.__pending_open === true ? undefined : window.__pending_open;
+                openPaymentModal(pending);
+                window.__pending_open = null;
+              }
+              if (window.__pending_close) {
+                closePaymentModal();
+                window.__pending_close = null;
+              }
+            } catch (e) {
+              console.warn('Erro ao expor funções globais:', e);
+            }
+
+            // botão pay
+            if (btnPay) btnPay.addEventListener('click', e => { e.preventDefault(); openPaymentModal(collectTotals()); });
+
+            /* ---------- PIX generation (robust) ---------- */
+            async function gerarPix() {
+              try {
+                if (!modal) return;
+                const valorStr = String(modal.dataset.total || '0').replace(',', '.');
+                const valorNum = Number(valorStr) || 0;
+                const amount = valorNum > 0 ? valorNum.toFixed(2) : null;
+
+                // dados do recebedor (configure aqui)
+                let chavePix = "139.138.019-36";
+                if (/^[\d.\-() ]+$/.test(chavePix)) chavePix = chavePix.replace(/\D/g, '');
+                const nome = "Padaria do Alemão";
+                const cidade = "JOINVILLE";
+
+                function tlv(tag, value) {
+                  const v = String(value || '');
+                  const len = String(v.length).padStart(2, '0');
+                  return tag + len + v;
+                }
+
+                const mfiGui = tlv('00', 'BR.GOV.BCB.PIX');
+                const mfiKey = tlv('01', chavePix);
+                const merchantAccountInfo = tlv('26', mfiGui + mfiKey);
+                const payloadFormatIndicator = tlv('00', '01');
+                const merchantCategoryCode = tlv('52', '0000');
+                const transactionCurrency = tlv('53', '986');
+                const amountField = amount ? tlv('54', amount) : '';
+                const countryCode = tlv('58', 'BR');
+                const merchantName = tlv('59', nome);
+                const merchantCity = tlv('60', cidade.toUpperCase());
+                const txidValue = '***';
+                const additionalDataField = tlv('62', tlv('05', txidValue));
+
+                let payload = payloadFormatIndicator
+                  + merchantAccountInfo
+                  + merchantCategoryCode
+                  + transactionCurrency
+                  + amountField
+                  + countryCode
+                  + merchantName
+                  + merchantCity
+                  + additionalDataField;
+                payload += '6304';
+
+                function crc16(str) {
+                  const pol = 0x1021;
+                  let crc = 0xFFFF;
+                  for (let i = 0; i < str.length; i++) {
+                    crc ^= str.charCodeAt(i) << 8;
+                    for (let j = 0; j < 8; j++) {
+                      crc = (crc & 0x8000) ? ((crc << 1) ^ pol) & 0xFFFF : (crc << 1) & 0xFFFF;
+                    }
+                  }
+                  return crc.toString(16).toUpperCase().padStart(4, '0');
+                }
+
+                const crc = crc16(payload);
+                const fullPayload = payload + crc;
+
+                // preenche copia e cola
+                if (pixCopiaCola) pixCopiaCola.value = fullPayload;
+
+                // limpa area do QR
+                if (!pixQr) return;
+                pixQr.innerHTML = '';
+
+                const size = 300; // gera QR maior; o CSS ajeita
+
+                // tenta usar QRCode lib; se não, tenta carregar; se erro -> fallback imagem
+                try {
+                  if (!(window.QRCode && typeof window.QRCode === 'function')) {
+                    // tenta carregar do CDN (poderá ser bloqueado em algumas redes)
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 5000)
+                      .catch(() => { /* swallow - faremos fallback por imagem */ });
+                  }
+                } catch (e) {
+                  // ignore
+                }
+
+                if (window.QRCode && typeof window.QRCode === 'function') {
+                  try {
+                    // qrcodejs cria dentro do container; limpa e cria
+                    const el = document.createElement('div');
+                    pixQr.appendChild(el);
+                    new QRCode(el, { text: fullPayload, width: size, height: size });
+                  } catch (err) {
+                    console.warn('[PIX] QR lib falhou, fallback para imagem:', err);
+                    const qrUrl = `https://chart.googleapis.com/chart?chs=${size}x${size}&cht=qr&chl=${encodeURIComponent(fullPayload)}`;
+                    pixQr.innerHTML = `<img alt="QR PIX" src="${qrUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
+                  }
+                } else {
+                  const qrUrl = `https://chart.googleapis.com/chart?chs=${size}x${size}&cht=qr&chl=${encodeURIComponent(fullPayload)}`;
+                  pixQr.innerHTML = `<img alt="QR PIX" src="${qrUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
+                }
+
+                if (pixBox) pixBox.style.display = 'block';
+                return fullPayload;
+              } catch (err) {
+                console.error('[PIX] erro em gerarPix():', err);
+                if (pixBox) pixBox.style.display = 'none';
+              }
+            }
+
+            /* ---------- eventos PIX / copiar ---------- */
+            if (pmMethod) {
+              pmMethod.addEventListener('change', () => {
+                if (pmMethod.value === 'pix') {
+                  if (paidField) paidField.style.display = 'none';
+                  gerarPix();
+                } else if (pmMethod.value === 'dinheiro') {
+                  if (paidField) paidField.style.display = '';
+                  if (pixBox) pixBox.style.display = 'none';
+                } else {
+                  if (paidField) paidField.style.display = 'none';
+                  if (pixBox) pixBox.style.display = 'none';
+                }
+              });
+            }
+
+            if (btnCopyPix && pixCopiaCola) {
+              btnCopyPix.addEventListener('click', async () => {
+                try {
+                  if (!pixCopiaCola.value) return;
+                  if (navigator.clipboard) await navigator.clipboard.writeText(pixCopiaCola.value);
+                  else { pixCopiaCola.select(); document.execCommand('copy'); }
+                  showToast('Código PIX copiado!');
+                } catch (e) {
+                  console.warn('copy failed', e);
+                  alert('Não foi possível copiar automaticamente. Selecione e copie manualmente.');
+                }
+              });
+            }
+
+            /* ---------- confirmar / cancelar ---------- */
+            if (pmCancel) pmCancel.addEventListener('click', () => closePaymentModal());
+            if (pmCloseTop) pmCloseTop.addEventListener('click', () => closePaymentModal());
+            if (backdrop) backdrop.addEventListener('click', e => { if (e.target === backdrop) closePaymentModal(); });
+            if (pmConfirm) pmConfirm.addEventListener('click', () => {
+              closePaymentModal();
+              showToast('Pagamento confirmado!');
+            });
+
+            /* ---------- toast ---------- */
+            let toastTimer = null;
+            function showToast(msg, ms = 2000) {
+              if (!toast) { alert(msg); return; }
+              toast.textContent = msg;
+              toast.classList.add('show');
+              clearTimeout(toastTimer);
+              toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
+            }
+
+            /* ---------- drag modal (visual) ---------- */
+            const modalPanel = modal ? modal.querySelector('.modal-panel') : null;
+            if (modal && modalPanel) {
+              let dragging = false, sx = 0, sy = 0, ol = 0, ot = 0;
+              const handle = modalPanel.querySelector('.modal-header') || modalPanel;
+              handle.style.touchAction = 'none';
+              handle.addEventListener('pointerdown', e => {
+                if (e.button && e.button !== 0) return;
+                dragging = true;
+                sx = e.clientX; sy = e.clientY;
+                const rect = modalPanel.getBoundingClientRect();
+                ol = rect.left; ot = rect.top;
+                modalPanel.style.position = 'fixed';
+                modalPanel.style.left = ol + 'px';
+                modalPanel.style.top = ot + 'px';
+                modalPanel.style.transform = 'none';
+                handle.setPointerCapture && handle.setPointerCapture(e.pointerId);
+              });
+              document.addEventListener('pointermove', e => {
+                if (!dragging) return;
+                const dx = e.clientX - sx, dy = e.clientY - sy;
+                let nl = ol + dx, nt = ot + dy;
+                const vw = window.innerWidth, vh = window.innerHeight;
+                const w = modalPanel.offsetWidth, h = modalPanel.offsetHeight;
+                nl = Math.min(Math.max(8, nl), vw - w - 8);
+                nt = Math.min(Math.max(8, nt), vh - h - 8);
+                modalPanel.style.left = nl + 'px';
+                modalPanel.style.top = nt + 'px';
+              });
+              document.addEventListener('pointerup', () => { dragging = false; });
+              document.addEventListener('pointercancel', () => { dragging = false; });
+            }
+
+            /* ---------- keyboard ---------- */
+            document.addEventListener('keydown', e => {
+              if (e.key === 'Escape') closePaymentModal();
+              if (e.key === 'Enter' && modal && modal.getAttribute('data-open') === 'true') pmConfirm && pmConfirm.click();
+            });
+
+            // inicializa totas
+            updateTotals();
+
+            // Search & Category filtering (se presente)
+            function filterProducts() {
+              const q = (searchInput && searchInput.value || '').trim().toLowerCase();
+              const activeBtn = categoryHud ? categoryHud.querySelector('button.active') : null;
+              const cat = activeBtn ? activeBtn.dataset.cat : 'all';
+              productCards().forEach(card => {
+                const name = (card.dataset.name || '').toLowerCase();
+                const category = (card.dataset.category || '').toLowerCase();
+                const matchesQuery = !q || name.includes(q) || (card.dataset.code && card.dataset.code.toLowerCase().includes(q));
+                const matchesCat = (cat === 'all') || (category === String(cat).toLowerCase());
+                card.style.display = (matchesQuery && matchesCat) ? '' : 'none';
+              });
+            }
+            if (searchInput) searchInput.addEventListener('input', filterProducts);
+            if (categoryHud) categoryHud.addEventListener('click', e => {
+              const btn = e.target.closest('button[data-cat]');
+              if (!btn) return;
+              categoryHud.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              filterProducts();
+            });
+
+          } catch (err) {
+            console.error('Erro inicializando payment script:', err);
+          }
+        }); // DOMContentLoaded end
+
+      })(); // IIFE end
     </script>
 
 </body>
