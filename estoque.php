@@ -58,7 +58,7 @@ try {
 
         body {
             margin: 0;
-            font-family: Segoe UI, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: var(--main-bg);
             display: flex;
         }

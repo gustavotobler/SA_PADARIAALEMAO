@@ -212,7 +212,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <div class="flex-group">
         <div>
           <label for="Preco_unitario">Preço Unitário (R$):</label>
-          <input type="number" step="0.01" min="0" name="Preco_unitario" id="Preco_unitario" />
+          <input type="text" name="Preco_unitario" id="Preco_unitario" placeholder="R$ 0,00"/>
         </div>
         <div>
           <label for="Unid_medida">Unidade de medida:</label>
@@ -251,13 +251,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
   mascaraData(Validade);
 
-  $(function Preco_unitario(){
-            $('#currency').maskMoney({
-              prefix:'R$ ',
-              allowNegative: true,
-              thousands:'.', decimal:',',
-              affixesStay: true});
-        })
+  const input = document.getElementById("Preco_unitario");
+
+    input.addEventListener("input", function () {
+      let valor = this.value.replace(/\D/g, ""); // remove tudo que não for número
+      valor = (valor / 100).toFixed(2) + "";     // divide por 100 e fixa 2 casas
+      valor = valor.replace(".", ",");           // troca ponto por vírgula
+      valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // adiciona pontos
+      this.value = "R$ " + valor;
+    });
   </script>
 </body>
 </html>
