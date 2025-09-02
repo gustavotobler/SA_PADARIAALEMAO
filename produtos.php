@@ -82,15 +82,17 @@ if ($_SESSION['nivel'] != 1) {
 
 <nav class="sidebar">
   <div class="sidebar-logo">
+    <a href="inicial1.php">
     <img src="img/Logopadaria.png" alt="Padaria do Alemão">
+    </a>
     <span style="color:white;">Padaria do Alemão</span>
+  
   </div>
   <a href="produtos.php" class="menu-item"><span class="material-icons">bakery_dining</span><span>Produtos</span></a>
   <a href="funcionarios.php" class="menu-item"><span class="material-icons">person</span><span>Funcionários</span></a>
   <a href="fornecedores.php" class="menu-item"><span class="material-icons">work</span><span>Fornecedores</span></a>
   <a href="vendas.php" class="menu-item"><span class="material-icons">analytics</span><span>Vendas</span></a>
   <a href="pagamento.php" class="menu-item"><span class="material-icons">shopping_cart</span><span>Pagamento</span></a>
-  <a href="inicial1.php" class="menu-item">Tela principal</a>
 </nav>
 
 <header>
@@ -104,7 +106,7 @@ if ($_SESSION['nivel'] != 1) {
       </div>
     </div>
     <div class="topo-right">
-      <a href="cadprod.php" id="add-button" class="hidden">
+      <a href="cadproduto.php" id="add-button" class="hidden">
         <button class="icon-btn add-btn" title="Adicionar">
           <span class="material-icons">add</span>
         </button>
@@ -121,6 +123,7 @@ if ($_SESSION['nivel'] != 1) {
         <th>ID</th>
         <th>Fornecedor</th>
         <th>Nome</th>
+        <th>Categoria</th>
         <th>Preço</th>
         <th>Unidade</th>
         <th>Validade</th>
@@ -130,26 +133,36 @@ if ($_SESSION['nivel'] != 1) {
     </thead>
     <tbody id="prod-table-body">
       <?php
-      $sql = "SELECT p.ID_produto, f.Nome_forn, p.Nome_prod, p.Preco, p.Unid_medida, p.Validade, p.Qntd_produto
-              FROM produtos 
-              LEFT JOIN fornecedores f ON p.ID_forn = f.ID_forn";
+      $sql = "SELECT 
+                p.ID_produto, 
+                f.Nome_forn, 
+                c.nome_categoria,
+                p.Nome_prod, 
+                p.Preco_unitario, 
+                p.Unid_medida, 
+                p.Validade, 
+                p.Qntd_produto
+              FROM produtos p
+              LEFT JOIN fornecedores f ON p.ID_forn = f.ID_forn
+              LEFT JOIN categorias c ON p.id_categorias = c.id_categorias";
       $stmt = $pdo->query($sql);
       $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       foreach ($produtos as $prod): ?>
       <tr>
         <td data-label="ID"><?= htmlspecialchars($prod['ID_produto']) ?></td>
-        <td data-label="Fornecedor"><?= htmlspecialchars($prod['Nome_forn']) ?></td>
+        <td data-label="Fornecedor"><?= htmlspecialchars($prod['Nome_forn']) ?></td>        
         <td data-label="Nome"><?= htmlspecialchars($prod['Nome_prod']) ?></td>
-        <td data-label="Preço"><?= htmlspecialchars($prod['Preco']) ?></td>
+        <td data-label="Categoria"><?= htmlspecialchars($prod['nome_categoria']) ?></td>
+        <td data-label="Preço"><?= htmlspecialchars($prod['Preco_unitario']) ?></td>
         <td data-label="Unidade"><?= htmlspecialchars($prod['Unid_medida']) ?></td>
         <td data-label="Validade"><?= htmlspecialchars($prod['Validade']) ?></td>
         <td data-label="Quantidade"><?= htmlspecialchars($prod['Qntd_produto']) ?></td>
         <td class="action-cell hidden">
-          <a href="alterar/alterar_produto.php?id=<?= $prod['ID_produto'] ?>" class="icon-btn" title="Editar">
+          <a href="alterar/alterar_produtos.php?ID_produto=<?= $prod['ID_produto'] ?>" class="icon-btn" title="Editar">
             <span class="material-icons">edit</span>
           </a>
-          <form action="exclusoes/excluir_produto.php" method="POST" style="display:inline;">
+          <form action="exclusoes/excluir_produtos.php" method="POST" style="display:inline;">
             <input type="hidden" name="id" value="<?= htmlspecialchars($prod['ID_produto']) ?>">
             <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este produto?')">
               <span class="material-icons">delete</span>
@@ -182,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
     Array.from(tableBody.rows).forEach(row => {
-      const match = Array.from(row.cells).slice(0,7)
+      const match = Array.from(row.cells).slice(0,8)
         .some(td => td.textContent.toLowerCase().includes(term));
       row.style.display = match ? '' : 'none';
       const cell = row.querySelector('td.action-cell');

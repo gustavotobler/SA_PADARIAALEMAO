@@ -138,3 +138,14 @@ h1 {
 .back-button .icon { margin-right: 8px; font-size: 18px; }
 .back-button:hover { background-color: #555; transform: translateY(-1px); }
 .back-button:active { background-color: #333; transform: translateY(0); }
+.sidebar .logout a,
+.sidebar .logout a button {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.sidebar .logout a button:hover {
+    background-color: transparent !important;
+    color: #dc3545; /* Mantém a cor vermelha do texto */
+    box-shadow: none !important;
+}

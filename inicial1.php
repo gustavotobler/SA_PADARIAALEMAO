@@ -23,6 +23,7 @@ $nomeNivel = $nivel['nome_acesso'] ?? '';
 <head>
     <meta charset="UTF-8">
     <title>Página Inicial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="css/site2.css">
 </head>
 <body>
@@ -40,8 +41,11 @@ $nomeNivel = $nivel['nome_acesso'] ?? '';
     <a href="estoque.php" arial-label="Ir para Estoque">📦 Estoque</a>
     <a href="relatorio_vendas_padaria_alemao1.php" aria-label="Ir para Relatório de Vendas">📈 Vendas</a>
     <a href="selecionar_itens.php" aria-label="Ir para Pagamento">🛒 Pagamento</a>
-
-    <a href="index.php">Logout</a>
+    
+    <br>
+    <div class="logout">
+    <a href="index.php"><button type="button" class="btn btn-outline-danger">Logout</button></a>
+</div>
 </nav>
 
 <!-- Conteúdo principal -->

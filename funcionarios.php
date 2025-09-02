@@ -17,105 +17,161 @@ if ($_SESSION['nivel'] != 1) {
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Funcionários - Padaria do Alemão</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <style>
-    /* ===== Reset e base ===== */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
-    body { background:#f5f7fa; color:#333; line-height:1.5; }
+<meta charset="UTF-8">
+<title>Funcionários - Padaria do Alemão</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+:root {
+    --sidebar-bg: #2e2e2e;
+    --primary-text: #fff;
+    --hover-bg: #444;
+    --main-bg: #fcf6eb;
+    --card-bg: #fff;
+    --accent: #3f3f3f;
+    --highlight: #e0f7ff;
+}
 
-    /* ===== Sidebar ===== */
-    .sidebar { width:220px; background:#2c3e50; position:fixed; top:0; left:0; bottom:0; padding-top:1rem; overflow:hidden; }
-    .sidebar-logo { display:flex; align-items:center; gap:10px; padding:0 1rem 1rem; cursor:pointer; }
-    .sidebar-logo img { width:40px; }
-    .menu-item { display:flex; align-items:center; gap:10px; padding:0.8rem 1rem; color:#fff; text-decoration:none; transition:background 0.2s; }
-    .menu-item:hover { background:rgba(255,255,255,0.1); }
+* { box-sizing: border-box; margin:0; padding:0; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+body { background: var(--main-bg); display: flex; }
 
-    /* ===== Topo/Header ===== */
-    header { background: linear-gradient(90deg, #2c3e50, #34495e); color:#fff; padding:0.8rem 1.5rem; box-shadow:0 2px 6px rgba(0,0,0,0.2); margin-left:220px; }
-    .topo { display:flex; align-items:center; justify-content:space-between; }
-    .topo-center { text-align:center; flex:1; }
-    .topo-center h1 { font-size:1.5rem; font-weight:600; margin-bottom:0.4rem; letter-spacing:1px; }
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 240px;
+    background: var(--sidebar-bg);
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    transition: width 0.3s;
+}
+.sidebar.collapsed { width: 60px; }
 
-    /* ===== Botões ===== */
-    .icon-btn { background:none; border:none; cursor:pointer; font-size:22px; transition:0.2s; }
-    .icon-btn:hover { color:#2980b9; transform:scale(1.2); }
-    .add-btn { background:#2ecc71; border-radius:50%; padding:8px; color:#fff; display:inline-block; }
-    .add-btn:hover { background:#27ae60; }
-    .edit-toggle { color:#fff; cursor:pointer; font-size:26px; transition:0.2s; }
-    .edit-toggle:hover { transform:rotate(20deg); }
+.sidebar a {
+    display: flex;
+    align-items: center;
+    color: var(--primary-text);
+    text-decoration: none;
+    padding: 15px 20px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+.sidebar a:hover { background: var(--hover-bg); }
+.sidebar .icon { margin-right: 8px; }
+.sidebar.collapsed .text { display: none; }
+.sidebar.collapsed .icon { margin-right: 0; justify-content: center; }
+.toggle-btn { cursor: pointer; text-align: center; margin-bottom: 20px; font-size: 20px; color: var(--primary-text); }
 
-    /* ===== Search ===== */
-    .search-container { background:#fff; display:flex; align-items:center; border-radius:25px; padding:0 10px; box-shadow:0 1px 3px rgba(0,0,0,0.2); max-width:350px; margin:0 auto 20px; }
-    .search-container span { color:#888; }
-    .search-container input { border:none; outline:none; padding:0.5rem; flex:1; }
-    .search-container button { background:#3498db; border:none; padding:6px 14px; border-radius:20px; color:#fff; cursor:pointer; font-weight:500; margin-left:6px; transition:background 0.2s; }
-    .search-container button:hover { background:#2980b9; }
+/* ===== Main Content ===== */
+.main-content { margin-left: 240px; padding: 20px 30px; width: 100%; transition: margin-left 0.3s; }
+.main-content.collapsed { margin-left: 60px; }
 
-    /* ===== Main/Tabela ===== */
-    main { padding:2rem; margin-left:220px; }
-    table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
-    thead { background:#34495e; color:#fff; }
-    thead th { padding:14px 10px; text-align:left; font-size:0.9rem; font-weight:600; }
-    tbody td { padding:12px 10px; border-bottom:1px solid #eee; font-size:0.9rem; }
-    tbody tr:nth-child(even) { background:#f9fbfd; }
-    tbody tr:hover { background:#f0f4f8; }
-    .action-cell { text-align:center; }
-    .delete-btn { color:#e74c3c; }
-    .delete-btn:hover { color:#c0392b; }
-    .hidden { display:none; }
+h1 { text-align: center; margin-bottom: 20px; }
 
-    /* ===== Responsividade ===== */
-    @media(max-width:768px){
-      header { margin-left:0; }
-      main { margin-left:0; padding:1rem; }
-      .search-container input { width:100px; }
-      table { font-size:0.8rem; }
-      thead { display:none; }
-      tbody td { display:block; text-align:right; padding:8px; }
-      tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
-    }
-  </style>
+/* ===== Search e Ações no topo ===== */
+.topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+
+.search-container {
+    background:#fff;
+    display:flex;
+    align-items:center;
+    border-radius:25px;
+    padding:0 10px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.2);
+    max-width:500px;
+    flex:1;
+}
+.search-container input {
+    border:none;
+    outline:none;
+    padding:0.5rem;
+    flex:1;
+}
+.search-container button {
+    background:#3498db;
+    border:none;
+    padding:6px 14px;
+    border-radius:20px;
+    color:#fff;
+    cursor:pointer;
+    font-weight:500;
+    margin-left:6px;
+}
+.search-container button:hover { background:#2980b9; }
+
+.actions-top {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.add-btn { background:#2ecc71; border-radius:50%; padding:8px; color:#fff; display:inline-block; transition:0.3s; }
+.add-btn:hover { background:#27ae60; }
+.edit-toggle { color:#2e2e2e; cursor:pointer; font-size:26px; transition:0.2s; }
+.edit-toggle:hover { transform:rotate(20deg); }
+
+/* ===== Tabela ===== */
+table { width:100%; border-collapse:collapse; background: var(--card-bg); border-radius:12px; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
+thead { background: var(--accent); color: var(--primary-text); }
+thead th { padding:14px 10px; text-align:left; font-size:0.9rem; font-weight:600; }
+tbody td { padding:12px 10px; border-bottom:1px solid #eee; font-size:0.9rem; }
+tbody tr:nth-child(even) { background:#f9fbfd; }
+tbody tr:hover { background: var(--highlight); }
+.action-cell { text-align:center; }
+.delete-btn { color:#e74c3c; }
+.delete-btn:hover { color:#c0392b; }
+.hidden { display:none; }
+
+/* ===== Responsividade ===== */
+@media(max-width:768px){
+  .main-content { margin-left:0; padding:1rem; }
+  table { font-size:0.8rem; }
+  thead { display:none; }
+  tbody td { display:block; text-align:right; padding:8px; border:none; border-bottom:1px solid #eee; }
+  tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
+  .topo { flex-direction: column; gap:10px; align-items: stretch; }
+  .actions-top { justify-content:flex-end; }
+}
+</style>
 </head>
 <body>
 
-<nav class="sidebar">
-  <div class="sidebar-logo">
-    <img src="img/Logopadaria.png" alt="Padaria do Alemão">
-    <span style="color:white;">Padaria do Alemão</span>
-  </div>
-  <a href="produtos.php" class="menu-item"><span class="material-icons">bakery_dining</span><span>Produtos</span></a>
-  <a href="funcionarios.php" class="menu-item"><span class="material-icons">person</span><span>Funcionários</span></a>
-  <a href="fornecedores.php" class="menu-item"><span class="material-icons">work</span><span>Fornecedores</span></a>
-  <a href="vendas.php" class="menu-item"><span class="material-icons">analytics</span><span>Vendas</span></a>
-  <a href="pagamento.php" class="menu-item"><span class="material-icons">shopping_cart</span><span>Pagamento</span></a>
-  <a href="inicial1.php"  class="menu-item">Tela principal</a>
+<nav class="sidebar" id="sidebar">
+    <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+    <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
+    <a href="produtos.php"><span class="material-icons icon">bakery_dining</span><span class="text">Produtos</span></a>
+    <a href="funcionarios.php"><span class="material-icons icon">person</span><span class="text">Funcionários</span></a>
+    <a href="fornecedores.php"><span class="material-icons icon">work</span><span class="text">Fornecedores</span></a>
+    <a href="vendas.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
+    <a href="pagamento.php"><span class="material-icons icon">shopping_cart</span><span class="text">Pagamento</span></a>
 </nav>
 
-<header>
-  <div class="topo">
-    <div class="topo-center">
-      <h1>FUNCIONÁRIOS</h1>
-      <div class="search-container">
-        <span class="material-icons">search</span>
-        <input type="text" id="search-input" placeholder="Pesquisar...">
-        <button id="search-btn" type="button">Pesquisar</button>
-      </div>
-    </div>
-    <div class="topo-right">
-      <a href="cadfunc.php" id="add-button" class="hidden">
-        <button class="icon-btn add-btn" title="Adicionar">
-          <span class="material-icons">add</span>
-        </button>
-      </a>
-      <span class="material-icons edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
-    </div>
-  </div>
-</header>
+<main class="main-content" id="mainContent">
+<h1>FUNCIONÁRIOS</h1>
 
-<main>
-  <table>
+<div class="topo">
+    <div style="flex:1; display:flex; justify-content:center;">
+        <div class="search-container" style="max-width:400px; width:100%;">
+            <span class="material-icons">search</span>
+            <input type="text" id="search-input" placeholder="Pesquisar...">
+            <button id="search-btn" type="button">Pesquisar</button>
+        </div>
+    </div>
+    <div class="actions-top">
+        <a href="cadfunc.php" id="add-button" class="add-btn hidden" title="Adicionar">
+            <span class="material-icons">add</span>
+        </a>
+        <span class="material-icons edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
+    </div>
+</div>
+
+<table>
     <thead>
       <tr>
         <th>ID</th>
@@ -131,7 +187,6 @@ if ($_SESSION['nivel'] != 1) {
       $sql = "SELECT ID_func, Nome_func, Cargo, Data_nascimento, Data_admissao FROM funcionario";
       $stmt = $pdo->query($sql);
       $funcionarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
       foreach ($funcionarios as $func): ?>
       <tr>
         <td data-label="ID"><?= htmlspecialchars($func['ID_func']) ?></td>
@@ -153,17 +208,23 @@ if ($_SESSION['nivel'] != 1) {
       </tr>
       <?php endforeach; ?>
     </tbody>
-  </table>
+</table>
 </main>
 
 <script>
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
+
+function toggleSidebar(){
+  sidebar.classList.toggle('collapsed');
+  mainContent.classList.toggle('collapsed');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const toggleBtn = document.getElementById('edit-toggle');
   const actionHeader = document.querySelector('th.action-header');
   const addButton = document.getElementById('add-button');
   const tableBody = document.getElementById('func-table-body');
-  const searchInput = document.getElementById('search-input');
-  const searchBtn = document.getElementById('search-btn');
 
   const getActionCells = () => document.querySelectorAll('td.action-cell');
 
@@ -173,11 +234,13 @@ document.addEventListener('DOMContentLoaded', () => {
     addButton.classList.toggle('hidden');
   });
 
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+
   function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
     Array.from(tableBody.rows).forEach(row => {
-      const match = Array.from(row.cells).slice(0,5)
-        .some(td => td.textContent.toLowerCase().includes(term));
+      const match = Array.from(row.cells).slice(0,5).some(td => td.textContent.toLowerCase().includes(term));
       row.style.display = match ? '' : 'none';
       const cell = row.querySelector('td.action-cell');
       if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
@@ -188,5 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
   searchInput.addEventListener('input', doSearch);
 });
 </script>
+
 </body>
 </html>
