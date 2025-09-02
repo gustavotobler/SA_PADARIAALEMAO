@@ -125,8 +125,10 @@ digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "nasciment
 digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "admissao"))), gerar_data_admissao())
 
 # --- Selecionando opções ---
-Select(wait.until(EC.presence_of_element_located((By.ID, "Sexo")))).select_by_value(random.choice(["M","F"]))
+Select(wait.until(EC.presence_of_element_located((By.ID, "Sexo")))).select_by_value(random.choice(["Masculino","Feminino"]))
+#time.sleep(10)
 Select(wait.until(EC.presence_of_element_located((By.ID, "Esta_civil")))).select_by_visible_text(random.choice(["Solteiro","Casado","Viúvo"]))
+#time.sleep(10)
 Select(wait.until(EC.presence_of_element_located((By.ID, "nivel_de_acesso")))).select_by_value(random.choice(["1","2"]))
 Select(wait.until(EC.presence_of_element_located((By.ID, "cargo")))).select_by_visible_text(random.choice(["Gerente","Padeiro","Caixa","Confeiteiro"]))
 
