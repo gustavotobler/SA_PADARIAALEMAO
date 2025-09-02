@@ -82,15 +82,17 @@ if ($_SESSION['nivel'] != 1) {
 
 <nav class="sidebar">
   <div class="sidebar-logo">
+  <a href="inicial1.php">
     <img src="img/Logopadaria.png" alt="Padaria do Alemão">
+    </a>
     <span style="color:white;">Padaria do Alemão</span>
+ 
   </div>
   <a href="produtos.php" class="menu-item"><span class="material-icons">bakery_dining</span><span>Produtos</span></a>
   <a href="funcionarios.php" class="menu-item"><span class="material-icons">person</span><span>Funcionários</span></a>
   <a href="fornecedores.php" class="menu-item"><span class="material-icons">work</span><span>Fornecedores</span></a>
   <a href="vendas.php" class="menu-item"><span class="material-icons">analytics</span><span>Vendas</span></a>
   <a href="pagamento.php" class="menu-item"><span class="material-icons">shopping_cart</span><span>Pagamento</span></a>
-  <a href="inicial1.php"  class="menu-item">Tela principal</a>
 </nav>
 
 <header>
