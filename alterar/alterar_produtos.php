@@ -2,17 +2,24 @@
 session_start();
 require_once '../conexao.php';
 
+// Verifica se é administrador
 if (empty($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
     echo "Acesso negado!";
     exit;
 }
 
+// Obtém o ID do produto via GET ou POST
 $id = filter_input(INPUT_GET, 'ID_produto', FILTER_VALIDATE_INT);
+if (!$id) {
+    $id = filter_input(INPUT_POST, 'ID_produto', FILTER_VALIDATE_INT);
+}
+
 if (!$id) {
     echo "ID do produto inválido.";
     exit;
 }
 
+// Busca o produto no banco
 $stmt = $pdo->prepare("SELECT * FROM produtos WHERE ID_produto = :id");
 $stmt->execute([':id' => $id]);
 $prod = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -28,11 +35,6 @@ function formatarData($data_sql) {
     $data_sql = trim($data_sql);
     if ($data_sql === '0000-00-00' || $data_sql === '0000-00-00 00:00:00') return '';
 
-    if (preg_match('/\d{4}-\d{2}-\d{2}/', $data_sql, $m)) {
-        $dt = DateTime::createFromFormat('Y-m-d', $m[0]);
-        if ($dt) return $dt->format('d/m/Y');
-    }
-
     $ts = strtotime($data_sql);
     if ($ts !== false) return date('d/m/Y', $ts);
 
@@ -46,6 +48,7 @@ $unid_medida = trim($prod['Unid_medida'] ?? '');
 $fornecedores = $pdo->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER BY Nome_forn")->fetchAll(PDO::FETCH_ASSOC);
 $categorias = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria")->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-BR">

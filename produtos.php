@@ -106,7 +106,7 @@ if ($_SESSION['nivel'] != 1) {
       </div>
     </div>
     <div class="topo-right">
-      <a href="cadprod.php" id="add-button" class="hidden">
+      <a href="cadproduto.php" id="add-button" class="hidden">
         <button class="icon-btn add-btn" title="Adicionar">
           <span class="material-icons">add</span>
         </button>
@@ -159,7 +159,7 @@ if ($_SESSION['nivel'] != 1) {
         <td data-label="Validade"><?= htmlspecialchars($prod['Validade']) ?></td>
         <td data-label="Quantidade"><?= htmlspecialchars($prod['Qntd_produto']) ?></td>
         <td class="action-cell hidden">
-          <a href="alterar/alterar_produtos.php?id=<?= $prod['ID_produto'] ?>" class="icon-btn" title="Editar">
+          <a href="alterar/alterar_produtos.php?ID_produto=<?= $prod['ID_produto'] ?>" class="icon-btn" title="Editar">
             <span class="material-icons">edit</span>
           </a>
           <form action="exclusoes/excluir_produtos.php" method="POST" style="display:inline;">

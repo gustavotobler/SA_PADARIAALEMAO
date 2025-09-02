@@ -14,300 +14,143 @@ if ($_SESSION['nivel'] != 1) {
 }
 
 $fornecedores = [];
-
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <title>Fornecedores - Padaria do Alemão</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <style>
-    /* ===== Reset e base ===== */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
-    body { background:#f5f7fa; color:#333; line-height:1.5; }
+<meta charset="UTF-8">
+<title>Fornecedores - Padaria do Alemão</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+:root {
+    --sidebar-bg: #2e2e2e;
+    --primary-text: #fff;
+    --hover-bg: #444;
+    --main-bg: #fcf6eb;
+    --card-bg: #fff;
+    --accent: #3f3f3f;
+    --highlight: #e0f7ff;
+}
 
-    /* ===== Sidebar ===== */
-    .sidebar {
-      width:220px;
-      background:#2c3e50;
-      position:fixed;
-      top:0;
-      left:0;
-      bottom:0;
-      padding-top:1rem;
-      overflow:hidden;
-    }
-    .sidebar-logo {
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:0 1rem 1rem;
-      color:white;
-      font-weight:600;
-    }
-    .menu-item {
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:0.8rem 1rem;
-      color:#fff;
-      text-decoration:none;
-      transition:background 0.2s;
-    }
-    .menu-item:hover, .menu-item.active {
-      background:rgba(255,255,255,0.1);
-    }
+* { box-sizing: border-box; margin:0; padding:0; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
 
-    /* ===== Topo/Header ===== */
-    header {
-      background: linear-gradient(90deg, #2c3e50, #34495e);
-      color:#fff;
-      padding:0.8rem 1.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      margin-left:220px;
-    }
-    .topo {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap: wrap;
-    }
-    .topo-left {
-      display:flex;
-      align-items:center;
-      gap:15px;
-    }
-    .topo-left h1 {
-      font-size:2.0rem;
-    }
-    .topo-center {
-      flex:1;
-      display:flex;
-      justify-content:center;
-      margin-top:10px;
-    }
-    .topo-right {
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
+body { background: var(--main-bg); display: flex; }
 
-    /* ===== Botões ===== */
-    .icon-btn {
-      background:none;
-      border:none;
-      cursor:pointer;
-      font-size:22px;
-      transition:0.2s;
-      padding:4px;
-      border-radius:4px;
-      color:#fff;
-    }
-    .icon-btn:hover {
-      color:#2980b9;
-      transform:scale(1.2);
-    }
-    .add-btn {
-      background:#2ecc71;
-      border-radius:50%;
-      padding:8px;
-      color:#fff;
-      display:inline-block;
-      transition:0.3s;
-      text-decoration:none;
-    }
-    .add-btn:hover {
-      background:#27ae60;
-    }
-    .edit-toggle {
-      cursor:pointer;
-      font-size:26px;
-      color:#fff;
-      transition:0.2s;
-    }
-    .edit-toggle:hover {
-      transform:rotate(20deg);
-    }
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 240px;
+    background: var(--sidebar-bg);
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    transition: width 0.3s;
+}
+.sidebar.collapsed { width: 60px; }
+.sidebar a {
+    display: flex;
+    align-items: center;
+    color: var(--primary-text);
+    text-decoration: none;
+    padding: 15px 20px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+.sidebar a:hover { background: var(--hover-bg); }
+.sidebar .icon { margin-right: 8px; }
+.sidebar.collapsed .text { display: none; }
+.sidebar.collapsed .icon { margin-right: 0; justify-content: center; }
+.toggle-btn { cursor: pointer; text-align: center; margin-bottom: 20px; font-size: 20px; color: var(--primary-text); }
 
-    /* ===== Search ===== */
-    .search-container {
-      background:#fff;
-      display:flex;
-      align-items:center;
-      border-radius:25px;
-      padding:0 10px;
-      box-shadow:0 1px 3px rgba(0,0,0,0.2);
-      max-width:350px;
-      width:100%;
-    }
-    .search-container span {
-      color:#888;
-    }
-    .search-container input {
-      border:none;
-      outline:none;
-      padding:0.5rem;
-      flex:1;
-      font-size:1rem;
-    }
-    .search-container button {
-      background:#3498db;
-      border:none;
-      padding:6px 14px;
-      border-radius:20px;
-      color:#fff;
-      cursor:pointer;
-      font-weight:500;
-      margin-left:6px;
-      font-size:0.87rem;
-      transition: background 0.3s;
-      max-height:30px;
-      max-width:90px;
-      margin-top:4px;
-    }
-    .search-container button:hover {
-      background:#2980b9;
-    }
+/* ===== Main Content ===== */
+.main-content { margin-left: 240px; padding: 20px 30px; width: 100%; transition: margin-left 0.3s; }
+.main-content.collapsed { margin-left: 60px; }
 
-    /* ===== Main/Tabela ===== */
-    main {
-      padding:2rem;
-      margin-left:220px;
-    }
-    table {
-      width:100%;
-      border-collapse:collapse;
-      background:#fff;
-      border-radius:12px;
-      overflow:hidden;
-      box-shadow:0 3px 8px rgba(0,0,0,0.15);
-    }
-    thead {
-      background:#34495e;
-      color:#fff;
-    }
-    thead th {
-      padding:14px 10px;
-      text-align:left;
-      font-size:0.9rem;
-      font-weight:600;
-    }
-    tbody td {
-      padding:12px 10px;
-      border-bottom:1px solid #eee;
-      font-size:0.9rem;
-    }
-    tbody tr:nth-child(even) {
-      background:#f9fbfd;
-    }
-    tbody tr:hover {
-      background:#f0f4f8;
-    }
-    .action-cell {
-      text-align:center;
-    }
-    .delete-btn {
-      color:#e74c3c;
-      font-size:22px;
-    }
-    .delete-btn:hover {
-      color:#c0392b;
-    }
-    .undo-btn {
-      cursor: pointer;
-      color: #007700;
-      font-size:22px;
-      background:none;
-      border:none;
-      padding:4px;
-      border-radius:4px;
-      margin-left:5px;
-      display:none;
-      transition: color 0.3s;
-    }
-    .undo-btn:hover {
-      color: #004400;
-    }
-    .hidden {
-      display:none !important;
-    }
-    .disabled-row {
-      opacity: 0.5;
-      text-decoration: line-through;
-    }
+/* ===== Topo ===== */
+.topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.topo-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.topo-center h1 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+.topo-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-    /* ===== Responsividade ===== */
-    @media(max-width:768px){
-      header {
-        margin-left:0;
-      }
-      main {
-        margin-left:0;
-        padding:1rem;
-      }
-      .topo {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      table {
-        font-size: 0.8rem;
-      }
-      thead {
-        display:none;
-      }
-      tbody td {
-        display:block;
-        text-align:right;
-        padding:8px;
-        border:none;
-        border-bottom:1px solid #eee;
-        position: relative;
-      }
-      tbody td::before {
-        content: attr(data-label);
-        float:left;
-        font-weight:600;
-        color:#555;
-      }
-      .action-cell {
-        text-align:right;
-      }
-    }
-  </style>
+/* ===== Botões ===== */
+.icon-btn { background:none; border:none; cursor:pointer; font-size:22px; transition:0.2s; }
+.icon-btn:hover { color:#2980b9; transform:scale(1.2); }
+.add-btn { background:#2ecc71; border-radius:50%; padding:8px; color:#fff; display:inline-block; }
+.add-btn:hover { background:#27ae60; }
+.edit-toggle { color:#fff; cursor:pointer; font-size:26px; transition:0.2s; }
+.edit-toggle:hover { transform:rotate(20deg); }
+
+/* ===== Search ===== */
+.search-container { background:#fff; display:flex; align-items:center; border-radius:25px; padding:0 10px; box-shadow:0 1px 3px rgba(0,0,0,0.2); max-width:400px; width:100%; }
+.search-container span { color:#888; }
+.search-container input { border:none; outline:none; padding:0.5rem; flex:1; }
+.search-container button { background:#3498db; border:none; padding:6px 14px; border-radius:20px; color:#fff; cursor:pointer; font-weight:500; margin-left:6px; transition:background 0.2s; }
+.search-container button:hover { background:#2980b9; }
+
+/* ===== Tabela ===== */
+table { width:100%; border-collapse:collapse; background: var(--card-bg); border-radius:12px; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
+thead { background: var(--accent); color: var(--primary-text); }
+thead th { padding:14px 10px; text-align:left; font-size:0.9rem; font-weight:600; }
+tbody td { padding:12px 10px; border-bottom:1px solid #eee; font-size:0.9rem; }
+tbody tr:nth-child(even) { background:#f9fbfd; }
+tbody tr:hover { background: var(--highlight); }
+.action-cell { text-align:center; }
+.delete-btn { color:#e74c3c; }
+.delete-btn:hover { color:#c0392b; }
+.hidden { display:none; }
+
+/* ===== Responsividade ===== */
+@media(max-width:768px){
+  .main-content { margin-left:0; padding:1rem; }
+  .search-container { max-width:100%; }
+  table { font-size:0.8rem; }
+  thead { display:none; }
+  tbody td { display:block; text-align:right; padding:8px; }
+  tbody td::before { content: attr(data-label); float:left; font-weight:600; color:#555; }
+}
+</style>
 </head>
 <body>
 
-<nav class="sidebar">
-  <div class="sidebar-logo">
-  <a href="inicial1.php">
-    <img src="img/Logopadaria.png" alt="Padaria do Alemão" style="height:34px; width:auto;">
-    </a>
-    <span>Padaria do Alemão</span>
- 
-  </div>
-  <a href="produtos.php" class="menu-item"><span class="material-icons">bakery_dining</span><span>Produtos</span></a>
-  <a href="funcionarios.php" class="menu-item"><span class="material-icons">person</span><span>Funcionários</span></a>
-  <a href="fornecedores.php" class="menu-item active"><span class="material-icons">work</span><span>Fornecedores</span></a>
-  <a href="vendas.php" class="menu-item"><span class="material-icons">analytics</span><span>Vendas</span></a>
-  <a href="pagamento.php" class="menu-item"><span class="material-icons">shopping_cart</span><span>Pagamento</span></a>
+<nav class="sidebar" id="sidebar">
+    <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+    <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
+    <a href="produtos.php"><span class="material-icons icon">bakery_dining</span><span class="text">Produtos</span></a>
+    <a href="funcionarios.php"><span class="material-icons icon">person</span><span class="text">Funcionários</span></a>
+    <a href="fornecedores.php"><span class="material-icons icon">work</span><span class="text">Fornecedores</span></a>
+    <a href="vendas.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
+    <a href="pagamento.php"><span class="material-icons icon">shopping_cart</span><span class="text">Pagamento</span></a>
 </nav>
 
-<header>
-  <div class="topo" style="align-items: center;">
-
-
-    <div class="topo-center" style="flex-direction: column; align-items: center; flex: 1; margin-top:-5px;" >
-      <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.4rem;">FORNECEDORES</h1>
+<main class="main-content" id="mainContent">
+  <div class="topo">
+    <div class="topo-center">
+      <h1>FORNECEDORES</h1>
       <div class="search-container">
         <span class="material-icons">search</span>
-        <form action="pesquisar/buscar_fornecedor.php" method="POST" style="margin:0; display:flex; flex:1; width: 100%;">
-          <input type="text" id="search-input" placeholder="Pesquisar..." name="search" autocomplete="off" />
-          <button id="search-btn" type="button">Pesquisar</button>
-        </form>
+        <input type="text" id="search-input" placeholder="Pesquisar...">
+        <button id="search-btn" type="button">Pesquisar</button>
       </div>
     </div>
-
     <div class="topo-right">
       <a href="cadforn.php" id="add-button" class="add-btn hidden" title="Adicionar">
         <span class="material-icons">add</span>
@@ -315,9 +158,7 @@ $fornecedores = [];
       <span class="material-icons edit-toggle" id="edit-toggle" title="Mostrar/Ocultar Ações">edit</span>
     </div>
   </div>
-</header>
 
-<main>
   <table>
     <thead>
       <tr>
@@ -348,7 +189,7 @@ $fornecedores = [];
               </a>
               <form action="exclusoes/excluir_fornecedor.php" method="POST" style="display:inline;">
                 <input type="hidden" name="id" value="<?= htmlspecialchars($fornecedor['ID_forn']) ?>">
-                <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este funcionário?')">
+                <button type="submit" class="icon-btn delete-btn" onclick="return confirm('Deseja realmente excluir este fornecedor?')">
                    <span class="material-icons">delete</span>
                 </button>
               </form>
@@ -360,51 +201,40 @@ $fornecedores = [];
 </main>
 
 <script>
-  // Alternar exibição da coluna de ações e botão adicionar
-  document.getElementById("edit-toggle").addEventListener("click", function() {
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
+
+function toggleSidebar(){
+  sidebar.classList.toggle('collapsed');
+  mainContent.classList.toggle('collapsed');
+}
+
+// Toggle ações e botão adicionar
+document.getElementById("edit-toggle").addEventListener("click", function() {
     const actionHeaders = document.querySelectorAll(".action-header");
     const actionCells = document.querySelectorAll(".action-cell");
     const addButton = document.getElementById('add-button');
     actionHeaders.forEach(header => header.classList.toggle("hidden"));
     actionCells.forEach(cell => cell.classList.toggle("hidden"));
     addButton.classList.toggle("hidden");
-  });
+});
 
-  // Filtro de busca local
-  const searchInput = document.getElementById("search-input");
-  const searchBtn = document.getElementById("search-btn");
-  const tableBody = document.getElementById("supplier-table-body");
+// Pesquisa local
+const searchInput = document.getElementById("search-input");
+const searchBtn = document.getElementById("search-btn");
+const tableBody = document.getElementById("supplier-table-body");
 
-  function doSearch() {
+function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
     Array.from(tableBody.rows).forEach(row => {
-      const cells = Array.from(row.cells);
-      const match = cells.slice(0, 5) // ID, Nome, Telefone, Email, CNPJ
-        .some(td => td.textContent.toLowerCase().includes(term));
-      row.style.display = match ? '' : 'none';
+        const match = Array.from(row.cells).slice(0,5)
+            .some(td => td.textContent.toLowerCase().includes(term));
+        row.style.display = match ? '' : 'none';
     });
-  }
+}
 
-  searchBtn.addEventListener('click', doSearch);
-  searchInput.addEventListener('input', doSearch);
-
-  // Função para criar botão Undo para exclusão temporária
-      undoBtn.addEventListener('click', function() {
-        const tr = cell.parentElement;
-        tr.classList.remove('disabled-row');
-        deleteBtn.style.display = 'inline-block';
-        undoBtn.style.display = 'none';
-        delete tr.dataset.deleted;
-      });
-
-
-  // Ativa/desativa ações ao carregar e ao clicar no toggle
-  document.getElementById("edit-toggle").addEventListener("click", initActionButtons);
-  window.onload = () => {
-    // Inicializa sem mostrar ações, então não precisa chamar initActionButtons aqui
-  };
-
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('input', doSearch);
 </script>
-
 </body>
 </html>
