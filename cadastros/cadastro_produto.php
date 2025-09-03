@@ -2,12 +2,16 @@
 session_start();
 require_once '../conexao.php';
 
+
 // Apenas admins podem cadastrar
-if (!isset($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
-    echo json_encode(['erro' => 'Acesso negado']);
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+    echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
     exit;
 }
-
+if ($_SESSION['nivel'] != 1) {
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
+    exit;
+}
 // Recebe os dados do POST
 $nome         = $_POST['Nome_prod'] ?? null;
 $preco        = $_POST['Preco_unitario'] ?? null;

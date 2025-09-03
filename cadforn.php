@@ -1,3 +1,16 @@
+<?php 
+session_start();
+require_once 'conexao.php';
+
+if ($_SESSION['nivel'] != 1) {
+  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='produtos.php';</script>";
+  exit;
+}
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+    echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -6,7 +19,7 @@
 <title>Cadastro de Fornecedor</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
-body { background:#eef2f7; min-height:100vh; display:flex; flex-direction:column; }
+body { background:rgb(59, 75, 93);; min-height:100vh; display:flex; flex-direction:column; }
 header { background:rgb(27,68,95); padding:15px 20px; color:white; display:flex; align-items:center; gap:15px; box-shadow:0 3px 10px rgba(0,0,0,0.15);}
 header .back-btn { background:transparent; border:none; color:white; cursor:pointer; font-size:24px; font-weight:700;}
 header h1 { flex:1; text-align:center; font-weight:700; font-size:1.5rem;}
