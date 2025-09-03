@@ -7,45 +7,53 @@ $fornecedores = $pdo->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER B
 $categorias   = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria")->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id_forn       = (int)($_POST["ID_forn"] ?? 0);
-    $id_categorias = (int)($_POST["id_categorias"] ?? 0);
-    $nome_prod     = trim($_POST["Nome_prod"] ?? "");
-    $preco_unitario= trim($_POST["Preco_unitario"] ?? "");
-    $unid_medida   = trim($_POST["Unid_medida"] ?? "");
-    $validade      = trim($_POST["Validade"] ?? "");
-    $qntd_produto  = (int)($_POST["Qntd_produto"] ?? 0);
+  $id_forn       = (int)($_POST["ID_forn"] ?? 0);
+  $id_categorias = (int)($_POST["id_categorias"] ?? 0);
+  $nome_prod     = trim($_POST["Nome_prod"] ?? "");
+  $preco_unitario= trim($_POST["Preco_unitario"] ?? "");
+  $unid_medida   = trim($_POST["Unid_medida"] ?? "");
+  $validade      = trim($_POST["Validade"] ?? "");
+  $qntd_produto  = (int)($_POST["Qntd_produto"] ?? 0);
 
-    // Validação simples
-    if (!$id_categorias) {
-        echo "<script>alert('Selecione uma categoria.');</script>";
-    } elseif (!$nome_prod) {
-        echo "<script>alert('Informe o nome do produto.');</script>";
-    } elseif ($preco_unitario !== "" && (!is_numeric($preco_unitario) || $preco_unitario < 0)) {
-        echo "<script>alert('Preço inválido.');</script>";
-    } elseif ($qntd_produto < 0) {
-        echo "<script>alert('Quantidade inválida.');</script>";
-    } else {
-        $sql = "INSERT INTO produtos 
-                (ID_forn, id_categorias, Nome_prod, Preco_unitario, Unid_medida, Validade, Qntd_produto) 
-                VALUES 
-                (:ID_forn, :id_categorias, :Nome_prod, :Preco_unitario, :Unid_medida, :Validade, :Qntd_produto)";
-        $stmt = $pdo->prepare($sql);
+  // Normaliza o preço: remove "R$", pontos e troca vírgula por ponto
+  if ($preco_unitario !== "") {
+      $preco_unitario = str_replace(["R$", " "], "", $preco_unitario); // tira R$ e espaços
+      $preco_unitario = str_replace(".", "", $preco_unitario);         // tira separadores de milhar
+      $preco_unitario = str_replace(",", ".", $preco_unitario);        // troca vírgula por ponto
+  }
 
-        $stmt->bindParam(':ID_forn', $id_forn, PDO::PARAM_INT);
-        $stmt->bindParam(':id_categorias', $id_categorias, PDO::PARAM_INT);
-        $stmt->bindParam(':Nome_prod', $nome_prod, PDO::PARAM_STR);
-        $stmt->bindParam(':Preco_unitario', $preco_unitario);
-        $stmt->bindParam(':Unid_medida', $unid_medida, PDO::PARAM_STR);
-        $stmt->bindParam(':Validade', $validade, PDO::PARAM_STR);
-        $stmt->bindParam(':Qntd_produto', $qntd_produto, PDO::PARAM_INT);
+  // Validação simples
+  if (!$id_categorias) {
+      echo "<script>alert('Selecione uma categoria.');</script>";
+  } elseif (!$nome_prod) {
+      echo "<script>alert('Informe o nome do produto.');</script>";
+  } elseif ($preco_unitario !== "" && (!is_numeric($preco_unitario) || $preco_unitario < 0)) {
+      echo "<script>alert('Preço inválido.');</script>";
+  } elseif ($qntd_produto < 0) {
+      echo "<script>alert('Quantidade inválida.');</script>";
+  } else {
+      $sql = "INSERT INTO produtos 
+              (ID_forn, id_categorias, Nome_prod, Preco_unitario, Unid_medida, Validade, Qntd_produto) 
+              VALUES 
+              (:ID_forn, :id_categorias, :Nome_prod, :Preco_unitario, :Unid_medida, :Validade, :Qntd_produto)";
+      $stmt = $pdo->prepare($sql);
 
-        if ($stmt->execute()) {
-            echo "<script>alert('Produto cadastrado com sucesso!');window.location.href='produtos.php'</script>";
-        } else {
-            echo "<script>alert('Erro ao cadastrar produto!');</script>";
-        }
-    }
+      $stmt->bindParam(':ID_forn', $id_forn, PDO::PARAM_INT);
+      $stmt->bindParam(':id_categorias', $id_categorias, PDO::PARAM_INT);
+      $stmt->bindParam(':Nome_prod', $nome_prod, PDO::PARAM_STR);
+      $stmt->bindParam(':Preco_unitario', $preco_unitario);
+      $stmt->bindParam(':Unid_medida', $unid_medida, PDO::PARAM_STR);
+      $stmt->bindParam(':Validade', $validade, PDO::PARAM_STR);
+      $stmt->bindParam(':Qntd_produto', $qntd_produto, PDO::PARAM_INT);
+
+      if ($stmt->execute()) {
+          echo "<script>alert('Produto cadastrado com sucesso!');window.location.href='produtos.php'</script>";
+      } else {
+          echo "<script>alert('Erro ao cadastrar produto!');</script>";
+      }
+  }
 }
+
 ?>
 
 <!DOCTYPE html>

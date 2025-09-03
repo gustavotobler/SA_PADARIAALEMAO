@@ -214,7 +214,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </header>
 
 <main>
-  <form method="POST" novalidate>
+  <form method="POST" novalidate action="cadastros/cadastro_funcionario.php">
     <h2>Cadastro de Funcionário</h2>
 
     <label for="Nome_func">Nome:</label>
