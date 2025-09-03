@@ -5,46 +5,51 @@ require_once("../conexao.php");
 $msg = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Mantém as máscaras
-    $nome_forn     = trim($_POST["Nome_forn"]);
-    $telefone      = trim($_POST["Telefone"]); 
-    $cnpj          = trim($_POST["CNPJ"]);     
-    $uf            = strtoupper(trim($_POST["UF"]));
-    $cidade        = trim($_POST["Cidade"]);
-    $bairro        = trim($_POST["Bairro"]);
-    $cep           = trim($_POST["CEP"]);
-    $num_empresa   = (int)$_POST["Num_empresa"];
-    $logradouro    = trim($_POST["Logradouro"]);
-    $email         = trim($_POST["Email"]);
+    // Sanitização e ajustes
+    $nome_forn     = trim($_POST["Nome_forn"] ?? '');
+    $telefone      = trim($_POST["Telefone"] ?? ''); 
+    $cnpj          = trim($_POST["CNPJ"] ?? '');     
+    $uf            = strtoupper(trim($_POST["UF"] ?? ''));
+    $cidade        = trim($_POST["Cidade"] ?? '');
+    $bairro        = trim($_POST["Bairro"] ?? '');
+    $cep           = trim($_POST["CEP"] ?? '');
+    $num_empresa   = isset($_POST["Num_empresa"]) ? (int)$_POST["Num_empresa"] : null;
+    $logradouro    = trim($_POST["Logradouro"] ?? '');
+    $email         = trim($_POST["Email"] ?? '');
     $data_fundacao = !empty($_POST["Data_fundacao"]) ? $_POST["Data_fundacao"] : null;
 
-    // Verifica se os obrigatórios foram preenchidos
-    if ($nome_forn && $telefone && $cnpj && $cep) {
-        $sql = "INSERT INTO fornecedores 
-                (Nome_forn, Telefone, CNPJ, UF, Cidade, Bairro, CEP, Num_empresa, Logradouro, Email, Data_fundacao) 
-                VALUES 
-                (:Nome_forn, :Telefone, :CNPJ, :UF, :Cidade, :Bairro, :CEP, :Num_empresa, :Logradouro, :Email, :Data_fundacao)";
-        
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':Nome_forn', $nome_forn, PDO::PARAM_STR);
-        $stmt->bindParam(':Telefone', $telefone, PDO::PARAM_STR);
-        $stmt->bindParam(':CNPJ', $cnpj, PDO::PARAM_STR);
-        $stmt->bindParam(':UF', $uf, PDO::PARAM_STR);
-        $stmt->bindParam(':Cidade', $cidade, PDO::PARAM_STR);
-        $stmt->bindParam(':Bairro', $bairro, PDO::PARAM_STR);
-        $stmt->bindParam(':CEP', $cep, PDO::PARAM_STR);
-        $stmt->bindParam(':Num_empresa', $num_empresa, PDO::PARAM_INT);
-        $stmt->bindParam(':Logradouro', $logradouro, PDO::PARAM_STR);
-        $stmt->bindParam(':Email', $email, PDO::PARAM_STR);
-        $stmt->bindParam(':Data_fundacao', $data_fundacao, PDO::PARAM_STR);
+    // Verifica campos obrigatórios
+    if (!empty($nome_forn) && !empty($telefone) && !empty($cnpj) && !empty($cep)) {
+        try {
+            $sql = "INSERT INTO fornecedores 
+                    (Nome_forn, Telefone, CNPJ, UF, Cidade, Bairro, CEP, Num_empresa, Logradouro, Email, Data_fundacao) 
+                    VALUES 
+                    (:Nome_forn, :Telefone, :CNPJ, :UF, :Cidade, :Bairro, :CEP, :Num_empresa, :Logradouro, :Email, :Data_fundacao)";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':Nome_forn', $nome_forn);
+            $stmt->bindParam(':Telefone', $telefone);
+            $stmt->bindParam(':CNPJ', $cnpj);
+            $stmt->bindParam(':UF', $uf);
+            $stmt->bindParam(':Cidade', $cidade);
+            $stmt->bindParam(':Bairro', $bairro);
+            $stmt->bindParam(':CEP', $cep);
+            $stmt->bindParam(':Num_empresa', $num_empresa);
+            $stmt->bindParam(':Logradouro', $logradouro);
+            $stmt->bindParam(':Email', $email);
+            $stmt->bindParam(':Data_fundacao', $data_fundacao);
 
-        if ($stmt->execute()) {
-            $msg = "<script>alert('Fornecedor cadastrado com sucesso!');window.location.href='../fornecedores.php'</script>";
-        } else {
-            $msg = "<script>alert('Erro ao cadastrar fornecedor!');</script>";
+            if ($stmt->execute()) {
+                echo "<script>alert('Fornecedor cadastrado com sucesso!');window.location.href='../fornecedores.php'</script>";
+                exit;
+            } else {
+                echo "<script>alert('Erro ao cadastrar fornecedor!');</script>";
+            }
+        } catch (PDOException $e) {
+            echo "<script>alert('Erro: " . $e->getMessage() . "');</script>";
         }
     } else {
-        $msg = "<script>alert('Preencha todos os campos obrigatórios!');</script>";
+        echo "<script>alert('Preencha todos os campos obrigatórios!');</script>";
     }
 }
 ?>

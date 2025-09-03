@@ -32,8 +32,7 @@ button[type="submit"]:hover { background:rgb(0,153,255);}
 </header>
 
 <main>
-  <form method="POST" id="form-fornecedor" action="cadastro/cadastro_fornecedor.php">
-    <?php echo $msg; ?>
+  <form method="POST" id="form-fornecedor" action="cadastros/cadastro_fornecedor.php">
 
     <h2>Dados da Empresa</h2>
     <label for="nome_forn">Nome da Empresa</label>

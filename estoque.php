@@ -42,224 +42,165 @@ try {
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --sidebar-bg: #2e2e2e;
-            --primary-text: #fff;
-            --hover-bg: #444;
-            --main-bg: #fcf6eb;
-            --card-bg: #fff;
-            --accent: #3f3f3f;
-            --highlight: #e0f7ff;
-        }
+      :root {
+  --navy-900: #071229;
+  --navy-800: #0d1b2a;
+  --navy-700: #153044;
+  --teal-500: #2aa19a;
+  --teal-600: #238678;
+  --teal-700: #1d6a60;
+  --muted:    #9aa6b2;
+  --card-bg:  rgba(255,255,255,0.02);
+  --highlight:#10293f;
+  --glass:    rgba(255,255,255,0.05);
+  --accent-glow: 0 8px 30px rgba(36,161,154,0.15);
+  --soft-shadow: 0 8px 18px rgba(2,6,23,0.6);
+  --radius:   12px;
+  --transition: 220ms cubic-bezier(.2,.9,.2,1);
+  --text-light:#e6eef2;
+  --text-mid: #cddbe3;
+}
 
-        * {
-            box-sizing: border-box;
-        }
+/* Reset */
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Segoe UI',sans-serif;
+  background:rgb(59, 75, 93);
+  color: var(--text-light);
+  display:flex;
+}
 
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--main-bg);
-            display: flex;
-        }
+/* Sidebar */
+.sidebar {
+  width:240px;
+  background: linear-gradient(180deg,var(--navy-900),var(--navy-800));
+  height:100vh;
+  position:fixed;
+  display:flex;
+  flex-direction:column;
+  padding-top:20px;
+  transition: width var(--transition);
+  box-shadow: 6px 0 30px rgba(0,0,0,0.55);
+}
 
-        .sidebar {
-            width: 240px;
-            background: var(--sidebar-bg);
-            height: 100vh;
-            position: fixed;
-            display: flex;
-            flex-direction: column;
-            padding-top: 20px;
-            transition: width 0.3s;
-        }
+.sidebar.collapsed { width:64px }
 
-        .sidebar.collapsed {
-            width: 60px;
-        }
+.sidebar a {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:var(--text-mid);
+  margin:6px 10px;
+  border-radius:10px;
+  transition: background var(--transition), transform var(--transition);
+}
 
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            color: var(--primary-text);
-            text-decoration: none;
-            padding: 15px 20px;
-            white-space: nowrap;
-        }
+.sidebar a:hover {
+  background: var(--glass);
+  transform:translateY(-3px);
+  box-shadow: var(--accent-glow);
+  border-left:3px solid var(--teal-500);
+  padding-left:12px;
+}
 
-        .sidebar a:hover {
-            background: var(--hover-bg);
-        }
+.sidebar.collapsed .text { display:none }
 
-        .sidebar .icon {
-            margin-right: 8px;
-        }
+/* Toggle */
+.toggle-btn{
+  cursor:pointer;
+  text-align:center;
+  margin-bottom:20px;
+  font-size:20px;
+  color:var(--text-light);
+}
 
-        .sidebar.collapsed .text {
-            display: none;
-        }
+/* Main content */
+.main-content {
+  margin-left:240px;
+  padding:20px 30px;
+  width:100%;
+  transition: margin-left var(--transition);
+}
+.main-content.collapsed { margin-left:64px }
 
-        .sidebar.collapsed .icon {
-            margin-right: 0;
-            justify-content: center;
-        }
+/* Titles */
+h1,h2{
+  text-align:center;
+  margin-bottom:20px;
+  font-weight:800;
+  color:var(--text-light);
+}
 
-        .toggle-btn {
-            cursor: pointer;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 20px;
-            color: var(--primary-text);
-        }
+/* Filters */
+#filters {
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
+.filter-group{display:flex;flex-direction:column}
+.filter-group label{margin-bottom:5px;color:var(--muted)}
+.filter-group input{
+  padding:.6rem .75rem;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  color:var(--text-light);
+  outline:none;
+  transition: box-shadow var(--transition), border var(--transition);
+}
+.filter-group input:focus{
+  box-shadow: var(--accent-glow);
+  border-color: var(--teal-500);
+}
+#clearFilters{
+  background:linear-gradient(180deg,var(--teal-500),var(--teal-600));
+  color:#fff;
+  padding:.55rem 1rem;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+  box-shadow:var(--accent-glow);
+}
+#clearFilters:hover{transform:translateY(-3px)}
 
-        .main-content {
-            margin-left: 240px;
-            padding: 20px 30px;
-            width: 100%;
-            transition: margin-left 0.3s;
-        }
+/* Table */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:rgb(76, 88, 101);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow: var(--soft-shadow);
+}
+th,td{padding:12px 10px;text-align:center}
+th{
+  background: linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  color:var(--text-light);
+  font-weight:800;
+}
+td{color:var(--text-mid);border-bottom:1px solid rgba(255,255,255,0.03)}
+tr:nth-child(even){background:rgba(255,255,255,0.01)}
+tr:hover{background:var(--highlight)}
 
-        .main-content.collapsed {
-            margin-left: 60px;
-        }
+/* Chart */
+.chart-section{
+  margin:40px auto;
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:12px;
+  max-width:700px;
+  box-shadow: var(--soft-shadow);
+  display:none;
+}
+.chart-section.active{display:block}
+.chart-container{position:relative;height:400px;width:100%}
+.filter-info{text-align:center;margin-bottom:10px;font-weight:700;color:var(--text-light)}
 
-        h1,
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        #filters {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            margin-bottom: 5px;
-        }
-
-        .filter-group input {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-
-        #clearFilters {
-            background: var(--accent);
-            color: var(--primary-text);
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #clearFilters:hover {
-            background: #555;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        th,
-        td {
-            padding: 12px 10px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background: var(--accent);
-            color: var(--primary-text);
-        }
-
-        tr:nth-child(even) {
-            background: #f9f9f9;
-        }
-
-        tr:hover {
-            background: var(--highlight);
-        }
-
-        .chart-section {
-            margin: 40px auto;
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            max-width: 700px;
-            display: none;
-        }
-
-        .chart-section.active {
-            display: block;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-
-        .filter-info {
-            text-align: center;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        /* Esconde apenas o texto quando colapsada */
-        .sidebar.collapsed .text {
-            display: none;
-        }
-
-        /* Ajusta emojis quando a sidebar está colapsada */
-        .sidebar .emoji {
-            margin-right: 8px;
-            display: inline-block;
-            width: 20px;
-            text-align: center;
-        }
-
-        .sidebar.collapsed .emoji {
-            margin-right: 0;
-            width: 100%;
-        }
-
-        .back-link {
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            /* suaviza posição e rotação */
-        }
-
-        .back-link .icon {
-            transition: transform 0.3s;
-            margin-right: 8px;
-        }
-
-        /* Quando a sidebar estiver colapsada */
-        .sidebar.collapsed .back-link {
-            justify-content: center;
-            /* centraliza horizontalmente */
-        }
-
-        .sidebar.collapsed .back-link .icon {
-            margin-right: 0;
-            transform: rotate(180deg);
-            /* rotação da seta */
-        }
     </style>
 </head>
 
