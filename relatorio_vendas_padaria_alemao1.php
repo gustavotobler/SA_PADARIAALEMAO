@@ -4,6 +4,11 @@ $dbname = 'padariadoalemao';
 $user = 'root';
 $pass = '';
 
+if ($_SESSION['nivel'] != 1) {
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
+    exit;
+  }
+
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

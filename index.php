@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg,rgb(0, 0, 0),rgb(0, 4, 57));
+            background:  #1b263b;
             display: flex;
             justify-content: center;
             align-items: center;

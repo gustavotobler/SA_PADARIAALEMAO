@@ -1,61 +1,16 @@
-<?php
+<?php 
 session_start();
-require_once("conexao.php");
+require_once 'conexao.php';
 
-// Busca fornecedores e categorias para popular selects
-$fornecedores = $pdo->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER BY Nome_forn")->fetchAll(PDO::FETCH_ASSOC);
-$categorias   = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria")->fetchAll(PDO::FETCH_ASSOC);
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $id_forn       = (int)($_POST["ID_forn"] ?? 0);
-  $id_categorias = (int)($_POST["id_categorias"] ?? 0);
-  $nome_prod     = trim($_POST["Nome_prod"] ?? "");
-  $preco_unitario= trim($_POST["Preco_unitario"] ?? "");
-  $unid_medida   = trim($_POST["Unid_medida"] ?? "");
-  $validade      = trim($_POST["Validade"] ?? "");
-  $qntd_produto  = (int)($_POST["Qntd_produto"] ?? 0);
-
-  // Normaliza o preço: remove "R$", pontos e troca vírgula por ponto
-  if ($preco_unitario !== "") {
-      $preco_unitario = str_replace(["R$", " "], "", $preco_unitario); // tira R$ e espaços
-      $preco_unitario = str_replace(".", "", $preco_unitario);         // tira separadores de milhar
-      $preco_unitario = str_replace(",", ".", $preco_unitario);        // troca vírgula por ponto
-  }
-
-  // Validação simples
-  if (!$id_categorias) {
-      echo "<script>alert('Selecione uma categoria.');</script>";
-  } elseif (!$nome_prod) {
-      echo "<script>alert('Informe o nome do produto.');</script>";
-  } elseif ($preco_unitario !== "" && (!is_numeric($preco_unitario) || $preco_unitario < 0)) {
-      echo "<script>alert('Preço inválido.');</script>";
-  } elseif ($qntd_produto < 0) {
-      echo "<script>alert('Quantidade inválida.');</script>";
-  } else {
-      $sql = "INSERT INTO produtos 
-              (ID_forn, id_categorias, Nome_prod, Preco_unitario, Unid_medida, Validade, Qntd_produto) 
-              VALUES 
-              (:ID_forn, :id_categorias, :Nome_prod, :Preco_unitario, :Unid_medida, :Validade, :Qntd_produto)";
-      $stmt = $pdo->prepare($sql);
-
-      $stmt->bindParam(':ID_forn', $id_forn, PDO::PARAM_INT);
-      $stmt->bindParam(':id_categorias', $id_categorias, PDO::PARAM_INT);
-      $stmt->bindParam(':Nome_prod', $nome_prod, PDO::PARAM_STR);
-      $stmt->bindParam(':Preco_unitario', $preco_unitario);
-      $stmt->bindParam(':Unid_medida', $unid_medida, PDO::PARAM_STR);
-      $stmt->bindParam(':Validade', $validade, PDO::PARAM_STR);
-      $stmt->bindParam(':Qntd_produto', $qntd_produto, PDO::PARAM_INT);
-
-      if ($stmt->execute()) {
-          echo "<script>alert('Produto cadastrado com sucesso!');window.location.href='produtos.php'</script>";
-      } else {
-          echo "<script>alert('Erro ao cadastrar produto!');</script>";
-      }
-  }
+if ($_SESSION['nivel'] != 1) {
+  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='produtos.php';</script>";
+  exit;
 }
-
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+  echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
+  exit;
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -72,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   body {
-    background: #eef2f7;
+    background:rgb(59, 75, 93);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -195,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   </header>
 
   <main>
-    <form method="POST" novalidate>
+    <form method="POST" novalidate action="cadastros/cadastro_produto.php">
       <h2>Cadastro de Produto</h2>
 
       <label for="ID_forn">Fornecedor:</label>
