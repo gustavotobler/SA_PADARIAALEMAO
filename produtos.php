@@ -9,10 +9,6 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
 }
 
 // Se não for administrador
-if ($_SESSION['nivel'] != 1) {
-    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
-    exit;
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">

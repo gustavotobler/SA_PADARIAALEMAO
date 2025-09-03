@@ -3,9 +3,13 @@ session_start();
 require_once '../conexao.php';
 
 // Verifica se é administrador
-if (empty($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
-    echo "Acesso negado!";
-    exit;
+if ($_SESSION['nivel'] != 1) {
+  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
+  exit;
+}
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+  echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
+  exit;
 }
 
 // Obtém o ID do produto via GET ou POST
@@ -65,7 +69,7 @@ $categorias = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   body {
-    background: #eef2f7;
+    background:rgb(59, 75, 93);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
