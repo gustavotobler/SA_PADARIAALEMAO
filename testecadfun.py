@@ -2,14 +2,23 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import random
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
 
-# --- Funções para gerar dados válidos ---
+# --- Função para digitar devagar (para máscaras JS) ---
+def digitar_com_mascara(elemento, valor, delay=0.05):
+    elemento.clear()
+    for c in valor:
+        elemento.send_keys(c)
+        time.sleep(delay)
+
+# --- Funções geradoras (CPF, RG, telefone, datas, nomes) ---
 def gerar_cpf():
     def mod11(num):
-        soma = sum([(len(num)+1-i)*int(x) for i,x in enumerate(num)])
+        soma = sum((len(num)+1-i)*int(x) for i,x in enumerate(num))
         resto = soma % 11
         return '0' if resto < 2 else str(11-resto)
     n = [str(random.randint(0,9)) for _ in range(9)]
@@ -44,97 +53,128 @@ def gerar_cep():
     return f"{random.randint(10000, 99999)}{random.randint(100, 999)}"
 
 def gerar_cidade():
-    cidade = [
-        "Araquari","Barra do Sul","Garuva",
-        "Guaramirim","Itapoá","Jaraguá do Sul",
-        "Massaranduba","Schroeder","São Francisco do Sul"
-    ]
-    return random.choice(cidade)
-
+    cidades = ["Araquari","Barra do Sul","Garuva","Guaramirim","Itapoá","Jaraguá do Sul",
+               "Massaranduba","Schroeder","São Francisco do Sul"]
+    return random.choice(cidades)
 
 def gerar_bairro():
-    bairro  = [
-        "Centro","Atiradores","Bucarein",
-        "Floresta","Glória","Iririú",
-        "Saguaçu","Costa e Silva","Anita Garibaldi",
-        "Boa Vista","Comasa","Cidade Nova",
-        "Parque Guarani","América","Bom Retiro",
-        "Itaum","Nova Brasília","Zona Industrial Norte"
-    ]
-    return random.choice(bairro)
+    bairros = ["Centro","Atiradores","Bucarein","Floresta","Glória","Iririú",
+               "Saguaçu","Costa e Silva","Anita Garibaldi","Boa Vista","Comasa",
+               "Cidade Nova","Parque Guarani","América","Bom Retiro","Itaum",
+               "Nova Brasília","Zona Industrial Norte"]
+    return random.choice(bairros)
 
 def gerar_logradouro():
-    ruas = [
-        "Rua das Palmeiras","Rua XV de Novembro","Rua 7 de Setembro",
-        "Rua Visconde de Taunay","Rua Benjamin Constant","Rua dos Estados",
-        "Rua Nove de Março","Rua Iririú","Rua São Paulo","Rua Almirante Barroso",
-        "Rua Amazonas","Rua das Flores","Rua do Príncipe","Rua Anita Garibaldi",
-        "Rua das Nações"
-    ]
+    ruas = ["Rua das Palmeiras","Rua XV de Novembro","Rua 7 de Setembro",
+            "Rua Visconde de Taunay","Rua Benjamin Constant","Rua dos Estados",
+            "Rua Nove de Março","Rua Iririú","Rua São Paulo","Rua Almirante Barroso",
+            "Rua Amazonas","Rua das Flores","Rua do Príncipe","Rua Anita Garibaldi",
+            "Rua das Nações"]
     return random.choice(ruas)
 
+# --- Helper: selecionar select por texto ---
+def selecionar_por_texto(driver, select_elem, texto):
+    try:
+        Select(select_elem).select_by_visible_text(texto)
+        return True
+    except:
+        try:
+            select_elem.click()
+            opt = driver.find_element(By.XPATH, f"//option[normalize-space()='{texto}']")
+            opt.click()
+            return True
+        except:
+            return False
 
-# --- Configuração Selenium ---
-driver = webdriver.Chrome()
-wait = WebDriverWait(driver, 10)
+# --- Inicialização do driver ---
+options = webdriver.ChromeOptions()
+options.add_argument("--start-maximized")
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=options)
+wait = WebDriverWait(driver, 15)
 
-# --- Login ---
-driver.get("http://localhost:8080/SA_PADARIAALEMAO/index.php")
-wait.until(EC.presence_of_element_located((By.ID, "Email"))).send_keys("kerryking@padaria.com")
-driver.find_element(By.ID, "Senha").send_keys("admin123")
-driver.find_element(By.XPATH, "//button[text()='Entrar']").click()
+try:
+    # --- LOGIN ---
+    wait.until(EC.visibility_of_element_located((By.ID, "Email"))).send_keys("kerryking@padaria.com")
+    wait.until(EC.visibility_of_element_located((By.ID, "Senha"))).send_keys("admin123")
+    driver.find_element(By.XPATH, "//button[normalize-space()='Entrar']").click()
+    print("[Login] Realizado com sucesso")
 
-# --- Acessar Funcionários ---
-func_btn = wait.until(EC.element_to_be_clickable((By.LINK_TEXT, "🙎‍♂️ Funcionários")))
-func_btn.click()
+    # --- NAVEGAR PARA FUNCIONÁRIOS ---
+    func_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(normalize-space(.), 'Funcionários')]")))
+    func_btn.click()
+    print("[Navegação] Página de Funcionários aberta")
 
-# --- Esperar funcionarios.php carregar ---
-wait.until(EC.presence_of_element_located((By.ID, "edit-toggle")))
+    # --- MOSTRAR AÇÕES (ícone lápis) ---
+    lapis = wait.until(EC.element_to_be_clickable((By.ID, "edit-toggle")))
+    lapis.click()
+    print("[Ações] Ícone lápis clicado")
 
-# --- Mostrar botões e clicar no "add" ---
-lapis = driver.find_element(By.ID, "edit-toggle")
-lapis.click()
-time.sleep(0.5)  # delay para animação
-add_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#add-button button.add-btn")))
-driver.execute_script("arguments[0].click();", add_btn)
+    # --- CLICAR BOTÃO ADICIONAR (+) ---
+    add_btn = None
+    for _ in range(5):
+        try:
+            add_btn = wait.until(EC.element_to_be_clickable((By.ID, "add-button")))
+            add_btn.click()
+            print("[Ações] Botão + clicado")
+            break
+        except:
+            print("[Retry] Botão + ainda não clicável, tentando novamente...")
+            time.sleep(1)
+    if not add_btn:
+        raise Exception("Botão + não clicável")
 
-# --- Espera cadfunc.php carregar ---
-wait.until(EC.presence_of_element_located((By.ID, "Nome_func")))
+    # --- ESPERAR FORMULÁRIO ---
+    wait.until(EC.visibility_of_element_located((By.ID, "Nome_func")))
+    print("[Formulário] Formulário carregado")
 
-# --- Função para digitar devagar (para máscaras JS) ---
-def digitar_com_mascara(elemento, valor):
-    elemento.clear()
-    for c in valor:
-        elemento.send_keys(c)
-        time.sleep(0.05)
+    # --- PREENCHIMENTO DE CAMPOS ---
+    campos = [
+        ("Nome_func", gerar_nome()),
+        ("telefone", gerar_telefone()),
+        ("rg", gerar_rg()),
+        ("cpf", gerar_cpf()),
+        ("cep", gerar_cep()),
+        ("UF", "SC"),
+        ("Num_casa", str(random.randint(1,500))),
+        ("Cidade", gerar_cidade()),
+        ("Bairro", gerar_bairro()),
+        ("Logradouro", gerar_logradouro()),
+        ("email", f"teste{random.randint(1000,9999)}@email.com"),
+        ("senha", "senha1234"),
+        ("nascimento", gerar_data_nascimento()),
+        ("admissao", gerar_data_admissao())
+    ]
 
-# --- Preenchendo campos ---
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Nome_func"))), gerar_nome())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "telefone"))), gerar_telefone())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "rg"))), gerar_rg())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "cpf"))), gerar_cpf())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "cep"))), gerar_cep())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "UF"))), "SC")
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Num_casa"))), str(random.randint(1,500)))
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Cidade"))), gerar_cidade())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Bairro"))), gerar_bairro())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "Logradouro"))), gerar_logradouro())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "email"))), f"teste{random.randint(1,999)}@email.com")
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "senha"))), "senha1234")
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "nascimento"))), gerar_data_nascimento())
-digitar_com_mascara(wait.until(EC.presence_of_element_located((By.ID, "admissao"))), gerar_data_admissao())
+    for campo_id, valor in campos:
+        digitar_com_mascara(wait.until(EC.visibility_of_element_located((By.ID, campo_id))), valor)
+        print(f"[Preenchimento] {campo_id} preenchido")
 
-# --- Selecionando opções ---
-Select(wait.until(EC.presence_of_element_located((By.ID, "Sexo")))).select_by_value(random.choice(["Masculino","Feminino"]))
-#time.sleep(10)
-Select(wait.until(EC.presence_of_element_located((By.ID, "Esta_civil")))).select_by_visible_text(random.choice(["Solteiro","Casado","Viúvo"]))
-#time.sleep(10)
-Select(wait.until(EC.presence_of_element_located((By.ID, "nivel_de_acesso")))).select_by_value(random.choice(["1","2"]))
-Select(wait.until(EC.presence_of_element_located((By.ID, "cargo")))).select_by_visible_text(random.choice(["Gerente","Padeiro","Caixa","Confeiteiro"]))
+    # --- SELEÇÃO DE SELECTS ---
+    sexo_elem = wait.until(EC.presence_of_element_located((By.ID, "Sexo")))
+    selecionar_por_texto(driver, sexo_elem, random.choice(["Masculino", "Feminino"]))
 
-# --- Submeter formulário ---
-wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))).click()
+    est_civil_elem = wait.until(EC.presence_of_element_located((By.ID, "Esta_civil")))
+    selecionar_por_texto(driver, est_civil_elem, random.choice(["Solteiro", "Casado", "Viúvo"]))
 
-# Pausa para ver resultado
-time.sleep(5)
-driver.quit()
+    nivel_elem = wait.until(EC.presence_of_element_located((By.ID, "nivel_de_acesso")))
+    Select(nivel_elem).select_by_value(random.choice(["1", "2"]))
+
+    cargo_elem = wait.until(EC.presence_of_element_located((By.ID, "cargo")))
+    selecionar_por_texto(driver, cargo_elem, random.choice(["Gerente", "Padeiro", "Caixa", "Confeiteiro"]))
+
+    print("[Selects] Seleções realizadas")
+
+    # --- SUBMIT ---
+    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))).click()
+    print("[Formulário] Submit clicado")
+
+    # --- Esperar redirecionamento ou resultado ---
+    wait.until(EC.visibility_of_element_located((By.ID, "edit-toggle")))
+    print("[Sucesso] Cadastro concluído")
+
+except Exception as e:
+    print("[Erro]", e)
+
+finally:
+    driver.quit()
