@@ -7,145 +7,112 @@
 }
 
 body {
-  font-family: "Century Gothic", sans-serif;
-  background-color: #f5f2ed;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #0d1b2a;
   position: relative;
   height: 100vh;
-  margin: 0;
-  overflow: hidden;
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333; display: flex;
-}
-nav img{
-   max-height:150px;
-   max-width:150px;
+  display: flex;
+  color: #f8f9fa;
 }
 
 body::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background-image: url(../img/fundo.avif);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 70%; /* Ajuste aqui a transparência da imagem */
+  opacity: 0.2; /* fundo bem sutil */
   z-index: -1;
 }
+
+/* ===== Variáveis ===== */
 :root {
-  --transition: 0.5s;
-  --sidebar-bg: #2e2e2e;
-  --primary-text: #fff;
-  --hover-bg: #444;
-  --main-bg: #f0f0f0;
-  --card-bg: #fff;
-  --highlight: #e0f7ff;
+  --transition: 0.3s;
+  --sidebar-bg: linear-gradient(180deg, #0d1b2a, #1b263b);
+  --primary-text: #f8f9fa;
+  --hover-bg: #1e3a5f;
+  --main-bg: #e9ecef;
+  --card-bg: #1b263b;
+  --highlight: #0077b6;
 }
-* { box-sizing: border-box; }
-body { 
-     margin: 0;
-     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-     color: #333; display: flex;
-     }
 
+/* ===== Sidebar ===== */
 .sidebar {
-         width: 240px;
-         background-color: var(--sidebar-bg); 
-         height: 100vh; position: fixed; 
-         display: flex; 
-         flex-direction: column; 
-         padding-top: 20px; 
-        }
-.sidebar h2 {
-           color: var(--primary-text); 
-           text-align: center; 
-           margin-bottom: 30px; 
-          }
-.sidebar a {
-          color: var(--primary-text); 
-          padding: 15px 20px; 
-          text-decoration: none; 
-          transition: background 0.3s; 
-        }
-.sidebar a:hover { 
-                border-radius: 10px;
-                background-color: var(--hover-bg); 
-              }
-.main-content { 
-             margin-left: 240px; 
-             padding: 30px; 
-             width: 100%; 
-            }
-h1 {
-  text-align: center; 
-  margin-bottom: 20px; 
-  font-size: 36px; 
- }
-.welcome-card {
-  background-color: var(--card-bg);
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  max-width: 700px;
-  margin: 0 auto;
-  text-align: center;
-}
-.welcome-card h2 {
-  color: var(--accent);
-  font-size: 28px;
-  margin-bottom: 20px;
-}
-.welcome-card p {
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-.welcome-card a {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: var(--accent);
-  color: var(--primary-text);
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: background-color 0.3s, transform 0.1s;
-}
-.welcome-card a:hover {
-  background-color: #555;
-  transform: translateY(-1px);
-}
-.welcome-card a:active {
-  background-color: #333;
-  transform: translateY(0);
-}
-.back-button { 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  padding: 10px 20px; 
-  margin: 10px; 
-  background-color: var(--accent); 
-  color: var(--primary-text); 
-  border-radius: 8px; 
-  text-decoration: none; 
-  font-size: 16px; 
-  font-weight: 500; 
-  transition: background-color 0.2s, transform 0.1s;
-}
-.back-button .icon { margin-right: 8px; font-size: 18px; }
-.back-button:hover { background-color: #555; transform: translateY(-1px); }
-.back-button:active { background-color: #333; transform: translateY(0); }
-.sidebar .logout a,
-.sidebar .logout a button {
-    background-color: transparent !important;
-    box-shadow: none !important;
+  width: 240px;
+  background: var(--sidebar-bg);
+  height: 100vh;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  box-shadow: 3px 0 10px rgba(0,0,0,0.3);
 }
 
+.sidebar img {
+  max-width: 150px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+}
+
+.sidebar a {
+  color: var(--primary-text);
+  padding: 15px 20px;
+  text-decoration: none;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.sidebar a:hover {
+  background: var(--hover-bg);
+  border-left: 4px solid var(--highlight);
+  padding-left: 16px;
+}
+
+/* ===== Logout ===== */
+.sidebar .logout {
+  margin-top: auto;
+  padding: 20px;
+}
+.sidebar .logout a button {
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: var(--transition);
+}
 .sidebar .logout a button:hover {
-    background-color: transparent !important;
-    color: #dc3545; /* Mantém a cor vermelha do texto */
-    box-shadow: none !important;
+  transform: scale(1.05);
+}
+
+/* ===== Conteúdo ===== */
+.main-content {
+  margin-left: 240px;
+  padding: 40px;
+  width: 100%;
+}
+
+.welcome-card {
+  background: var(--card-bg);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  max-width: 800px;
+  margin: 80px auto;
+  text-align: center;
+  color: var(--primary-text);
+  transition: transform var(--transition);
+}
+.welcome-card:hover {
+  transform: translateY(-5px);
+}
+
+.welcome-card h2 {
+  font-size: 28px;
+  line-height: 1.5;
+  color: #f1f1f1;
 }

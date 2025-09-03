@@ -18,11 +18,9 @@ function simularEnvioEmail($email, $senha) {
 if($_SERVER["REQUEST_METHOD"]=="POST"){
     $email = $_POST['email'];
 
-    // Validação extra no servidor
     if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
         echo "<script>alert('Formato de email inválido');</script>";
     } else {
-        //VERIFICA SE O EMAIL EXISTE NO BANCO DE DADOS
         $sql="SELECT * FROM funcionario WHERE Email = :Email";
         $stmt= $pdo->prepare($sql);
         $stmt->bindParam(':Email',$email);
@@ -30,18 +28,15 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if($usuario){
-            //GERA UMA SENHA TEMPORÁRIA
             $senha_temporaria = gerarSenhaTemporaria();
             $senha_hash = password_hash($senha_temporaria,PASSWORD_DEFAULT);
 
-            //ATUALIZA NO BANCO
             $sql="UPDATE funcionario SET Senha = :Senha, senha_temporaria = TRUE WHERE Email = :Email";
             $stmt=$pdo->prepare($sql);
             $stmt->bindParam(':Senha',$senha_hash);
             $stmt->bindParam(':Email',$email);
             $stmt->execute();
 
-            //SIMULA ENVIO
             simularEnvioEmail($email,$senha_temporaria);
             echo "<script>alert('Uma senha temporária foi gerada e enviada (simulação). Verifique o arquivo emails_simulados.txt');window.location.href='index.php';</script>";
         } else {
@@ -51,102 +46,124 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 }
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar senha</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #74ABE2, #5563DE);
-        color: #333;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-      }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg,rgb(0, 0, 0),rgb(0, 4, 57));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-      .container {
-        background: #fff;
-        padding: 25px 30px;
-        border-radius: 15px;
-        box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
-        width: 100%;
-        max-width: 400px;
-        text-align: center;
-      }
+        .container {
+            background: #fff;
+            padding: 35px 30px;
+            border-radius: 20px;
+            box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
 
-      h2 {
-        margin-bottom: 20px;
-        color: #5563DE;
-      }
+        .logo {
+            width: 100px;
+            margin-bottom: 15px;
+        }
 
-      label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-      }
+        h2 {
+            margin-bottom: 15px;
+            color:rgb(0, 0, 0);
+        }
 
-      input[type="email"] {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-        transition: 0.3s;
-      }
+        label {
+            display: block;
+            margin: 12px 0 6px;
+            font-weight: 600;
+            text-align: left;
+        }
 
-      input[type="email"]:focus {
-        border-color: #5563DE;
-        outline: none;
-        box-shadow: 0 0 5px rgba(85,99,222,0.5);
-      }
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
 
-      button {
-        width: 100%;
-        padding: 12px;
-        border: none;
-        border-radius: 8px;
-        background: #5563DE;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-        transition: 0.3s;
-      }
+        input:focus {
+            border-color:rgb(5, 37, 91);
+            outline: none;
+            box-shadow: 0 0 6px rgba(2, 31, 82, 0.5);
+        }
 
-      button:hover {
-        background: #4050b5;
-      }
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg,rgb(4, 10, 21),rgb(5, 1, 69));
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-      a button {
-        background: #999;
-        margin-top: 10px;
-      }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 5px 15px rgba(37,117,252,0.4);
+        }
 
-      a button:hover {
-        background: #777;
-      }
+        .btn-voltar {
+            display: block;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #999;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+        }
 
-      footer {
-        margin-top: 20px;
-        font-size: 12px;
-        color: #666;
-      }
+        .btn-voltar:hover {
+            background: #777;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="img/Logopadaria.png" alt="Logo Padaria" class="logo">
         <h2>Recuperar senha</h2>
         <form action="RECUP_SENHA.php" method="POST" onsubmit="return validarFuncionario()">
-            <label for="email">Digite o seu email cadastrado</label>
+            <label for="email">Digite o seu e-mail cadastrado</label>
             <input type="email" id="email" name="email" placeholder="exemplo@email.com" required>
             <button type="submit">Enviar senha temporária</button>
         </form>
-        <a href="index.php"><button type="button">Voltar</button></a>
-        <footer>© Gustavo Tobler - Técnico de Desenvolvimento de Sistemas</footer>
+        <a href="index.php" class="btn-voltar">Voltar</a>
+        <footer>&copy; 2025 Padaria do Alemão</footer>
     </div>
     <script>
       function validarFuncionario() {
@@ -154,14 +171,14 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         const email = emailInput.value.trim();
 
         if (email === "") {
-            alert("Por favor, digite o seu email.");
+            alert("Por favor, digite o seu e-mail.");
             emailInput.focus();
             return false;
         }
 
         const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!regexEmail.test(email)) {
-            alert("Digite um email válido (exemplo: usuario@email.com).");
+            alert("Digite um e-mail válido (exemplo: usuario@email.com).");
             emailInput.focus();
             return false;
         }
