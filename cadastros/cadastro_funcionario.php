@@ -4,8 +4,12 @@ require_once '../conexao.php';
 error_reporting(E_ALL);
 
 // Verifica permissão
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+    echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
+    exit;
+}
 if ($_SESSION['nivel'] != 1) {
-    echo "Acesso negado!";
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
     exit;
 }
 

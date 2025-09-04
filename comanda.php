@@ -52,15 +52,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $acao = $_POST['acao'] ?? "";
 
     if ($acao === "nova") {
+        // Cria uma nova comanda com status ABERTA
         $stmt = $pdo->prepare("INSERT INTO vendas (ID_func, venda_data, status) VALUES (?, NOW(), 'ABERTA')");
         $stmt->execute([$_SESSION['ID_func']]);
+        // Recupera o ID da comanda criada
+        $novaId = $pdo->lastInsertId();
         $msg = "Nova comanda criada!";
+        // Redireciona para a nova comanda
+        header("Location: comanda.php?id=" . $novaId);
+        exit();
     }
 
     if ($acao === "add_item") {
-        $id_venda = (int)$_POST['id_venda'];
-        $id_prod  = (int)$_POST['id_produto'];
-        $qtd      = (int)$_POST['quantidade'];
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
+        $id_prod  = isset($_POST['id_produto']) ? (int)$_POST['id_produto'] : 0;
+        $qtd      = isset($_POST['quantidade']) ? (int)$_POST['quantidade'] : 1;
 
         $p = $pdo->prepare("SELECT Preco_unitario, Qntd_produto FROM produtos WHERE ID_produto = ?");
         $p->execute([$id_prod]);
@@ -94,18 +100,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id_venda = (int)$_POST['id_venda'];
         $itens = $pdo->prepare("SELECT ID_produto, Quantidade FROM itens_vendas WHERE ID_vendas = ?");
         $itens->execute([$id_venda]);
+        $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
         foreach ($itens as $i) {
             $upd = $pdo->prepare("UPDATE produtos SET Qntd_produto = Qntd_produto - ? WHERE ID_produto = ?");
             $upd->execute([$i['Quantidade'], $i['ID_produto']]);
         }
         $pdo->prepare("UPDATE vendas SET status='FECHADA' WHERE ID_vendas=?")->execute([$id_venda]);
         $msg = "Comanda fechada!";
+
+        header("Location: comanda.php?id=" . $id_venda);
+        exit();
     }
 
     if ($acao === "cancelar") {
-        $id_venda = (int)$_POST['id_venda'];
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
         $pdo->prepare("UPDATE vendas SET status='CANCELADA' WHERE ID_vendas=?")->execute([$id_venda]);
         $msg = "Comanda cancelada!";
+        header("Location: comanda.php?id=" . $id_venda);
+        exit();
+    }
+
+    if ($acao === "salvar") {
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
+        $pdo->prepare("UPDATE vendas SET venda_data=NOW() WHERE ID_vendas=?")->execute([$id_venda]);
+        $msg = "Comanda salva com sucesso!";
     }
 }
 
@@ -235,5 +253,16 @@ $produtos = $pdo->query("SELECT * FROM produtos")->fetchAll(PDO::FETCH_ASSOC);
     <?php endif; ?>
   </div>
 </div>
+</main>
+
+<script>
+function toggleSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  const content = document.getElementById('mainContent');
+  sidebar.classList.toggle('collapsed');
+  content.classList.toggle('collapsed');
+}
+</script>
+
 </body>
 </html>

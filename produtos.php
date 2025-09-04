@@ -9,10 +9,6 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
 }
 
 // Se não for administrador
-if ($_SESSION['nivel'] != 1) {
-    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
-    exit;
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -170,6 +166,8 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
     <a href="estoque.php"><span class="material-icons icon">analytics</span><span class="text">Estoque</span></a>
     <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
     <a href="selecionar_itens.php"><span class="material-icons icon">shopping_cart</span><span class="text">Pagamento</span></a>
+     <a href="comanda.php"><span class="material-icons"></span> Comanda</a>
+
 </nav>
 
 <main class="main-content" id="mainContent">

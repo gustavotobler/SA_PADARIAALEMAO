@@ -1,11 +1,20 @@
 <?php
 session_start();
 require_once '../conexao.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Verifica permissão
+
 if ($_SESSION['nivel'] != 1) {
-    die("Acesso negado!");
+  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../funcionarios.php';</script>";
+  exit;
 }
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+  echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
+  exit;
+}
+
 
 // Verifica se o ID foi passado
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -23,9 +32,18 @@ if (!$func) {
     die("Funcionário não encontrado!");
 }
 
+// Função para formatar datas para o banco
+function formatarDataBanco($data){
+    if(!$data) return null;
+    $partes = explode("/", $data);
+    if(count($partes) == 3){
+        return $partes[2]."-".$partes[1]."-".$partes[0];
+    }
+    return null;
+}
+
 // Processa o formulário
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id          = $_POST['ID_func'];
     $nome        = $_POST['Nome_func'] ?? '';
     $telefone    = $_POST['Telefone'] ?? '';
     $sexo        = $_POST['Sexo'] ?? '';
@@ -41,13 +59,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email       = $_POST['Email'] ?? '';
     $nivel       = $_POST['nivel_de_acesso'] ?? '';
     $cargo       = $_POST['Cargo'] ?? '';
-    $data_nasc   = $_POST['Data_nascimento'] ?? null;
-    $data_adm    = $_POST['Data_admissao'] ?? null;
+    $data_nasc   = formatarDataBanco($_POST['Data_nascimento'] ?? null);
+    $data_adm    = formatarDataBanco($_POST['Data_admissao'] ?? null);
 
     // Mantém a senha antiga se o campo estiver vazio
     $senha = !empty($_POST['Senha']) ? password_hash($_POST['Senha'], PASSWORD_DEFAULT) : $func['Senha'];
 
-    // Atualiza os dados mantendo máscaras
+    // Atualiza os dados
     $sql = "UPDATE funcionario SET 
                 Nome_func=:Nome_func,
                 Telefone=:Telefone,
@@ -70,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             WHERE ID_func=:id";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([
+    $executou = $stmt->execute([
         'Nome_func'=>$nome,
         'Telefone'=>$telefone,
         'Sexo'=>$sexo,
@@ -92,7 +110,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'id'=>$id
     ]);
 
-    echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='../funcionarios.php';</script>";
+    if($executou){
+        echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='../funcionarios.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Erro ao atualizar o funcionário.');</script>";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -103,7 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
-body{background:#eef2f7;min-height:100vh;display:flex;flex-direction:column;}
+body{background:rgb(59, 75, 93);min-height:100vh;display:flex;flex-direction:column;}
 header {background:rgb(27, 68, 95);padding: 15px 20px;color: white;display: flex;align-items: center;gap: 15px;box-shadow: 0 3px 10px rgba(0,0,0,0.15);}
 header .back-btn {background: transparent;border: none;color: white;cursor: pointer;font-size: 24px;}
 header h1 {flex: 1;font-weight: 700;font-size: 1.5rem;}
@@ -220,7 +243,7 @@ button[type="submit"]:hover {background:rgb(0,153,255);}
 </main>
 
 <script>
-// Máscaras mantendo os caracteres no banco
+// Máscaras e validações
 document.addEventListener("DOMContentLoaded", function(){
   const telefone=document.getElementById("telefone");
   const rg=document.getElementById("rg");
