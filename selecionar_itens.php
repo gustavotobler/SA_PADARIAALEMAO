@@ -879,7 +879,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <span class="text">Produtos</span>
     </a>
 
-    <a href="#" onclick="showSection('comanda.php')">
+    <a href="comanda.php" onclick="showSection('comanda.php')">
       <span class="emoji">🧾</span>
       <span class="text">Comanda</span>
     </a>
@@ -1435,7 +1435,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
               }
             } catch (e) { /* no-op */ }
 
-          } catch (err) {
+          } catch (err) {   
             console.error('Erro inicializando payment script:', err);
           }
         }); // DOMContentLoaded end
