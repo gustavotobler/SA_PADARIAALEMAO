@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 04/09/2025 às 19:21
+-- Tempo de geração: 04/09/2025 às 21:30
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -109,7 +109,7 @@ CREATE TABLE `funcionario` (
 
 INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `senha_temporaria`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
 (1, 'Kerry King', '(47) 99685-5520', 'Masculino', '01.203.4013', '141.554.709-26', 'Casado', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', '$2y$10$NCqESNfuzXEBVXt2XNkTnOA2bMRZLOX/8Orq8LnwjHg1okdCmWj96', 0, 'kerryking@padaria.com', 1, '0000-00-00', '0000-00-00', 'Gerente'),
-(2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$WudbEx4ect2LG7hdyu5rXO5Mqt56BwMZNovriq5XeegN3jUkDXq/a', 0, 'ian@gmail.com', 2, '0000-00-00', '0000-00-00', 'Padeiro'),
+(2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$oTvTgzi1VHWdr7dQzxHLYeMmypykkgAJeHK0SlJStyBUJQW9lyJ3e', 0, 'ian@gmail.com', 2, '0000-00-00', '0000-00-00', 'Padeiro'),
 (3, 'Lucas Borba', '(51) 98765-4321', '', '123456789', '123.456.789-00', 'Solteiro', 'RS', 'Porto Alegre', 'Centro', '90000-00', 101, 'Rua das Flores', 'SenhaForte@123', 0, 'lucas.borba@email.com', 2, '1990-05-15', '2025-08-01', 'Analista de Sistemas'),
 (4, 'Gustavo Tobler', '(92) 03123-1321', '', '23.342.34-23', '314.452.536-54', 'Solteiro', 'SC', 'Joinville', 'Paraíso', '90323-33', 189, 'rua das flores', '$2y$10$sfS6FgkVVfa78RVMalM7vO1OIVJeiouVfk/KKPJDYY3hVjMn2kPiK', 0, 'toblerone@gmail.com', 1, '2000-09-02', '2025-09-03', 'Gerente');
 
@@ -133,7 +133,13 @@ CREATE TABLE `itens_vendas` (
 
 INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quantidade`, `valor_total`) VALUES
 (2, 1, 1, 3, 150.00),
-(3, 1, 1, 1, 2.00);
+(3, 1, 1, 1, 2.00),
+(4, 0, 4, 1, 8.00),
+(5, 0, 6, 1, 21.00),
+(6, 0, 4, 1, 8.00),
+(7, 1, 4, 1, 8.00),
+(8, 1, 4, 1, 8.00),
+(9, 1, 6, 1, 21.00);
 
 -- --------------------------------------------------------
 
@@ -176,8 +182,8 @@ CREATE TABLE `produtos` (
 --
 
 INSERT INTO `produtos` (`ID_produto`, `ID_forn`, `id_categorias`, `Nome_prod`, `Preco_unitario`, `Unid_medida`, `Validade`, `Qntd_produto`) VALUES
-(4, 2, 3, 'bolo de leite', 8.00, 'un', '07/10/2025', 10),
-(6, 3, 2, 'Pão Frânces', 21.00, 'kg', '07/10/2025', 200),
+(4, 2, 3, 'bolo de leite', 8.00, 'un', '07/10/2025', 7),
+(6, 3, 2, 'Pão Frânces', 21.00, 'kg', '07/10/2025', 199),
 (7, 1, 3, 'Bolo de arroz', 2.00, 'kg', '2026-03-10', 80),
 (8, 1, 6, 'iogurte', 5.50, 'un', '2025-09-15', 100);
 
@@ -191,16 +197,31 @@ CREATE TABLE `vendas` (
   `ID_vendas` int(11) NOT NULL,
   `ID_func` int(11) DEFAULT NULL,
   `venda_data` datetime DEFAULT NULL,
-  `forma_pagamento` varchar(15) DEFAULT NULL
+  `forma_pagamento` varchar(15) DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'ABERTA'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Despejando dados para a tabela `vendas`
 --
 
-INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`) VALUES
-(0, 3, '2025-08-29 00:00:00', 'cartão'),
-(1, 1, '2025-08-28 12:00:00', 'cartão');
+INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`, `status`) VALUES
+(1, 1, '2025-09-04 15:46:50', NULL, 'FECHADA'),
+(2, 1, '2025-09-04 15:48:25', NULL, 'CANCELADA'),
+(3, 1, '2025-09-04 15:48:42', NULL, 'FECHADA'),
+(4, 1, '2025-09-04 15:58:47', NULL, 'FECHADA'),
+(5, 1, '2025-09-04 15:51:34', NULL, 'FECHADA'),
+(6, 1, '2025-09-04 15:58:53', NULL, 'FECHADA'),
+(7, 1, '2025-09-04 16:08:20', NULL, 'FECHADA'),
+(8, 1, '2025-09-04 16:08:16', NULL, 'FECHADA'),
+(9, 1, '2025-09-04 16:08:36', NULL, 'ABERTA'),
+(10, 1, '2025-09-04 16:14:54', NULL, 'ABERTA'),
+(11, 1, '2025-09-04 16:15:16', NULL, 'ABERTA'),
+(12, 1, '2025-09-04 16:15:54', NULL, 'CANCELADA'),
+(13, 1, '2025-09-04 16:17:56', NULL, 'FECHADA'),
+(14, 1, '2025-09-04 16:22:26', NULL, 'ABERTA'),
+(15, 1, '2025-09-04 16:26:58', NULL, 'ABERTA'),
+(16, 1, '2025-09-04 16:28:59', NULL, 'ABERTA');
 
 --
 -- Índices para tabelas despejadas
@@ -283,7 +304,7 @@ ALTER TABLE `funcionario`
 -- AUTO_INCREMENT de tabela `itens_vendas`
 --
 ALTER TABLE `itens_vendas`
-  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de tabela `nivel`
@@ -296,6 +317,12 @@ ALTER TABLE `nivel`
 --
 ALTER TABLE `produtos`
   MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT de tabela `vendas`
+--
+ALTER TABLE `vendas`
+  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Restrições para tabelas despejadas
