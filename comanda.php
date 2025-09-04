@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+/* ====== CONFIGURAÇÃO DO BANCO ====== */
 $host = "127.0.0.1";
 $db   = "padariadoalemao";
 $user = "root";
@@ -13,29 +14,34 @@ try {
     die("Erro na conexão: " . $e->getMessage());
 }
 
+/* ====== LOGIN DE DEMONSTRAÇÃO ====== */
 if (!isset($_SESSION['ID_func'])) {
     $_SESSION['ID_func'] = 1;
     $_SESSION['Nome_func'] = "Funcionário Demo";
 }
 
+/* ====== FUNÇÕES ====== */
 function listarComandas($pdo) {
-    $sql = "SELECT v.*, f.Nome_func FROM vendas v 
-            LEFT JOIN funcionario f ON f.ID_func = v.ID_func 
-            ORDER BY v.venda_data DESC";
+    $sql = "SELECT v.*, f.Nome_func 
+              FROM vendas v 
+              LEFT JOIN funcionario f ON f.ID_func = v.ID_func 
+             ORDER BY v.venda_data DESC";
     return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function detalheComanda($pdo, $id) {
-    $cab = $pdo->prepare("SELECT v.*, f.Nome_func FROM vendas v 
-                          LEFT JOIN funcionario f ON f.ID_func = v.ID_func 
-                          WHERE v.ID_vendas = ?");
+    $cab = $pdo->prepare("SELECT v.*, f.Nome_func 
+                            FROM vendas v 
+                            LEFT JOIN funcionario f ON f.ID_func = v.ID_func 
+                           WHERE v.ID_vendas = ?");
     $cab->execute([$id]);
     $cab = $cab->fetch(PDO::FETCH_ASSOC);
     if (!$cab) return null;
 
-    $itens = $pdo->prepare("SELECT iv.*, p.Nome_prod FROM itens_vendas iv
-                            JOIN produtos p ON p.ID_produto = iv.ID_produto
-                            WHERE iv.ID_vendas = ?");
+    $itens = $pdo->prepare("SELECT iv.*, p.Nome_prod 
+                              FROM itens_vendas iv
+                              JOIN produtos p ON p.ID_produto = iv.ID_produto
+                             WHERE iv.ID_vendas = ?");
     $itens->execute([$id]);
     $cab['itens'] = $itens->fetchAll(PDO::FETCH_ASSOC);
 
@@ -46,6 +52,7 @@ function detalheComanda($pdo, $id) {
     return $cab;
 }
 
+/* ====== AÇÕES ====== */
 $msg = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -68,36 +75,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id_prod  = isset($_POST['id_produto']) ? (int)$_POST['id_produto'] : 0;
         $qtd      = isset($_POST['quantidade']) ? (int)$_POST['quantidade'] : 1;
 
-        $p = $pdo->prepare("SELECT Preco_unitario, Qntd_produto FROM produtos WHERE ID_produto = ?");
+        $p = $pdo->prepare("SELECT Preco_unitario FROM produtos WHERE ID_produto = ?");
         $p->execute([$id_prod]);
-        $dados_prod = $p->fetch(PDO::FETCH_ASSOC);
+        $preco = $p->fetchColumn();
 
-        if (!$dados_prod || $dados_prod['Qntd_produto'] < $qtd) {
-            $msg = "Estoque insuficiente para o produto selecionado!";
-        } else {
-            $preco = $dados_prod['Preco_unitario'];
-            $valor_total = $preco * $qtd;
+        $valor_total = $preco * $qtd;
 
-            $ver = $pdo->prepare("SELECT ID_itens_vendas, Quantidade FROM itens_vendas WHERE ID_vendas = ? AND ID_produto = ?");
-            $ver->execute([$id_venda, $id_prod]);
-            $existente = $ver->fetch(PDO::FETCH_ASSOC);
+        $ins = $pdo->prepare("INSERT INTO itens_vendas (ID_vendas, ID_produto, Quantidade, valor_total) VALUES (?,?,?,?)");
+        $ins->execute([$id_venda, $id_prod, $qtd, $valor_total]);
 
-            if ($existente) {
-                $novaQtd = $existente['Quantidade'] + $qtd;
-                $novoTotal = $novaQtd * $preco;
-                $upd = $pdo->prepare("UPDATE itens_vendas SET Quantidade = ?, valor_total = ? WHERE ID_itens_vendas = ?");
-                $upd->execute([$novaQtd, $novoTotal, $existente['ID_itens_vendas']]);
-            } else {
-                $ins = $pdo->prepare("INSERT INTO itens_vendas (ID_vendas, ID_produto, Quantidade, valor_total) VALUES (?,?,?,?)");
-                $ins->execute([$id_venda, $id_prod, $qtd, $valor_total]);
-            }
-
-            $msg = "Item adicionado!";
-        }
+        $msg = "Item adicionado!";
     }
 
     if ($acao === "fechar") {
-        $id_venda = (int)$_POST['id_venda'];
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
+
+        // Atualiza estoque
         $itens = $pdo->prepare("SELECT ID_produto, Quantidade FROM itens_vendas WHERE ID_vendas = ?");
         $itens->execute([$id_venda]);
         $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
@@ -105,6 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $upd = $pdo->prepare("UPDATE produtos SET Qntd_produto = Qntd_produto - ? WHERE ID_produto = ?");
             $upd->execute([$i['Quantidade'], $i['ID_produto']]);
         }
+
+        // Fecha a comanda
         $pdo->prepare("UPDATE vendas SET status='FECHADA' WHERE ID_vendas=?")->execute([$id_venda]);
         $msg = "Comanda fechada!";
 
@@ -128,129 +123,158 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $comandas = listarComandas($pdo);
-$comandaSel = isset($_GET['id']) && is_numeric($_GET['id']) ? detalheComanda($pdo, (int)$_GET['id']) : null;
+$comandaSel = isset($_GET['id']) ? detalheComanda($pdo, $_GET['id']) : null;
 $produtos = $pdo->query("SELECT * FROM produtos")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Sistema de Comandas</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <style>
-    body {margin: 0; font-family: Arial, sans-serif; background: #eef1f5;}
-    header {background: #222; padding: 10px 20px; color: #fff; display: flex; align-items: center; justify-content: space-between;}
-    header h1 {margin: 0; font-size: 22px;}
-    nav .dropdown {position: relative; display: inline-block;}
-    .dropbtn {background: #444; color: #fff; padding: 10px; border: none; border-radius: 5px; cursor: pointer;}
-    .dropdown-content {display: none; position: absolute; background: #fff; min-width: 160px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1;}
-    .dropdown-content a {color: #333; padding: 12px 16px; text-decoration: none; display: block;}
-    .dropdown-content a:hover {background: #f1f1f1;}
-    .dropdown:hover .dropdown-content {display: block;}
+<meta charset="UTF-8">
+<title>Comandas</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+/* ====== ESTILOS ====== */
+:root {
+  --bg: #1b263b;
+  --sidebar-bg: linear-gradient(180deg, #0d1b2a, #1b263b);
+  --text-color: #f8f9fa;
+  --highlight: #0077b6;
+  --card-bg: #ffffff;
+}
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+body { display:flex; background:var(--bg); color:var(--text-color); }
 
-    .container {display: grid; grid-template-columns: 300px 1fr; gap: 20px; padding: 20px;}
-    .card {background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
-    .btn {padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer;}
-    .btn.green {background: #4caf50; color: #fff;}
-    .btn.red {background: #e53935; color: #fff;}
-    .btn.blue {background: #1e88e5; color: #fff;}
-    .list-item {padding: 10px; border-bottom: 1px solid #ddd;}
-    .msg {padding: 10px; margin: 10px 0; border-radius: 6px;}
-    .msg.ok {background: #c8e6c9;}
-    .msg.err {background: #ffcdd2;}
-    table {width: 100%; border-collapse: collapse; margin-top: 10px;}
-    th, td {padding: 8px; border-bottom: 1px solid #ddd; text-align: left;}
-    tfoot td {font-weight: bold;}
-    .status-ABERTA {color: #1e88e5; font-weight: bold;}
-    .status-FECHADA {color: #4caf50; font-weight: bold;}
-    .status-CANCELADA {color: #e53935; font-weight: bold;}
-  </style>
+.sidebar {
+  width:240px; background:var(--sidebar-bg); height:100vh; position:fixed;
+  display:flex; flex-direction:column; padding-top:20px; transition:0.3s; box-shadow:3px 0 10px rgba(0,0,0,0.3);
+}
+.sidebar.collapsed { width:60px; }
+.sidebar a { display:flex; align-items:center; color:var(--text-color); text-decoration:none; padding:15px 20px; transition:0.2s; white-space:nowrap;}
+.sidebar a:hover { background:#1e3a5f; border-left:4px solid var(--highlight); padding-left:16px;}
+.sidebar .icon { margin-right:8px; }
+.sidebar.collapsed .text { display:none; }
+.sidebar.collapsed .icon { margin:0 auto; }
+.toggle-btn { cursor:pointer; text-align:center; margin-bottom:20px; font-size:22px; color:var(--text-color);}
+.sidebar form { padding:0 20px 10px;}
+.sidebar form button { width:100%; margin-top:10px;}
+.main-content { margin-left:240px; padding:30px; width:100%; transition:0.3s;}
+.main-content.collapsed { margin-left:60px;}
+h1 { margin-bottom:20px; color:#fff; text-align:center; }
+.container { display:grid; grid-template-columns:300px 1fr; gap:20px; }
+.card { background:var(--card-bg); padding:20px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.2); color:#333;}
+.btn { padding:10px 15px; border:none; border-radius:6px; cursor:pointer; }
+.btn.green { background:#4caf50; color:#fff; }
+.btn.red { background:#e53935; color:#fff; }
+.btn.blue { background:#1e88e5; color:#fff; }
+.list-item { padding:10px; border-bottom:1px solid #ddd; }
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th,td { padding:10px; border-bottom:1px solid #ccc; text-align:left; }
+tfoot td { font-weight:bold; }
+.msg { padding:10px; border-radius:6px; margin-bottom:10px; }
+.msg.ok { background:#c8e6c9; color:#2e7d32; }
+@media(max-width:768px) { .container{grid-template-columns:1fr;} .main-content{margin-left:0; padding:15px;} }
+</style>
 </head>
 <body>
-<header>
-  <h1><span class="material-icons">receipt_long</span>&nbsp;Sistema de Comandas</h1>
-  <nav class="dropdown">
-    <button class="dropbtn">Menu</button>
-    <div class="dropdown-content">
-      <a href="cadfunc.html">Cadastro de Funcionário</a>
-      <a href="cadforn.html">Cadastro de Fornecedor</a>
-      <a href="comandas.php">Comandas</a>
-      <a href="logout.php">Sair</a>
-    </div>
-  </nav>
-</header>
 
+<nav class="sidebar" id="sidebar">
+  <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+  <form method="post">
+    <input type="hidden" name="acao" value="nova">
+    <button type="submit" class="btn green">Nova Comanda</button>
+  </form>
+  <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
+  <a href="produtos.php"><span class="material-icons icon">bakery_dining</span><span class="text">Produtos</span></a>
+  <a href="funcionarios.php"><span class="material-icons icon">person</span><span class="text">Funcionários</span></a>
+  <a href="fornecedores.php"><span class="material-icons icon">work</span><span class="text">Fornecedores</span></a>
+  <a href="estoque.php"><span class="material-icons icon">analytics</span><span class="text">Estoque</span></a>
+  <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
+  <a href="selecionar_itens.php"><span class="material-icons icon">shopping_cart</span><span class="text">Pagamento</span></a>
+  <a href="comanda.php"><span class="material-icons icon"></span><span class="text">Comanda</span></a>
+</nav>
+
+<main class="main-content" id="mainContent">
+<h1>Sistema de Comandas</h1>
 <div class="container">
+  <!-- Lista de Comandas -->
   <div class="card">
     <h2>Comandas</h2>
-    <?php if ($msg): ?>
-      <div class="msg ok"><?php echo htmlspecialchars($msg); ?></div>
-    <?php endif; ?>
-    <form method="post">
-      <input type="hidden" name="acao" value="nova">
-      <button class="btn green">+ Nova Comanda</button>
-    </form><hr>
-    <?php foreach ($comandas as $c): ?>
+    <?php if($msg): ?><div class="msg ok"><?=htmlspecialchars($msg)?></div><?php endif; ?>
+    <hr>
+    <?php foreach($comandas as $c): ?>
       <div class="list-item">
-        <a href="?id=<?php echo $c['ID_vendas']; ?>"><b>#<?php echo $c['ID_vendas']; ?></b></a><br>
-        Func.: <?php echo $c['Nome_func']; ?><br>
-        Status: <span class="status-<?php echo $c['status']; ?>"><?php echo $c['status']; ?></span><br>
-        Data: <?php echo $c['venda_data']; ?>
+        <a href="?id=<?=$c['ID_vendas']?>"><b>#<?=$c['ID_vendas']?></b></a><br>
+        Func.: <?=htmlspecialchars($c['Nome_func'])?><br>
+        Status: <?=isset($c['status']) ? htmlspecialchars($c['status']) : 'N/A'?><br>
+        Data: <?=$c['venda_data']?>
       </div>
     <?php endforeach; ?>
   </div>
+
+  <!-- Detalhes da Comanda -->
   <div class="card">
-    <h2>Detalhes da Comanda</h2>
-    <?php if (!$comandaSel): ?>
-      <p>Selecione uma .</p>
+    <h2>Detalhes</h2>
+    <?php if(!$comandaSel): ?>
+      <p>Selecione uma comanda.</p>
     <?php else: ?>
-      <p><b>ID:</b> <?php echo $comandaSel['ID_vendas']; ?> | <b>Status:</b> <span class="status-<?php echo $comandaSel['status']; ?>"><?php echo $comandaSel['status']; ?></span></p>
-      <p><b>Funcionário:</b> <?php echo $comandaSel['Nome_func']; ?></p>
-      <form method="post">
-        <input type="hidden" name="acao" value="add_item">
-        <input type="hidden" name="id_venda" value="<?php echo $comandaSel['ID_vendas']; ?>">
-        <select name="id_produto" required>
-          <option value="">Selecione produto</option>
-          <?php foreach ($produtos as $p): ?>
-            <option value="<?php echo $p['ID_produto']; ?>">
-              <?php echo $p['Nome_prod']; ?> - R$ <?php echo number_format($p['Preco_unitario'], 2, ',', '.'); ?> (Estoque: <?php echo $p['Qntd_produto']; ?>)
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <input type="number" name="quantidade" value="1" min="1" required>
-        <button class="btn blue">Adicionar</button>
-      </form>
+<p><b>ID:</b> <?= isset($comandaSel['ID_vendas']) ? htmlspecialchars($comandaSel['ID_vendas']) : 'N/A' ?> | 
+<b>Status:</b> <?= isset($comandaSel['status']) ? htmlspecialchars($comandaSel['status']) : 'N/A' ?></p>
 
-      <table>
-        <thead><tr><th>Produto</th><th>Qtd</th><th>Valor</th></tr></thead>
-        <tbody>
-          <?php foreach ($comandaSel['itens'] as $i): ?>
-            <tr>
-              <td><?php echo $i['Nome_prod']; ?></td>
-              <td><?php echo $i['Quantidade']; ?></td>
-              <td>R$ <?php echo number_format($i['valor_total'], 2, ',', '.'); ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-        <tfoot>
-          <tr><td colspan="2">Total</td><td>R$ <?php echo number_format($comandaSel['total'], 2, ',', '.'); ?></td></tr>
-        </tfoot>
-      </table>
+<form method="post" style="margin-bottom:10px">
+  <input type="hidden" name="acao" value="add_item">
+  <input type="hidden" name="id_venda" value="<?=$comandaSel['ID_vendas']?>">
 
-      <?php if ($comandaSel['status'] === "ABERTA"): ?>
-        <form method="post" style="margin-top:10px;display:inline-block">
-          <input type="hidden" name="acao" value="fechar">
-          <input type="hidden" name="id_venda" value="<?php echo $comandaSel['ID_vendas']; ?>">
-          <button class="btn green">Fechar Comanda</button>
-        </form>
-        <form method="post" style="margin-top:10px;display:inline-block">
-          <input type="hidden" name="acao" value="cancelar">
-          <input type="hidden" name="id_venda" value="<?php echo $comandaSel['ID_vendas']; ?>">
-          <button class="btn red">Cancelar</button>
-        </form>
-      <?php endif; ?>
-    <?php endif; ?>
+  <select name="id_produto" required>
+    <option value="">Selecione produto</option>
+    <?php foreach($produtos as $p): ?>
+      <option value="<?= $p['ID_produto'] ?>"><?= htmlspecialchars($p['Nome_prod']) ?> - R$ <?= $p['Preco_unitario'] ?> (Estoque: <?= $p['Qntd_produto'] ?>)</option>
+    <?php endforeach; ?>
+  </select>
+  <input type="number" name="quantidade" value="1" min="1" required>
+  <button class="btn blue">Adicionar</button>
+</form>
+
+<table>
+  <thead>
+    <tr><th>Produto</th><th>Qtd</th><th>Valor</th></tr>
+  </thead>
+  <tbody>
+    <?php foreach($comandaSel['itens'] as $i): ?>
+      <tr>
+        <td><?=htmlspecialchars($i['Nome_prod'])?></td>
+        <td><?=$i['Quantidade']?></td>
+        <td>R$ <?=$i['valor_total']?></td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td colspan="2">Total</td><td>R$ <?=$comandaSel['total']?></td></tr>
+  </tfoot>
+</table>
+
+<?php
+$comandaStatus = isset($comandaSel['status']) ? $comandaSel['status'] : '';
+?>
+<?php if($comandaStatus !== '' && strtoupper($comandaStatus) === "ABERTA"): ?>
+<form method="post" style="display:inline-block;margin-top:10px">
+    <input type="hidden" name="acao" value="fechar">
+    <input type="hidden" name="id_venda" value="<?=$comandaSel['ID_vendas']?>">
+    <button class="btn green">Fechar Comanda</button>
+</form>
+<form method="post" style="display:inline-block;margin-top:10px">
+    <input type="hidden" name="acao" value="cancelar">
+    <input type="hidden" name="id_venda" value="<?=$comandaSel['ID_vendas']?>">
+    <button class="btn red">Cancelar</button>
+</form>
+<form method="post" style="display:inline-block;margin-top:10px">
+    <input type="hidden" name="acao" value="salvar">
+    <input type="hidden" name="id_venda" value="<?=$comandaSel['ID_vendas']?>">
+    <button class="btn blue">Salvar Comanda</button>
+</form>
+<?php endif; ?>
+
+<?php endif; ?>
   </div>
 </div>
 </main>
