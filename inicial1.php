@@ -157,8 +157,7 @@ $nomeFunc = $nome['Nome_func'] ?? '';
 <main class="main-content">
     <section>
         <div class="welcome-card">
-            <h2>Seja bem-vindo ao nosso sistema de gestão! <br>
-            Você está utilizando um perfil de <b><?=$nomeFunc?></b>.</h2>
+            <h2>Seja bem-vindo <b><?=$nomeFunc?></b>, ao nosso sistema de gestão!</h2>
         </div>
     </section>
 </main>

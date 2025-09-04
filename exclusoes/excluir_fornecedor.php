@@ -1,34 +1,37 @@
 <?php 
-session_start();
-require_once '../conexao.php';
+session_start(); // Inicia a sessão para validar o usuário logado
+require_once '../conexao.php'; // Conexão com o banco de dados
 
-//VERIFICA SE O USUARIO TEM PERMISSAO DE ADM
-if($_SESSION['nivel']!=1){
+// Aqui só o administrador (nível 1) pode acessar.
+// Se não for, mostra alerta e volta para a página de fornecedores.
+if($_SESSION['nivel'] != 1){
     echo "<script>alert('Acesso Negado!');window.location.href='../fornecedores.php'</script>";
-    exit();
+    exit(); // Encerra a execução do código aqui mesmo
 }
 
-//INICIALIZA A VARIAVEL PARA ARMAZENAR USUARIOS
+// Cria a variável que vai armazenar os fornecedores cadastrados
 $fornecedores = [];
 
-//BUSCA TODOS OS USUARIOS CADASTRADOS EM ORDEM ALFABETICA
-$sql = "SELECT * FROM fornecedores ORDER BY  Nome_forn ASC";
+// Consulta todos os fornecedores do banco, em ordem alfabética pelo nome
+$sql = "SELECT * FROM fornecedores ORDER BY Nome_forn ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
-$fornecedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$fornecedores = $stmt->fetchAll(PDO::FETCH_ASSOC); // Armazena o resultado em um array associativo
 
-//SE UM ID FOR PASSADO VIA GET EXCLUIR O FORNECEDOR
-if(isset($_POST['id'])&& is_numeric($_POST['id'])){
-    $id_fornecedor = $_POST['id'];
+// Caso um ID seja enviado via POST, significa que o usuário quer excluir um fornecedor
+if(isset($_POST['id']) && is_numeric($_POST['id'])){
+    $id_fornecedor = $_POST['id']; // ID do fornecedor a ser deletado
 
-    //EXCLUI O USUARIO DO BANCO DE DADOS
-    $sql = "DELETE FROM fornecedores WHERE ID_forn=:id";//Variável $sql que guarda um DELETE. Este comando serve para deletar informações do banco de dados, aqui no caso, será o fornecedor desejado.
+    // Comando para excluir o fornecedor do banco de dados
+    $sql = "DELETE FROM fornecedores WHERE ID_forn = :id";
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':id',$id_fornecedor,PDO::PARAM_INT);
+    $stmt->bindParam(':id', $id_fornecedor, PDO::PARAM_INT);
 
+    // Se a exclusão deu certo, avisa e volta para fornecedores.php
     if($stmt->execute()){
         echo "<script>alert('Fornecedor deletado com sucesso!');window.location.href='../fornecedores.php'</script>";
     }else{
+        // Caso dê algum erro no processo de exclusão
         echo "<script>alert('Erro ao excluir fornecedor!');</script>";
     }
 }
