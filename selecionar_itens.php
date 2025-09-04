@@ -227,125 +227,74 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
       transform: translateY(-3px)
     }
 
-    /* ---------- Sidebar (left) - fixed navigation ---------- */
     .sidebar {
       width: 240px;
-      background: linear-gradient(180deg, var(--navy-900), var(--navy-800));
+      background: linear-gradient(180deg, #0d1b2a, #1b263b);
       height: 100vh;
       position: fixed;
       left: 0;
       top: 0;
       display: flex;
       flex-direction: column;
-      padding-top: 18px;
-      gap: 8px;
-      box-shadow: 6px 0 30px rgba(0, 0, 0, 0.55);
+      padding-top: 20px;
+      transition: width .3s;
+      box-shadow: 3px 0 10px rgba(0, 0, 0, .3);
       z-index: 60;
-      transition: width 300ms ease;
     }
 
     .sidebar.collapsed {
-      width: 64px
+      width: 60px
     }
 
-    /* logo area */
-    .sidebar .logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 12px 12px
-    }
-
-    .sidebar .logo img {
-      max-width: 140px;
-      height: auto
-    }
-
-    /* nav links */
     .sidebar a {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      color: var(--text-light);
-      margin: 6px 10px;
-      border-radius: 8px;
-      transition: background var(--transition), transform var(--transition)
-    }
-
-    .sidebar a .icon {
-      font-size: 20px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center
-    }
-
-    .sidebar a .text {
-      font-weight: 700;
+      color: #f8f9fa;
+      text-decoration: none;
+      padding: 15px 20px;
       white-space: nowrap;
-      color: var(--text-mid)
+      transition: background .2s, padding .3s;
     }
 
     .sidebar a:hover {
-      background: rgba(255, 255, 255, 0.03);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
-      border-left: 4px solid var(--teal-600);
-      padding-left: 10px
+      background: #1e3a5f;
+      border-left: 4px solid #0077b6;
+      padding-left: 16px;
+    }
+
+    .sidebar .icon {
+      margin-right: 8px;
     }
 
     .sidebar.collapsed .text {
-      display: none
+      display: none;
     }
 
     .sidebar.collapsed .icon {
       margin-right: 0;
       justify-content: center;
-      width: 100%
     }
 
-    /* toggle button */
+    /* Botão toggle */
     .toggle-btn {
       cursor: pointer;
       text-align: center;
-      margin-bottom: 6px;
-      font-size: 20px;
-      color: var(--text-light);
-      padding: 10px 14px
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: #f8f9fa;
     }
 
-    /* logout area */
-    .sidebar .logout {
-      margin-top: auto;
-      padding: 12px;
-      display: flex;
-      justify-content: center
-    }
-
-    .sidebar .logout button {
-      background: transparent;
-      border: 2px solid rgba(255, 255, 255, 0.06);
-      color: var(--text-light);
-      padding: 8px 12px;
-      border-radius: 10px;
-    }
-
-    .sidebar .logout button:hover {
-      background: rgba(255, 255, 255, 0.03);
-      transform: translateY(-3px)
-    }
-
-    /* ---------- Main content area (to the right of sidebar) ---------- */
+    /* Ajuste do conteúdo principal */
     .main-content {
       margin-left: 240px;
-      padding: 18px;
-      width: calc(100% - 240px);
-      transition: margin-left 300ms ease;
+      padding: 20px 30px;
+      width: 100%;
+      transition: margin-left .3s;
     }
 
     .sidebar.collapsed~.main-content {
-      margin-left: 64px;
-      width: calc(100% - 64px)
+      margin-left: 60px;
+      width: calc(100% - 60px);
     }
 
     /* header (for pages that include search at top) */
@@ -862,33 +811,193 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         transform: none
       }
     }
+
+    /* Barra de pesquisa */
+    .controls input[type="text"],
+    .search-container input {
+      background: rgba(255, 255, 255, 0.15);
+      /* aumenta contraste */
+      color: #f0f0f0;
+      /* texto mais claro */
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      /* borda mais visível */
+      padding: 8px 12px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .controls input[type="text"]::placeholder,
+    .search-container input::placeholder {
+      color: #d0d0d0;
+      /* placeholder visível */
+      opacity: 1;
+    }
+
+    /* Botões e selects do painel de controle */
+    .controls select,
+    .controls button,
+    .category-hud button {
+      color: #ffffff;
+      /* texto totalmente branco */
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      /* borda visível */
+      background: rgba(0, 0, 0, 0.25);
+      /* fundo escuro translúcido */
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .controls select:hover,
+    .controls button:hover,
+    .category-hud button:hover {
+      background: rgba(36, 161, 154, 0.8);
+      color: #fff;
+    }
+
+    /* Botões de categoria (HUD) */
+    .category-hud button.active {
+      background: linear-gradient(180deg, #2aa19a, #238678);
+      /* destaque */
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(36, 161, 154, 0.3);
+    }
+
+    /* Botões de quantidade do carrinho */
+    .qty-btn {
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      /* texto/branco dos + e − */
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 1.1rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+    }
+
+    .qty-btn:hover {
+      background: rgba(36, 161, 154, 0.8);
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    /* Carrinho subtotal e total */
+    .totals div span:last-child {
+      color: #ffffff;
+      /* contraste maior */
+      font-weight: 900;
+    }
+
+    /* Botão de pagamento */
+    .btn-pay {
+      background: linear-gradient(180deg, #2aa19a, #238678);
+      color: #ffffff;
+      font-weight: 900;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(36, 161, 154, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-pay:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 28px rgba(36, 161, 154, 0.4);
+    }
+
+    /* Selects do painel de controle (como pagamentos) */
+    .controls select,
+    .controls button,
+    .category-hud button {
+      color: #ffffff;
+      /* texto do select */
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.25);
+      /* fundo do select fechado */
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    /* Select do painel de controle */
+    .controls select {
+      color: #ffffff;
+      /* texto do select */
+      background: rgba(0, 0, 0, 0.25);
+      /* fundo do select fechado */
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Opções */
+    .controls select option {
+      color: #ffffff !important;
+      /* força texto branco */
+      background: #000000 !important;
+      /* fundo preto */
+    }
+
+    /* Opções desabilitadas */
+    .controls select option:disabled {
+      color: #ccc !important;
+      /* cinza claro para indicar desabilitado */
+      background: #000 !important;
+    }
+
+    /* Select de pagamento */
+    #pmMethod {
+      background-color: rgba(0, 0, 0, 0.85);
+      /* mais contraste */
+      color: #ffffff;
+      /* texto branco */
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* Opções do select */
+    #pmMethod option {
+      background-color: #0d1b2a;
+      /* fundo escuro consistente */
+      color: #ffffff;
+      /* texto branco */
+      padding: 6px 10px;
+    }
   </style>
 </head>
 
 <body>
   <!-- Sidebar fixa lateral -->
+  <!-- Sidebar fixa lateral -->
   <nav class="sidebar" id="sidebar">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+
     <a href="inicial1.php" class="back-link">
       <span class="material-icons icon">arrow_back</span>
       <span class="text">Voltar</span>
     </a>
 
     <a href="#" onclick="showSection('tabela')">
-      <span class="emoji">🍞</span>
+      <span class="material-icons icon">inventory_2</span>
       <span class="text">Produtos</span>
     </a>
 
     <a href="comanda.php" onclick="showSection('comanda.php')">
-      <span class="emoji">🧾</span>
+      <span class="material-icons icon">receipt_long</span>
       <span class="text">Comanda</span>
     </a>
 
     <a href="#" id="linkPayment">
-      <span class="emoji">💳</span>
+      <span class="material-icons icon">credit_card</span>
       <span class="text">Pagamento</span>
     </a>
   </nav>
+
 
 
   <!-- Conteúdo principal -->
@@ -1435,7 +1544,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
               }
             } catch (e) { /* no-op */ }
 
-          } catch (err) {   
+          } catch (err) {
             console.error('Erro inicializando payment script:', err);
           }
         }); // DOMContentLoaded end
