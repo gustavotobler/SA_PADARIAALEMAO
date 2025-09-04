@@ -4,7 +4,7 @@ require_once '../conexao.php';
 
 //VERIFICA SE O USUARIO TEM PERMISSAO DE ADM
 if($_SESSION['nivel']!=1){
-    echo "<script>alert('Acesso Negado!');window.location.href='../inicial1.php'</script>";
+    echo "<script>alert('Acesso Negado!');window.location.href='../fornecedores.php'</script>";
     exit();
 }
 

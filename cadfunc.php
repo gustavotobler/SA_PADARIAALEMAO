@@ -3,7 +3,7 @@ session_start();
 require_once 'conexao.php';
 
 if ($_SESSION['nivel'] != 1) {
-  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='produtos.php';</script>";
+  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='funcionarios.php';</script>";
   exit;
 }
 if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {

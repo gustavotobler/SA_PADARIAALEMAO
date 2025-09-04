@@ -172,7 +172,7 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
     <a href="estoque.php"><span class="material-icons icon">analytics</span><span class="text">Estoque</span></a>
     <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
     <a href="selecionar_itens.php"><span class="material-icons icon">shopping_cart</span><span class="text">Pagamento</span></a>
-    <a href="comanda.php"><span class="material-icons"></span> Comanda</a>
+    <a href="comanda.php"><span class="material-icons">receipt_long</span> Comanda</a>
 
 </nav>
 
