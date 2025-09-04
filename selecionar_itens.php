@@ -811,6 +811,163 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         transform: none
       }
     }
+
+    /* Barra de pesquisa */
+    .controls input[type="text"],
+    .search-container input {
+      background: rgba(255, 255, 255, 0.15);
+      /* aumenta contraste */
+      color: #f0f0f0;
+      /* texto mais claro */
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      /* borda mais visível */
+      padding: 8px 12px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .controls input[type="text"]::placeholder,
+    .search-container input::placeholder {
+      color: #d0d0d0;
+      /* placeholder visível */
+      opacity: 1;
+    }
+
+    /* Botões e selects do painel de controle */
+    .controls select,
+    .controls button,
+    .category-hud button {
+      color: #ffffff;
+      /* texto totalmente branco */
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      /* borda visível */
+      background: rgba(0, 0, 0, 0.25);
+      /* fundo escuro translúcido */
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .controls select:hover,
+    .controls button:hover,
+    .category-hud button:hover {
+      background: rgba(36, 161, 154, 0.8);
+      color: #fff;
+    }
+
+    /* Botões de categoria (HUD) */
+    .category-hud button.active {
+      background: linear-gradient(180deg, #2aa19a, #238678);
+      /* destaque */
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(36, 161, 154, 0.3);
+    }
+
+    /* Botões de quantidade do carrinho */
+    .qty-btn {
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      /* texto/branco dos + e − */
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 1.1rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+    }
+
+    .qty-btn:hover {
+      background: rgba(36, 161, 154, 0.8);
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    /* Carrinho subtotal e total */
+    .totals div span:last-child {
+      color: #ffffff;
+      /* contraste maior */
+      font-weight: 900;
+    }
+
+    /* Botão de pagamento */
+    .btn-pay {
+      background: linear-gradient(180deg, #2aa19a, #238678);
+      color: #ffffff;
+      font-weight: 900;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(36, 161, 154, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-pay:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 28px rgba(36, 161, 154, 0.4);
+    }
+
+    /* Selects do painel de controle (como pagamentos) */
+    .controls select,
+    .controls button,
+    .category-hud button {
+      color: #ffffff;
+      /* texto do select */
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.25);
+      /* fundo do select fechado */
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    /* Select do painel de controle */
+    .controls select {
+      color: #ffffff;
+      /* texto do select */
+      background: rgba(0, 0, 0, 0.25);
+      /* fundo do select fechado */
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Opções */
+    .controls select option {
+      color: #ffffff !important;
+      /* força texto branco */
+      background: #000000 !important;
+      /* fundo preto */
+    }
+
+    /* Opções desabilitadas */
+    .controls select option:disabled {
+      color: #ccc !important;
+      /* cinza claro para indicar desabilitado */
+      background: #000 !important;
+    }
+
+    /* Select de pagamento */
+    #pmMethod {
+      background-color: rgba(0, 0, 0, 0.85);
+      /* mais contraste */
+      color: #ffffff;
+      /* texto branco */
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* Opções do select */
+    #pmMethod option {
+      background-color: #0d1b2a;
+      /* fundo escuro consistente */
+      color: #ffffff;
+      /* texto branco */
+      padding: 6px 10px;
+    }
   </style>
 </head>
 
