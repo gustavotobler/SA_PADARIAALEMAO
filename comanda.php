@@ -191,7 +191,7 @@ tfoot td { font-weight:bold; }
   <a href="estoque.php"><span class="material-icons icon">analytics</span><span class="text">Estoque</span></a>
   <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
   <a href="selecionar_itens.php"><span class="material-icons icon">shopping_cart</span><span class="text">Pagamento</span></a>
-  <a href="comanda.php"><span class="material-icons icon"></span><span class="text">Comanda</span></a>
+  <a href="comanda.php"><span class="material-icons icon">receipt_long</span><span class="text">Comanda</span></a>
 </nav>
 
 <main class="main-content" id="mainContent">
