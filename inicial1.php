@@ -9,13 +9,13 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
 }
 
 // OBTENDO O NOME DO PERFIL DO USUÁRIO LOGADO
-$id_Nivel = $_SESSION['nivel'];
-$sqlNivel = 'SELECT nome_acesso FROM nivel WHERE nivel_de_acesso = :nivel_de_acesso';
-$stmtNivel = $pdo->prepare($sqlNivel);
-$stmtNivel->bindParam(':nivel_de_acesso', $id_Nivel, PDO::PARAM_INT);
-$stmtNivel->execute();
-$nivel = $stmtNivel->fetch(PDO::FETCH_ASSOC);
-$nomeNivel = $nivel['nome_acesso'] ?? '';
+$id_Nome = $_SESSION['funcionario'];
+$sqlNome = 'SELECT Nome_func FROM funcionario WHERE ID_func = :ID_func';
+$stmtNome = $pdo->prepare($sqlNome);
+$stmtNome->bindParam(':ID_func', $id_Nome, PDO::PARAM_INT);
+$stmtNome->execute();
+$nome = $stmtNome->fetch(PDO::FETCH_ASSOC);
+$nomeFunc = $nome['Nome_func'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -158,7 +158,7 @@ $nomeNivel = $nivel['nome_acesso'] ?? '';
     <section>
         <div class="welcome-card">
             <h2>Seja bem-vindo ao nosso sistema de gestão! <br>
-            Você está utilizando um perfil de <b><?=$nomeNivel?></b>.</h2>
+            Você está utilizando um perfil de <b><?=$nomeFunc?></b>.</h2>
         </div>
     </section>
 </main>
