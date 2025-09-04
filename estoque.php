@@ -110,7 +110,11 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
 .pagination button:disabled{background:#999;cursor:default}
 
 /* Gráficos */
-.chart-section{margin:40px auto;background:var(--card-bg);padding:20px;border-radius:12px;max-width:700px;display:none}
+/* importante: esconder seção quando não ativa (corrige o problema) */
+.section {display:none}
+.section.active {display:block}
+
+.chart-section{margin:40px auto;background:var(--card-bg);padding:20px;border-radius:12px;max-width:900px;display:none}
 .chart-section.active{display:block}
 .chart-container{position:relative;height:400px;width:100%}
 .filter-info{text-align:center;margin-bottom:10px;font-weight:bold;color:#fff}
@@ -131,12 +135,12 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
 <nav class="sidebar" id="sidebar">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
-    <a href="#" onclick="showSection('tabela')"><span class="material-icons icon">table_chart</span><span class="text">Tabela</span></a>
-    <a href="#" onclick="showSection('grafico-qtd')"><span class="material-icons icon">inventory</span><span class="text">Gráfico Quantidade</span></a>
-    <a href="#" onclick="showSection('grafico-valor')"><span class="material-icons icon">attach_money</span><span class="text">Gráfico Valor</span></a>
-    <a href="#" onclick="showSection('grafico-fornecedor')"><span class="material-icons icon">factory</span><span class="text">Gráfico Fornecedor</span></a>
-    <a href="#" onclick="showSection('grafico-validade')"><span class="material-icons icon">hourglass_bottom</span><span class="text">Gráfico Validade</span></a>
-    <a href="#" onclick="showSection('grafico-preco')"><span class="material-icons icon">paid</span><span class="text">Gráfico Preço</span></a>
+    <a href="#" onclick="event.preventDefault(); showSection('tabela')"><span class="material-icons icon">table_chart</span><span class="text">Tabela</span></a>
+    <a href="#" onclick="event.preventDefault(); showSection('grafico-qtd')"><span class="material-icons icon">inventory</span><span class="text">Gráfico Quantidade</span></a>
+    <a href="#" onclick="event.preventDefault(); showSection('grafico-valor')"><span class="material-icons icon">attach_money</span><span class="text">Gráfico Valor</span></a>
+    <a href="#" onclick="event.preventDefault(); showSection('grafico-fornecedor')"><span class="material-icons icon">factory</span><span class="text">Gráfico Fornecedor</span></a>
+    <a href="#" onclick="event.preventDefault(); showSection('grafico-validade')"><span class="material-icons icon">hourglass_bottom</span><span class="text">Gráfico Validade</span></a>
+    <a href="#" onclick="event.preventDefault(); showSection('grafico-preco')"><span class="material-icons icon">paid</span><span class="text">Gráfico Preço</span></a>
 </nav>
 
 <main class="main-content" id="mainContent">
@@ -201,11 +205,11 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
     </div>
 </section>
 
-<section id="grafico-qtd" class="chart-section"><h2>Quantidade em Estoque por Produto</h2><canvas id="chartQtd"></canvas></section>
-<section id="grafico-valor" class="chart-section"><h2>Valor Total em Estoque por Produto</h2><canvas id="chartValor"></canvas></section>
-<section id="grafico-fornecedor" class="chart-section"><h2>Distribuição por Fornecedor</h2><canvas id="chartForn"></canvas></section>
-<section id="grafico-validade" class="chart-section"><h2>Validade dos Produtos</h2><canvas id="chartValidade"></canvas></section>
-<section id="grafico-preco" class="chart-section"><h2>Preço Unitário dos Produtos</h2><canvas id="chartPreco"></canvas></section>
+<section id="grafico-qtd" class="chart-section"><h2>Quantidade em Estoque por Produto</h2><div class="chart-container"><canvas id="chartQtd"></canvas></div></section>
+<section id="grafico-valor" class="chart-section"><h2>Valor Total em Estoque por Produto</h2><div class="chart-container"><canvas id="chartValor"></canvas></div></section>
+<section id="grafico-fornecedor" class="chart-section"><h2>Distribuição por Fornecedor</h2><div class="chart-container"><canvas id="chartForn"></canvas></div></section>
+<section id="grafico-validade" class="chart-section"><h2>Validade dos Produtos</h2><div class="chart-container"><canvas id="chartValidade"></canvas></div></section>
+<section id="grafico-preco" class="chart-section"><h2>Preço Unitário dos Produtos</h2><div class="chart-container"><canvas id="chartPreco"></canvas></div></section>
 
 </main>
 
@@ -218,14 +222,31 @@ function toggleSidebar(){
 }
 
 function showSection(id){
+    // remove active de todas as seções
     document.querySelectorAll('.section, .chart-section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    const target = document.getElementById(id);
+    if(!target) return;
+    target.classList.add('active');
+
+    // se for aba de gráfico, inicializa/atualiza gráficos
+    if(id.startsWith('grafico-')) {
+        initChartsFromTable();
+        // dar um pequeno timeout para garantir que o canvas esteja renderizado (ajuda em alguns browsers)
+        setTimeout(()=> {
+            Object.values(window._charts || {}).forEach(c=>{ try { c.resize(); c.update(); } catch(e){} });
+            // rolar para topo da seção
+            target.scrollIntoView({behavior:'smooth', block:'start'});
+        }, 80);
+    } else {
+        // rolar para topo da tabela
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+    }
 }
 
 // Simples paginação
 let currentPage=1; const rowsPerPage=10;
-const table = document.getElementById('estoqueTable').getElementsByTagName('tbody')[0];
-const rows = table.getElementsByTagName('tr');
+const tbody = document.getElementById('estoqueTable').getElementsByTagName('tbody')[0];
+const rows = tbody.getElementsByTagName('tr');
 const pageInfo = document.getElementById('pageInfo');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -233,10 +254,16 @@ const nextBtn = document.getElementById('nextBtn');
 function displayRows(){
     const start=(currentPage-1)*rowsPerPage;
     const end=start+rowsPerPage;
-    for(let i=0;i<rows.length;i++){rows[i].style.display=(i>=start && i<end)?'':'none'}
-    pageInfo.textContent=`Página ${currentPage} de ${Math.ceil(rows.length/rowsPerPage)}`;
+    for(let i=0;i<rows.length;i++){
+        // se linha estiver escondida por filtro, manter escondida
+        const shouldShow = rows[i].classList.contains('filtered-hidden') ? false : (i>=start && i<end);
+        rows[i].style.display = shouldShow ? '' : 'none';
+    }
+    // calcular páginas considerando apenas linhas não filtradas
+    const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('filtered-hidden'));
+    pageInfo.textContent=`Página ${currentPage} de ${Math.max(1, Math.ceil(visibleRows.length/rowsPerPage))}`;
     prevBtn.disabled=currentPage===1;
-    nextBtn.disabled=currentPage>=Math.ceil(rows.length/rowsPerPage);
+    nextBtn.disabled=currentPage>=Math.ceil(visibleRows.length/rowsPerPage);
 }
 prevBtn.onclick=()=>{currentPage--;displayRows();}
 nextBtn.onclick=()=>{currentPage++;displayRows();}
@@ -248,29 +275,182 @@ const endDate = document.getElementById('endDate');
 const search = document.getElementById('search');
 const clearFilters = document.getElementById('clearFilters');
 
+function brToISO(dateStr){ // 'dd/mm/yyyy' -> 'yyyy-mm-dd'
+    const parts = dateStr.split('/');
+    if(parts.length!==3) return null;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+function parseBRNumber(str){ // '1.234,56' -> 1234.56
+    if(!str) return 0;
+    let s = str.trim().replace(/\./g,'').replace(',','.');
+    s = s.replace(/[^\d\.\-]/g,'');
+    return parseFloat(s) || 0;
+}
+
 function applyFilters(){
     let sDate = startDate.value? new Date(startDate.value):null;
     let eDate = endDate.value? new Date(endDate.value):null;
     let term = search.value.toLowerCase();
     let count=0;
     Array.from(rows).forEach(r=>{
+        r.classList.remove('filtered-hidden'); // reset
         let cells=r.getElementsByTagName('td');
         let val = cells[8].textContent.trim();
-        let rowDate = val!=='---'?new Date(val.split('/').reverse().join('-')):null;
+        let rowDate = val!=='---'?new Date(brToISO(val)):null;
         let text = Array.from(cells).slice(1,4).map(c=>c.textContent.toLowerCase()).join(' ');
         let show=true;
-        if(sDate && rowDate && rowDate<sDate) show=false;
-        if(eDate && rowDate && rowDate>eDate) show=false;
+        if(sDate && rowDate && rowDate < sDate) show=false;
+        if(eDate && rowDate && rowDate > eDate) show=false;
         if(term && !text.includes(term)) show=false;
-        r.style.display=show?'':'none';
-        if(show) count++;
+        if(!show){
+            r.classList.add('filtered-hidden');
+        } else {
+            count++;
+        }
     });
     document.getElementById('filterInfo').textContent=`Produtos filtrados: ${count}`;
     currentPage=1;
     displayRows();
+
+    // Atualiza gráficos imediatamente se alguma aba de gráfico estiver ativa
+    const activeChartSection = document.querySelector('.chart-section.active');
+    if(activeChartSection){
+        initChartsFromTable();
+        setTimeout(()=> {
+            Object.values(window._charts || {}).forEach(c=>{ try { c.resize(); c.update(); } catch(e){} });
+        }, 80);
+    } else {
+        // se nenhum gráfico estiver aberto, destruímos os charts para economizar memória;
+        // quando o usuário abrir, os charts serão recriados.
+        resetChartsInitialization();
+    }
 }
 [startDate,endDate,search].forEach(el=>el.addEventListener('input',applyFilters));
 clearFilters.onclick=()=>{startDate.value='';endDate.value='';search.value='';applyFilters();};
+
+// ---------- Gráficos (inicializa a partir da tabela) ----------
+function initChartsFromTable(){
+    // sempre recria com base nas linhas que estão visíveis (não filtradas)
+    // destrói existentes
+    if(window._charts){
+        Object.values(window._charts).forEach(c => { try { c.destroy(); } catch(e){} });
+        window._charts = {};
+    } else {
+        window._charts = {};
+    }
+
+    // pega apenas as linhas que NÃO estão filtradas
+    const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.classList.contains('filtered-hidden'));
+    if(trs.length === 0){
+        // sem dados filtrados => manter charts vazios/destruidos
+        return;
+    }
+
+    const labels = [];
+    const qtys = [];
+    const valores = [];
+    const precos = [];
+    const fornecedores = {};
+    const validadeCounts = { expirados:0, proximos30:0, afastados:0, semData:0 };
+    const today = new Date();
+    const in30 = new Date(); in30.setDate(today.getDate()+30);
+
+    trs.forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        const nome = tds[1].textContent.trim();
+        const fornecedor = tds[2].textContent.trim() || '---';
+        const qtd = parseBRNumber(tds[5].textContent.trim());
+        const preco = parseBRNumber(tds[6].textContent.trim());
+        const valor = parseBRNumber(tds[7].textContent.trim());
+        const valStr = tds[8].textContent.trim();
+
+        labels.push(nome);
+        qtys.push(qtd);
+        valores.push(valor);
+        precos.push(preco);
+
+        fornecedores[fornecedor] = (fornecedores[fornecedor] || 0) + qtd;
+
+        if(valStr === '---' || valStr === '') {
+            validadeCounts.semData++;
+        } else {
+            const dateISO = brToISO(valStr);
+            const d = new Date(dateISO);
+            if(d < today) validadeCounts.expirados++;
+            else if(d <= in30) validadeCounts.proximos30++;
+            else validadeCounts.afastados++;
+        }
+    });
+
+    const maxLabels = 20;
+    const smallLabels = labels.slice(0, maxLabels);
+    const smallQtys = qtys.slice(0, maxLabels);
+    const smallValores = valores.slice(0, maxLabels);
+    const smallPrecos = precos.slice(0, maxLabels);
+    const fornLabels = Object.keys(fornecedores);
+    const fornValues = fornLabels.map(k => fornecedores[k]);
+
+    // cria os charts (sempre recria)
+    try {
+        const ctxQtd = document.getElementById('chartQtd').getContext('2d');
+        window._charts['chartQtd'] = new Chart(ctxQtd, {
+            type:'bar',
+            data:{ labels: smallLabels, datasets:[{ label:'Quantidade', data: smallQtys }]},
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}
+        });
+    } catch(e){}
+
+    try {
+        const ctxValor = document.getElementById('chartValor').getContext('2d');
+        window._charts['chartValor'] = new Chart(ctxValor, {
+            type:'bar',
+            data:{ labels: smallLabels, datasets:[{ label:'Valor (R$)', data: smallValores }]},
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+        });
+    } catch(e){}
+
+    try {
+        const ctxForn = document.getElementById('chartForn').getContext('2d');
+        window._charts['chartForn'] = new Chart(ctxForn, {
+            type:'doughnut',
+            data:{ labels: fornLabels, datasets:[{ label:'Fornecedores', data: fornValues }]},
+            options:{ responsive:true, maintainAspectRatio:false }
+        });
+    } catch(e){}
+
+    try {
+        const ctxVal = document.getElementById('chartValidade').getContext('2d');
+        window._charts['chartValidade'] = new Chart(ctxVal, {
+            type:'pie',
+            data:{ labels: ['Expirados','Próx.30 dias','Afastados','Sem Data'], datasets:[{ data: [validadeCounts.expirados, validadeCounts.proximos30, validadeCounts.afastados, validadeCounts.semData] }]},
+            options:{ responsive:true, maintainAspectRatio:false }
+        });
+    } catch(e){}
+
+    try {
+        const ctxPreco = document.getElementById('chartPreco').getContext('2d');
+        window._charts['chartPreco'] = new Chart(ctxPreco, {
+            type:'line',
+            data:{ labels: smallLabels, datasets:[{ label:'Preço Unitário', data: smallPrecos, fill:false }]},
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+        });
+    } catch(e){}
+}
+
+// Caso já tenha sido clicado antes e queira re-renderizar (por ex. após filtro), reseta para permitir reinit:
+function resetChartsInitialization(){
+    if(!window._charts) return;
+    Object.values(window._charts).forEach(c => { try { c.destroy(); } catch(e){} });
+    window._charts = {};
+}
+
+// Se filtros mudarem e o usuário abrir a aba de gráfico, queremos refletir mudanças:
+// (applyFilters já chama init quando a aba estiver ativa, e também reseta charts quando nenhuma aba de gráfico estiver aberta)
+
+// Inicializar comportamento: esconder seções (CSS já faz), aplicar filtros e paginação
+applyFilters();
+displayRows();
+
 </script>
 </body>
 </html>

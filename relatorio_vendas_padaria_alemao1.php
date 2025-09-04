@@ -190,16 +190,20 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
 </section>
 
 <section id="grafico-produto" class="chart-section"><h2>Vendas por Produto</h2><div class="chart-container"><canvas id="produtoChart"></canvas></div></section>
-<section id="grafico-pagamento" class="chart-section"><h2>Vendas por Pagamento</h2><div class="chart-container"><canvas id="pagamentoChart"></canvas></div></section>
-<section id="grafico-funcionario" class="chart-section"><h2>Vendas por Funcionário</h2><div class="chart-container"><canvas id="funcionarioChart"></canvas></div></section>
-<section id="grafico-dia" class="chart-section"><h2>Total Vendido por Dia</h2><div class="chart-container"><canvas id="diaChart"></canvas></div></section>
+<section id="grafico-pagamento" class="chart-section"><h2>Vendas por Pagamento (R$)</h2><div class="chart-container"><canvas id="pagamentoChart"></canvas></div></section>
+<section id="grafico-funcionario" class="chart-section"><h2>Vendas por Funcionário (R$)</h2><div class="chart-container"><canvas id="funcionarioChart"></canvas></div></section>
+<section id="grafico-dia" class="chart-section"><h2>Total Vendido por Dia (R$)</h2><div class="chart-container"><canvas id="diaChart"></canvas></div></section>
 </main>
 
 <script>
 const sidebar=document.getElementById('sidebar');
 const mainContent=document.getElementById('mainContent');
 function toggleSidebar(){sidebar.classList.toggle('collapsed');mainContent.classList.toggle('collapsed')}
-function showSection(id){document.querySelectorAll('.section,.chart-section').forEach(s=>s.style.display='none');document.getElementById(id).style.display='block';if(id.startsWith('grafico-'))setTimeout(updateCharts,50)}
+function showSection(id){
+    document.querySelectorAll('.section,.chart-section').forEach(s=>s.style.display='none');
+    document.getElementById(id).style.display='block';
+    if(id.startsWith('grafico-')) setTimeout(updateCharts,50);
+}
 
 // Filtros + Paginação
 const tableRows=Array.from(document.querySelectorAll('#vendasTable tbody tr'));
@@ -210,15 +214,61 @@ const clearBtn=document.getElementById('clearFilters');
 const filterInfo=document.getElementById('filterInfo');
 let currentPage=1;const rowsPerPage=9;let filteredIndices=[];
 
-function applyFilters(){
-    const start=startDateInput.value;const end=endDateInput.value;const search=searchInput.value.toLowerCase();
-    filteredIndices=[];tableRows.forEach((row,idx)=>{const date=row.cells[1].textContent;const produto=row.cells[3].textContent.toLowerCase();const func=row.cells[2].textContent.toLowerCase();let passDate=true;if(start)passDate=date>=start;if(end)passDate=passDate&&date<=end;let passSearch=produto.includes(search)||func.includes(search);if(passDate&&passSearch)filteredIndices.push(idx)});
-    const totalPages=Math.ceil(filteredIndices.length/rowsPerPage)||1;if(currentPage>totalPages)currentPage=totalPages;
-    tableRows.forEach((row,idx)=>{const pos=filteredIndices.indexOf(idx);row.style.display=(pos>=(currentPage-1)*rowsPerPage&&pos<currentPage*rowsPerPage)?'':'none'});
-    document.getElementById('pageInfo').textContent=`Página ${currentPage} de ${totalPages}`;
-    document.getElementById('prevBtn').disabled=currentPage===1;document.getElementById('nextBtn').disabled=currentPage===totalPages;
-    filterInfo.textContent=filteredIndices.length?`Vendas encontradas: ${filteredIndices.length}`:'Nenhuma venda encontrada';updateCharts()
+// função robusta para parse BR (1.234,56 -> 1234.56)
+function parseBR(str){
+    if(!str && str !== 0) return 0;
+    let s = String(str).trim();
+    // remove qualquer caractere que não seja dígito, ponto ou vírgula ou hífen
+    s = s.replace(/[^\d\.,\-]/g,'');
+    // se tiver vírgula, assumir formato BR: remove pontos (milhares) e troca vírgula por ponto
+    if(s.indexOf(',') !== -1){
+        s = s.replace(/\./g,'').replace(',', '.');
+    } else {
+        // sem vírgula, pode ter pontos como milhares -> remover
+        s = s.replace(/\./g,'');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
 }
+
+function applyFilters(){
+    const start=startDateInput.value;
+    const end=endDateInput.value;
+    const search=searchInput.value.toLowerCase();
+    filteredIndices=[];
+    tableRows.forEach((row,idx)=>{
+        const date=row.cells[1].textContent.trim();
+        const produto=row.cells[3].textContent.toLowerCase();
+        const func=row.cells[2].textContent.toLowerCase();
+        // date string comparison: se input tem valor (YYYY-MM-DD) comparamos com prefix da célula
+        let passDate=true;
+        if(start){
+            passDate = (date >= start);
+        }
+        if(end){
+            passDate = passDate && (date <= end);
+        }
+        const passSearch = produto.includes(search) || func.includes(search);
+        if(passDate && passSearch) filteredIndices.push(idx);
+    });
+
+    const totalPages=Math.ceil(filteredIndices.length/rowsPerPage) || 1;
+    if(currentPage>totalPages) currentPage=totalPages;
+
+    tableRows.forEach((row,idx)=>{
+        const pos = filteredIndices.indexOf(idx);
+        row.style.display = (pos >= (currentPage-1)*rowsPerPage && pos < currentPage*rowsPerPage) ? '' : 'none';
+    });
+
+    document.getElementById('pageInfo').textContent=`Página ${currentPage} de ${totalPages}`;
+    document.getElementById('prevBtn').disabled = currentPage === 1;
+    document.getElementById('nextBtn').disabled = currentPage === totalPages;
+    filterInfo.textContent = filteredIndices.length ? `Vendas encontradas: ${filteredIndices.length}` : 'Nenhuma venda encontrada';
+
+    // atualiza os charts (reflete datas / busca)
+    updateCharts();
+}
+
 startDateInput.addEventListener('change',()=>{currentPage=1;applyFilters()});
 endDateInput.addEventListener('change',()=>{currentPage=1;applyFilters()});
 searchInput.addEventListener('input',()=>{currentPage=1;applyFilters()});
@@ -226,22 +276,112 @@ clearBtn.addEventListener('click',()=>{startDateInput.value='';endDateInput.valu
 document.getElementById('prevBtn').addEventListener('click',()=>{if(currentPage>1){currentPage--;applyFilters()}})
 document.getElementById('nextBtn').addEventListener('click',()=>{if(currentPage<Math.ceil(filteredIndices.length/rowsPerPage)){currentPage++;applyFilters()}})
 
-// Gráficos
-const defaultColors=['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#8E44AD','#2ECC71','#E74C3C'];
-let produtoChart=new Chart(document.getElementById('produtoChart'),{type:'bar',data:{labels:[],datasets:[{label:'Quantidade',data:[],backgroundColor:[],borderWidth:1}]}})
-let pagamentoChart=new Chart(document.getElementById('pagamentoChart'),{type:'pie',data:{labels:[],datasets:[{data:[],backgroundColor:[]}]}})
-let funcionarioChart=new Chart(document.getElementById('funcionarioChart'),{type:'bar',data:{labels:[],datasets:[{label:'Vendas',data:[],backgroundColor:[],borderWidth:1}]}})
-let diaChart=new Chart(document.getElementById('diaChart'),{type:'line',data:{labels:[],datasets:[{label:'Total vendido',data:[],borderColor:'',backgroundColor:'',fill:true,tension:.3}]}})
+// Gráficos — inicializa com objetos vazios
+const defaultColors=['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#8E44AD','#2ECC71','#E74C3C','#34495E','#F39C12','#1ABC9C'];
+let produtoChart = new Chart(document.getElementById('produtoChart'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Quantidade',data:[],backgroundColor:[],borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+let pagamentoChart = new Chart(document.getElementById('pagamentoChart'),{
+    type:'pie',
+    data:{labels:[],datasets:[{data:[],backgroundColor:[]} ]},
+    options:{responsive:true,maintainAspectRatio:false}
+});
+let funcionarioChart = new Chart(document.getElementById('funcionarioChart'),{
+    type:'bar',
+    data:{labels:[],datasets:[{label:'Total (R$)',data:[],backgroundColor:[],borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
+});
+let diaChart = new Chart(document.getElementById('diaChart'),{
+    type:'line',
+    data:{labels:[],datasets:[{label:'Total vendido (R$)',data:[],borderColor:'',backgroundColor:'',fill:true,tension:.3}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
+});
 
 function updateCharts(){
-    const prodCounts={},pagCounts={},funcCounts={},diaTotals={};
-    filteredIndices.forEach(idx=>{const row=tableRows[idx];const qtd=+row.cells[4].textContent.replace(',','.');const total=+row.cells[6].textContent.replace(',','.');const produto=row.cells[3].textContent;const func=row.cells[2].textContent;const pagamento=row.cells[7].textContent;const date=row.cells[1].textContent;prodCounts[produto]=(prodCounts[produto]||0)+qtd;pagCounts[pagamento]=(pagCounts[pagamento]||0)+1;funcCounts[func]=(funcCounts[func]||0)+1;diaTotals[date]=(diaTotals[date]||0)+total});
-    produtoChart.data.labels=Object.keys(prodCounts);produtoChart.data.datasets[0].data=Object.values(prodCounts);produtoChart.data.datasets[0].backgroundColor=produtoChart.data.labels.map((_,i)=>defaultColors[i%defaultColors.length]);produtoChart.update();
-    pagamentoChart.data.labels=Object.keys(pagCounts);pagamentoChart.data.datasets[0].data=Object.values(pagCounts);pagamentoChart.data.datasets[0].backgroundColor=pagamentoChart.data.labels.map((_,i)=>defaultColors[i%defaultColors.length]);pagamentoChart.update();
-    funcionarioChart.data.labels=Object.keys(funcCounts);funcionarioChart.data.datasets[0].data=Object.values(funcCounts);funcionarioChart.data.datasets[0].backgroundColor=funcionarioChart.data.labels.map((_,i)=>defaultColors[i%defaultColors.length]);funcionarioChart.update();
-    diaChart.data.labels=Object.keys(diaTotals);diaChart.data.datasets[0].data=Object.values(diaTotals);const dayColor=defaultColors[1];diaChart.data.datasets[0].borderColor=dayColor;diaChart.data.datasets[0].backgroundColor=dayColor+'33';diaChart.update()
+    // preparar agregações a partir das linhas filtradas
+    const prodCounts = {}; // quantidade por produto
+    const pagTotals = {}; // valor total por forma de pagamento (R$)
+    const funcTotals = {}; // valor total por funcionario (R$)
+    const diaTotals = {}; // total por data
+
+    if(filteredIndices.length === 0){
+        // sem dados: limpar charts
+        produtoChart.data.labels = []; produtoChart.data.datasets[0].data = []; produtoChart.data.datasets[0].backgroundColor = [];
+        pagamentoChart.data.labels = []; pagamentoChart.data.datasets[0].data = []; pagamentoChart.data.datasets[0].backgroundColor = [];
+        funcionarioChart.data.labels = []; funcionarioChart.data.datasets[0].data = []; funcionarioChart.data.datasets[0].backgroundColor = [];
+        diaChart.data.labels = []; diaChart.data.datasets[0].data = [];
+        produtoChart.update(); pagamentoChart.update(); funcionarioChart.update(); diaChart.update();
+        return;
+    }
+
+    filteredIndices.forEach(idx=>{
+        const row = tableRows[idx];
+        const produto = row.cells[3].textContent.trim();
+        const qtdStr = row.cells[4].textContent.trim();
+        const totalStr = row.cells[6].textContent.trim();
+        const func = row.cells[2].textContent.trim();
+        const pagamento = row.cells[7].textContent.trim();
+        const date = row.cells[1].textContent.trim();
+
+        const qtd = parseBR(qtdStr);
+        const total = parseBR(totalStr);
+
+        prodCounts[produto] = (prodCounts[produto] || 0) + qtd;
+        pagTotals[pagamento] = (pagTotals[pagamento] || 0) + total;
+        funcTotals[func] = (funcTotals[func] || 0) + total;
+        // armazenar por date string; manter raw string, ordenaremos depois
+        diaTotals[date] = (diaTotals[date] || 0) + total;
+    });
+
+    // Produto chart: labels e dados (quantidade)
+    const prodLabels = Object.keys(prodCounts);
+    const prodData = Object.values(prodCounts);
+    produtoChart.data.labels = prodLabels;
+    produtoChart.data.datasets[0].data = prodData;
+    produtoChart.data.datasets[0].backgroundColor = prodLabels.map((_,i)=>defaultColors[i % defaultColors.length]);
+    produtoChart.update();
+
+    // Pagamento chart: agora soma valores (R$)
+    const pagLabels = Object.keys(pagTotals);
+    const pagData = pagLabels.map(l => +pagTotals[l].toFixed(2));
+    pagamentoChart.data.labels = pagLabels;
+    pagamentoChart.data.datasets[0].data = pagData;
+    pagamentoChart.data.datasets[0].backgroundColor = pagLabels.map((_,i)=>defaultColors[i % defaultColors.length]);
+    pagamentoChart.update();
+
+    // Funcionário chart: soma em R$
+    const funcLabels = Object.keys(funcTotals);
+    const funcData = funcLabels.map(l => +funcTotals[l].toFixed(2));
+    funcionarioChart.data.labels = funcLabels;
+    funcionarioChart.data.datasets[0].data = funcData;
+    funcionarioChart.data.datasets[0].backgroundColor = funcLabels.map((_,i)=>defaultColors[i % defaultColors.length]);
+    funcionarioChart.update();
+
+    // Dia chart: ordenar por data (tentar converter para Date)
+    const diaEntries = Object.entries(diaTotals).map(([k,v])=>{
+        // tenta criar Date (aceita 'YYYY-MM-DD' ou ISO); fallback: keep string
+        const d = new Date(k);
+        return { key:k, dateObj: isNaN(d.getTime()) ? null : d, value: +v.toFixed(2) };
+    });
+    diaEntries.sort((a,b)=>{
+        if(a.dateObj && b.dateObj) return a.dateObj - b.dateObj;
+        return a.key.localeCompare(b.key);
+    });
+    const diaLabels = diaEntries.map(e => e.key);
+    const diaData = diaEntries.map(e => e.value);
+    diaChart.data.labels = diaLabels;
+    diaChart.data.datasets[0].data = diaData;
+    const dayColor = defaultColors[1];
+    diaChart.data.datasets[0].borderColor = dayColor;
+    diaChart.data.datasets[0].backgroundColor = dayColor + '33';
+    diaChart.update();
 }
+
+// primeira aplicação de filtros (inicial)
 applyFilters();
 </script>
 </body>
 </html>
+    
