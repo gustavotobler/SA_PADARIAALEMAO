@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 03/09/2025 às 19:21
+-- Tempo de geração: 04/09/2025 às 19:21
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -108,9 +108,10 @@ CREATE TABLE `funcionario` (
 --
 
 INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `senha_temporaria`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
-(1, 'Kerry King', '(47) 99685-5520', 'Masculino', '01.203.4013', '141.554.709-26', 'Casado', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', '$2y$10$cLBEEFf9BdSzbtn157dH9e798zm80fr8zLuZKreiS1NAAC8HtphZG', 0, 'kerryking@padaria.com', 1, '0000-00-00', '0000-00-00', 'Gerente'),
-(2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$i.FGwrLPX5JIt9jk98EXoOWOdhj2Yc82rVbFfvh7P33.pYz6uDdp2', 0, 'ian@gmail.com', 0, '0000-00-00', '0000-00-00', 'Padeiro'),
-(3, 'Lucas Borba', '(51) 98765-4321', '', '123456789', '123.456.789-00', 'Solteiro', 'RS', 'Porto Alegre', 'Centro', '90000-00', 101, 'Rua das Flores', 'SenhaForte@123', 0, 'lucas.borba@email.com', 2, '1990-05-15', '2025-08-01', 'Analista de Sistemas');
+(1, 'Kerry King', '(47) 99685-5520', 'Masculino', '01.203.4013', '141.554.709-26', 'Casado', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', '$2y$10$NCqESNfuzXEBVXt2XNkTnOA2bMRZLOX/8Orq8LnwjHg1okdCmWj96', 0, 'kerryking@padaria.com', 1, '0000-00-00', '0000-00-00', 'Gerente'),
+(2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$WudbEx4ect2LG7hdyu5rXO5Mqt56BwMZNovriq5XeegN3jUkDXq/a', 0, 'ian@gmail.com', 2, '0000-00-00', '0000-00-00', 'Padeiro'),
+(3, 'Lucas Borba', '(51) 98765-4321', '', '123456789', '123.456.789-00', 'Solteiro', 'RS', 'Porto Alegre', 'Centro', '90000-00', 101, 'Rua das Flores', 'SenhaForte@123', 0, 'lucas.borba@email.com', 2, '1990-05-15', '2025-08-01', 'Analista de Sistemas'),
+(4, 'Gustavo Tobler', '(92) 03123-1321', '', '23.342.34-23', '314.452.536-54', 'Solteiro', 'SC', 'Joinville', 'Paraíso', '90323-33', 189, 'rua das flores', '$2y$10$sfS6FgkVVfa78RVMalM7vO1OIVJeiouVfk/KKPJDYY3hVjMn2kPiK', 0, 'toblerone@gmail.com', 1, '2000-09-02', '2025-09-03', 'Gerente');
 
 -- --------------------------------------------------------
 
@@ -270,13 +271,13 @@ ALTER TABLE `categorias`
 -- AUTO_INCREMENT de tabela `fornecedores`
 --
 ALTER TABLE `fornecedores`
-  MODIFY `ID_forn` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ID_forn` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de tabela `funcionario`
 --
 ALTER TABLE `funcionario`
-  MODIFY `ID_func` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID_func` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de tabela `itens_vendas`
@@ -294,7 +295,7 @@ ALTER TABLE `nivel`
 -- AUTO_INCREMENT de tabela `produtos`
 --
 ALTER TABLE `produtos`
-  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Restrições para tabelas despejadas

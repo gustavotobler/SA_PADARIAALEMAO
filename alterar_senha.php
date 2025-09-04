@@ -1,37 +1,41 @@
 <?php
-session_start();
-require_once 'conexao.php';
+session_start(); // Inicia a sessão para manter dados do usuário
+require_once 'conexao.php'; // Inclui a conexão com o banco de dados
 
-// Se não tiver logado, volta pro login
+// Verifica se o usuário está logado, se não, redireciona para login
 if (!isset($_SESSION['funcionario'])) {
     header("Location: index.php");
     exit();
 }
 
-// Se não estiver com senha temporária, não precisa trocar
+// Verifica se a senha temporária está ativa, se não, redireciona
 if (empty($_SESSION['senha_temp'])) {
     header("Location: inicial1.php");
     exit();
 }
 
+// Processa o envio do formulário
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nova = $_POST['nova_senha'] ?? '';
     $confirmar = $_POST['confirmar_senha'] ?? '';
 
+    // Verifica se as senhas coincidem e têm pelo menos 6 caracteres
     if ($nova === $confirmar && strlen($nova) >= 6) {
-        $hash = password_hash($nova, PASSWORD_DEFAULT);
+        $hash = password_hash($nova, PASSWORD_DEFAULT); // Cria hash seguro da senha
 
+        // Atualiza a senha do usuário no banco e desativa a senha temporária
         $sql = "UPDATE funcionario SET Senha = :senha, senha_temporaria = 0 WHERE ID_func = :id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':senha', $hash);
         $stmt->bindParam(':id', $_SESSION['funcionario']);
         $stmt->execute();
 
-        $_SESSION['senha_temp'] = 0; // Atualiza sessão
+        $_SESSION['senha_temp'] = 0; // Atualiza a sessão para indicar senha permanente
 
         echo "<script>alert('Senha alterada com sucesso!');window.location.href='inicial1.php';</script>";
         exit();
     } else {
+        // Caso haja erro na validação
         echo "<script>alert('Senhas não coincidem ou são muito curtas');</script>";
     }
 }
@@ -44,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alterar senha</title>
     <style>
+        /* Estilo base do corpo */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background:  #1b263b;
@@ -54,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin: 0;
         }
 
+        /* Container do formulário */
         .container {
             background: #fff;
             padding: 35px 30px;
@@ -67,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         h2 {
             margin-bottom: 15px;
-            color:rgb(0, 0, 0);
+            color: rgb(0, 0, 0);
         }
 
         p {
@@ -93,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         input[type="password"]:focus {
-            border-color:rgb(5, 37, 91);
+            border-color: rgb(5, 37, 91);
             outline: none;
             box-shadow: 0 0 6px rgba(2, 31, 82, 0.5);
         }
@@ -138,8 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="container">
     <h2>Alterar Senha</h2>
+    <!-- Saudação ao usuário -->
     <p>Olá, <strong><?php echo $_SESSION['nome_func'] ?? 'funcionário'; ?></strong>. Digite sua nova senha abaixo:</p>
 
+    <!-- Formulário de alteração de senha -->
     <form action="alterar_senha.php" method="POST" onsubmit="return validar()">
         <label for="nova_senha">Nova senha</label>
         <input type="password" id="nova_senha" name="nova_senha" required>
@@ -147,6 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="confirmar_senha">Confirmar nova senha</label>
         <input type="password" id="confirmar_senha" name="confirmar_senha" required>
 
+        <!-- Checkbox para mostrar senha -->
         <div class="checkbox">
             <input type="checkbox" onclick="mostrarSenha()"> Mostrar senha
         </div>
@@ -160,35 +169,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+   // Validação do formulário antes do envio
    function validar() {
-    const novaSenha = document.getElementById('nova_senha').value.trim();
-    const confirmarSenha = document.getElementById('confirmar_senha').value.trim();
+        const novaSenha = document.getElementById('nova_senha').value.trim();
+        const confirmarSenha = document.getElementById('confirmar_senha').value.trim();
 
-    if (novaSenha.length < 8) {
-        alert('A senha deve ter pelo menos 8 caracteres!');
-        return false;
+        if (novaSenha.length < 8) {
+            alert('A senha deve ter pelo menos 8 caracteres!');
+            return false;
+        }
+
+        if (novaSenha !== confirmarSenha) {
+            alert('As senhas não coincidem!');
+            return false;
+        }
+
+        if (novaSenha === 'tem123') {
+            alert('Escolha uma senha diferente da senha temporária!');
+            return false;
+        }
+
+        return true; // Tudo ok, permite envio
     }
 
-    if (novaSenha !== confirmarSenha) {
-        alert('As senhas não coincidem!');
-        return false;
+    // Alterna visibilidade das senhas
+    function mostrarSenha() {
+        let senha1 = document.getElementById("nova_senha");
+        let senha2 = document.getElementById("confirmar_senha");
+        let tipo = senha1.type === "password" ? "text" : "password";
+        senha1.type = tipo;
+        senha2.type = tipo;
     }
-
-    if (novaSenha === 'tem123') {
-        alert('Escolha uma senha diferente da senha temporária!');
-        return false;
-    }
-
-    return true;
-}
-
-function mostrarSenha() {
-    let senha1 = document.getElementById("nova_senha");
-    let senha2 = document.getElementById("confirmar_senha");
-    let tipo = senha1.type === "password" ? "text" : "password";
-    senha1.type = tipo;
-    senha2.type = tipo;
-}
 </script>
 </body>
 </html>

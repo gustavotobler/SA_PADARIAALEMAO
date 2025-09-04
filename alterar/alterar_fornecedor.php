@@ -1,63 +1,67 @@
 <?php
-session_start();
-require_once("../conexao.php");
+session_start(); // Inicia a sessão para acessar variáveis de sessão
+require_once("../conexao.php"); // Conecta com o banco de dados
 
-// Se não for administrador
+// Verifica se o usuário é administrador (nivel 1)
 if ($_SESSION['nivel'] != 1) {
     echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../fornecedores.php';</script>";
     exit;
-  }
-  if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+}
+
+// Verifica se o usuário está logado
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
     exit;
 }
 
-$msg = "";
+$msg = ""; // Variável que vai guardar mensagens de erro ou sucesso
 
-// Pega o ID tanto da URL quanto do formulário
+// Pega o ID do fornecedor, tanto da URL quanto do formulário
 $id = isset($_GET["id"]) ? (int) $_GET["id"] : (isset($_POST["id"]) ? (int) $_POST["id"] : 0);
-
 if ($id <= 0) {
-    die("ID do fornecedor não informado!");
+    die("ID do fornecedor não informado!"); // Se não passar ID, para a execução
 }
 
-// Busca os dados atuais do fornecedor
+// Busca os dados atuais do fornecedor no banco
 try {
     $sql = "SELECT * FROM fornecedores WHERE ID_forn = :id LIMIT 1";
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT); // Protege contra SQL Injection
     $stmt->execute();
-    $fornecedor = $stmt->fetch(PDO::FETCH_ASSOC);
+    $fornecedor = $stmt->fetch(PDO::FETCH_ASSOC); // Pega os dados do fornecedor
 
     if (!$fornecedor) {
-        die("Fornecedor não encontrado!");
+        die("Fornecedor não encontrado!"); // Se o ID não existir
     }
 } catch (PDOException $e) {
-    die("Erro: " . $e->getMessage());
+    die("Erro: " . $e->getMessage()); // Mostra erro de banco se der problema
 }
 
-// Atualizar ao enviar
+// Se o formulário foi enviado, atualiza os dados do fornecedor
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome_forn     = trim($_POST["Nome_forn"]);
-    $telefone      = trim($_POST["Telefone"]);
-    $cnpj          = trim($_POST["CNPJ"]);
-    $uf            = strtoupper(trim($_POST["UF"]));
-    $cidade        = trim($_POST["Cidade"]);
-    $bairro        = trim($_POST["Bairro"]);
-    $cep           = trim($_POST["CEP"]);
-    $num_empresa   = (int)$_POST["Num_empresa"];
-    $logradouro    = trim($_POST["Logradouro"]);
-    $email         = trim($_POST["Email"]);
-    $data_fundacao = !empty($_POST["Data_fundacao"]) ? $_POST["Data_fundacao"] : null;
+    // Pega os dados enviados pelo formulário
+    $nome_forn     = trim($_POST["Nome_forn"]); // Nome da empresa
+    $telefone      = trim($_POST["Telefone"]); // Telefone ou celular
+    $cnpj          = trim($_POST["CNPJ"]); // CNPJ
+    $uf            = strtoupper(trim($_POST["UF"])); // Estado em maiúsculo
+    $cidade        = trim($_POST["Cidade"]); // Cidade
+    $bairro        = trim($_POST["Bairro"]); // Bairro
+    $cep           = trim($_POST["CEP"]); // CEP
+    $num_empresa   = (int)$_POST["Num_empresa"]; // Número do endereço
+    $logradouro    = trim($_POST["Logradouro"]); // Rua, avenida, etc
+    $email         = trim($_POST["Email"]); // E-mail da empresa
+    $data_fundacao = !empty($_POST["Data_fundacao"]) ? $_POST["Data_fundacao"] : null; // Data de fundação
 
+    // Só atualiza se o nome do fornecedor estiver preenchido
     if ($nome_forn) {
+        // Monta o SQL de atualização
         $sql = "UPDATE fornecedores 
                 SET Nome_forn=:Nome_forn, Telefone=:Telefone, CNPJ=:CNPJ, UF=:UF, Cidade=:Cidade,
                     Bairro=:Bairro, CEP=:CEP, Num_empresa=:Num_empresa, Logradouro=:Logradouro, 
                     Email=:Email, Data_fundacao=:Data_fundacao
                 WHERE ID_forn=:id";
         
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare($sql); // Prepara a query
         $stmt->bindParam(":Nome_forn", $nome_forn);
         $stmt->bindParam(":Telefone", $telefone);
         $stmt->bindParam(":CNPJ", $cnpj);
@@ -71,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":Data_fundacao", $data_fundacao);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
 
+        // Executa a atualização
         if ($stmt->execute()) {
             $msg = "<script>alert('Fornecedor atualizado com sucesso!');window.location.href='../fornecedores.php'</script>";
         } else {
@@ -88,6 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta charset="UTF-8" />
 <title>Editar Fornecedor</title>
 <style>
+/* Reset básico e fonte */
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
 body{background:rgb(59, 75, 93); min-height:100vh; display:flex; flex-direction:column;}
 header{background:rgb(27,68,95); padding:15px 20px; color:white; display:flex; align-items:center; gap:15px; box-shadow:0 3px 10px rgba(0,0,0,0.15);}
@@ -109,15 +115,17 @@ button[type="submit"]:hover{background:rgb(0,153,255);}
 </head>
 <body>
 
+<!-- Cabeçalho com botão de voltar -->
 <header>
   <button class="back-btn" onclick="window.location.href='../fornecedores.php'">&#8592; Voltar</button>
   <h1>Editar Fornecedor</h1>
 </header>
 
+<!-- Formulário principal -->
 <main>
   <form method="POST" id="form-fornecedor">
-    <input type="hidden" name="id" value="<?= $id ?>">
-    <?php echo $msg; ?>
+    <input type="hidden" name="id" value="<?= $id ?>"> <!-- ID escondido -->
+    <?php echo $msg; ?> <!-- Mostra mensagem de erro ou sucesso -->
 
     <h2>Dados da Empresa</h2>
     <label for="nome_forn">Nome da Empresa</label>
@@ -142,6 +150,7 @@ button[type="submit"]:hover{background:rgb(0,153,255);}
     <select id="uf" name="UF" required>
       <option value="">Selecione</option>
       <?php 
+        // Lista de estados para seleção
         $ufs = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB",
                 "PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
         foreach ($ufs as $u) {
@@ -164,16 +173,36 @@ button[type="submit"]:hover{background:rgb(0,153,255);}
 </main>
 
 <script>
-// Máscaras
-function mascaraCNPJ(cnpj){cnpj=cnpj.replace(/\D/g,"");cnpj=cnpj.replace(/^(\d{2})(\d)/,"$1.$2");cnpj=cnpj.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3");cnpj=cnpj.replace(/\.(\d{3})(\d)/,".$1/$2");cnpj=cnpj.replace(/(\d{4})(\d)/,"$1-$2");return cnpj;}
-function mascaraCEP(cep){cep=cep.replace(/\D/g,"");cep=cep.replace(/^(\d{5})(\d)/,"$1-$2");return cep;}
-function mascaraTelefone(tel){tel=tel.replace(/\D/g,"");if(tel.length<=10){tel=tel.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");}else{tel=tel.replace(/(\d{2})(\d{5})(\d{0,4})/,"($1) $2-$3");}return tel;}
+// Funções para aplicar máscara nos campos de CNPJ, CEP e Telefone
+function mascaraCNPJ(cnpj){
+    cnpj=cnpj.replace(/\D/g,"");
+    cnpj=cnpj.replace(/^(\d{2})(\d)/,"$1.$2");
+    cnpj=cnpj.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3");
+    cnpj=cnpj.replace(/\.(\d{3})(\d)/,".$1/$2");
+    cnpj=cnpj.replace(/(\d{4})(\d)/,"$1-$2");
+    return cnpj;
+}
+function mascaraCEP(cep){
+    cep=cep.replace(/\D/g,"");
+    cep=cep.replace(/^(\d{5})(\d)/,"$1-$2");
+    return cep;
+}
+function mascaraTelefone(tel){
+    tel=tel.replace(/\D/g,"");
+    if(tel.length<=10){
+        tel=tel.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");
+    }else{
+        tel=tel.replace(/(\d{2})(\d{5})(\d{0,4})/,"($1) $2-$3");
+    }
+    return tel;
+}
 
+// Aplica as máscaras aos campos
 document.getElementById("cnpj").addEventListener("input",function(){this.value=mascaraCNPJ(this.value);});
 document.getElementById("cep").addEventListener("input",function(){this.value=mascaraCEP(this.value);});
 document.getElementById("telefone").addEventListener("input",function(){this.value=mascaraTelefone(this.value);});
 
-// Validação
+// Validação antes de enviar o formulário
 document.getElementById("form-fornecedor").addEventListener("submit",function(e){
     let erros=[];
     const nome=document.getElementById("nome_forn").value.trim();
@@ -190,7 +219,10 @@ document.getElementById("form-fornecedor").addEventListener("submit",function(e)
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.push("E-mail inválido.");
     if(!uf) erros.push("Selecione uma UF válida.");
 
-    if(erros.length>0){ e.preventDefault(); alert(erros.join("\n")); }
+    if(erros.length>0){ 
+        e.preventDefault(); // Bloqueia envio se houver erro
+        alert(erros.join("\n")); // Mostra os erros
+    }
 });
 </script>
 
