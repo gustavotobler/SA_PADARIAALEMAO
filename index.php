@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $_SESSION['nivel'] = $usuario['nivel_de_acesso'];
         $_SESSION['Nome_func'] = $usuario['Nome_func'];
         $_SESSION['senha_temp'] = $usuario['senha_temporaria'];
+        
 
         if ($usuario['senha_temporaria']) {
             header("Location: alterar_senha.php");

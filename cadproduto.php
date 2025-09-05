@@ -2,13 +2,30 @@
 session_start();
 require_once 'conexao.php';
 
+// 🔒 Verificações de segurança
+if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
+  echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
+  exit;
+}
 if ($_SESSION['nivel'] != 1) {
   echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='produtos.php';</script>";
   exit;
 }
-if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
-  echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
-  exit;
+
+// 📦 Busca fornecedores
+try {
+  $stmt = $pdo->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER BY Nome_forn");
+  $fornecedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  die("Erro ao buscar fornecedores: " . $e->getMessage());
+}
+
+// 📦 Busca categorias
+try {
+  $stmt2 = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria");
+  $categorias = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  die("Erro ao buscar categorias: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -127,15 +144,6 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     flex: 1;
   }
 
-  /* Mensagens de erro */
-  .erro {
-    color: #e74c3c;
-    font-size: 0.85rem;
-    margin-top: -10px;
-    margin-bottom: 10px;
-    display: block;
-  }
-
   @media(max-width: 600px) {
     .flex-group {
       flex-direction: column;
@@ -154,10 +162,12 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
       <h2>Cadastro de Produto</h2>
 
       <label for="ID_forn">Fornecedor:</label>
-      <select name="ID_forn" id="ID_forn">
-          <option value="">-- Nenhum --</option>
+      <select name="ID_forn" id="ID_forn" required>
+          <option value="">Selecione</option>
           <?php foreach($fornecedores as $forn): ?>
-              <option value="<?= $forn['ID_forn'] ?>"><?= htmlspecialchars($forn['Nome_forn']) ?></option>
+              <option value="<?= $forn['ID_forn'] ?>">
+                  <?= htmlspecialchars($forn['Nome_forn']) ?>
+              </option>
           <?php endforeach; ?>
       </select>
 
@@ -165,7 +175,9 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
       <select name="id_categorias" id="id_categorias" required>
           <option value="">Selecione</option>
           <?php foreach($categorias as $cat): ?>
-              <option value="<?= $cat['id_categorias'] ?>"><?= htmlspecialchars($cat['nome_categoria']) ?></option>
+              <option value="<?= $cat['id_categorias'] ?>">
+                  <?= htmlspecialchars($cat['nome_categoria']) ?>
+              </option>
           <?php endforeach; ?>
       </select>
 
@@ -204,23 +216,23 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
   </main>
   <script>
     // Máscara datas dd/mm/aaaa
-  function mascaraData(el){
-    el.addEventListener("input", () => {
-      let v = el.value.replace(/\D/g,"").slice(0,8);
-      if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
-      if(v.length > 5) v = v.slice(0,5) + '/' + v.slice(5);
-      el.value = v;
-    });
-  }
-  mascaraData(Validade);
+    function mascaraData(el){
+      el.addEventListener("input", () => {
+        let v = el.value.replace(/\D/g,"").slice(0,8);
+        if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+        if(v.length > 5) v = v.slice(0,5) + '/' + v.slice(5);
+        el.value = v;
+      });
+    }
+    mascaraData(Validade);
 
-  const input = document.getElementById("Preco_unitario");
-
+    // Formatar preço em moeda
+    const input = document.getElementById("Preco_unitario");
     input.addEventListener("input", function () {
-      let valor = this.value.replace(/\D/g, ""); // remove tudo que não for número
-      valor = (valor / 100).toFixed(2) + "";     // divide por 100 e fixa 2 casas
-      valor = valor.replace(".", ",");           // troca ponto por vírgula
-      valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // adiciona pontos
+      let valor = this.value.replace(/\D/g, ""); 
+      valor = (valor / 100).toFixed(2) + "";     
+      valor = valor.replace(".", ",");           
+      valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
       this.value = "R$ " + valor;
     });
   </script>

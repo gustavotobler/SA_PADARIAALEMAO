@@ -3,61 +3,81 @@ session_start();
 require_once '../conexao.php'; // Conexão com o banco de dados
 
 // 🔒 SEGURANÇA: Apenas usuários logados e administradores podem cadastrar produtos
-
-// 1️⃣ Verifica se o usuário está logado
 if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
-    exit; // Interrompe o script
+    exit;
 }
-
-// 2️⃣ Verifica se o usuário é administrador (nível 1)
 if ($_SESSION['nivel'] != 1) {
     echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
-    exit; // Interrompe o script
+    exit;
 }
 
 // 📥 RECEBE OS DADOS DO FORMULÁRIO (POST)
-$nome         = $_POST['Nome_prod'] ?? null;
-$preco        = $_POST['Preco_unitario'] ?? null;
-$unidade      = $_POST['Unid_medida'] ?? null;
-$quantidade   = $_POST['Qntd_produto'] ?? null;
-$fornecedor   = $_POST['ID_forn'] ?? null;
-$validade     = $_POST['Validade'] ?? null;
-$categoria    = $_POST['id_categorias'] ?? null;
+$nome       = $_POST['Nome_prod'] ?? null;
+$preco      = $_POST['Preco_unitario'] ?? null;
+$unidade    = $_POST['Unid_medida'] ?? null;
+$quantidade = $_POST['Qntd_produto'] ?? null;
+$fornecedor = $_POST['ID_forn'] ?? null;
+$validade   = $_POST['Validade'] ?? null;
+$categoria  = $_POST['id_categorias'] ?? null;
+
+// 🔧 Corrige o preço (ex: "R$ 1.234,56" → 1234.56)
+if ($preco) {
+    $preco = str_replace(['R$', ' '], '', $preco);
+    $preco = str_replace('.', '', $preco);
+    $preco = str_replace(',', '.', $preco);
+    $preco = (float) $preco;
+}
 
 // ✅ VALIDAÇÕES BÁSICAS
-// Verifica se os dados enviados fazem sentido
-if (!$nome || strlen($nome) < 3) { // Nome precisa ter pelo menos 3 caracteres
-    exit(json_encode(['erro'=>'Nome inválido']));
+if (!$nome || strlen($nome) < 3) {
+    exit("<script>alert('Nome inválido');window.history.back();</script>");
 }
-if (!$preco || $preco < 0.10) { // Preço mínimo
-    exit(json_encode(['erro'=>'Preço inválido']));
+if (!$preco || $preco < 0.10) {
+    exit("<script>alert('Preço inválido');window.history.back();</script>");
 }
-if (!$unidade) { // Unidade de medida precisa ser escolhida
-    exit(json_encode(['erro'=>'Unidade não selecionada']));
+if (!$unidade) {
+    exit("<script>alert('Unidade de medida não selecionada');window.history.back();</script>");
 }
-if (!$quantidade || $quantidade < 1) { // Quantidade mínima
-    exit(json_encode(['erro'=>'Quantidade inválida']));
+if (!$quantidade || $quantidade < 1) {
+    exit("<script>alert('Quantidade inválida');window.history.back();</script>");
 }
-if (!$fornecedor) { // Fornecedor precisa estar selecionado
-    exit(json_encode(['erro'=>'Fornecedor não selecionado']));
+if (!$fornecedor) {
+    exit("<script>alert('Fornecedor não selecionado');window.history.back();</script>");
 }
-if (!$validade) { // Validade precisa estar preenchida
-    exit(json_encode(['erro'=>'Validade não informada']));
+if (!$categoria) {
+    exit("<script>alert('Categoria não selecionada');window.history.back();</script>");
+}
+if (!$validade) {
+    exit("<script>alert('Validade não informada');window.history.back();</script>");
 }
 
-// 🗓️ Converte a validade de formato "dd/mm/yyyy" para "yyyy-mm-dd" (formato do MySQL)
+// 🗓️ Converte validade (dd/mm/yyyy → yyyy-mm-dd)
 $partes = explode('/', $validade);
-if (count($partes) != 3) { // Se não tiver 3 partes, é inválido
-    exit(json_encode(['erro'=>'Formato de validade inválido']));
+if (count($partes) != 3) {
+    exit("<script>alert('Formato de validade inválido');window.history.back();</script>");
 }
 $validade_sql = "{$partes[2]}-{$partes[1]}-{$partes[0]}";
 
+// 🔍 Valida se fornecedor existe
+$stmtF = $pdo->prepare("SELECT COUNT(*) FROM fornecedores WHERE ID_forn = ?");
+$stmtF->execute([$fornecedor]);
+if ($stmtF->fetchColumn() == 0) {
+    exit("<script>alert('Fornecedor inválido');window.history.back();</script>");
+}
+
+// 🔍 Valida se categoria existe
+$stmtC = $pdo->prepare("SELECT COUNT(*) FROM categorias WHERE id_categorias = ?");
+$stmtC->execute([$categoria]);
+if ($stmtC->fetchColumn() == 0) {
+    exit("<script>alert('Categoria inválida');window.history.back();</script>");
+}
+
 // 💾 INSERÇÃO NO BANCO
 try {
-    // Prepara a query para cadastrar o produto
-    $sql = "INSERT INTO produtos (ID_forn, Nome_prod, Preco_unitario, Unid_medida, Qntd_produto, Validade, id_categorias)
-            VALUES (:fornecedor, :nome, :preco, :unidade, :quantidade, :validade, :categoria)";
+    $sql = "INSERT INTO produtos 
+        (ID_forn, Nome_prod, Preco_unitario, Unid_medida, Qntd_produto, Validade, id_categorias)
+        VALUES (:fornecedor, :nome, :preco, :unidade, :quantidade, :validade, :categoria)";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
@@ -70,9 +90,7 @@ try {
         ':categoria'  => $categoria
     ]);
 
-    // Se tudo deu certo, retorna mensagem de sucesso em JSON
-    echo json_encode(['sucesso' => 'Produto cadastrado com sucesso']);
+    echo "<script>alert('Produto cadastrado com sucesso!');window.location.href='../produtos.php'</script>";
 } catch (PDOException $e) {
-    // Se houver erro no banco, retorna mensagem de erro em JSON
-    echo json_encode(['erro' => 'Erro ao cadastrar: '.$e->getMessage()]);
+    echo "<script>alert('Erro ao cadastrar: ".$e->getMessage()."');window.history.back();</script>";
 }
