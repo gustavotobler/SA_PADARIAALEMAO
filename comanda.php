@@ -274,6 +274,12 @@ tfoot td { font-weight:bold; }
     <input type="hidden" name="acao" value="salvar">
     <input type="hidden" name="id_venda" value="<?=$comandaSel['ID_vendas']?>">
     <button class="btn blue">Salvar Comanda</button>
+    <?php if($comandaSel): ?>
+<?php endif; ?>
+</form>
+<form method="get" action="comanda_pdf.php" target="_blank" style="display:inline-block;margin-top:10px">
+    <input type="hidden" name="id" value="<?=$comandaSel['ID_vendas']?>">
+    <button class="btn blue">📄 Baixar PDF</button>
 </form>
 <?php else: ?>
     <p style="margin-top:10px;color:red"><b>Esta comanda está <?=$comandaSel['status']?> e não pode mais ser alterada.</b></p>
