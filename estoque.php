@@ -162,6 +162,18 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
         </div>
         <button id="clearFilters">Limpar Filtros</button>
     </div>
+    <div style="text-align:center;margin-bottom:15px;">
+    <form method="POST" action="relatorio_estoque_pdf.php" target="_blank">
+        <input type="hidden" name="startDate" id="pdfStartDate">
+        <input type="hidden" name="endDate" id="pdfEndDate">
+        <input type="hidden" name="search" id="pdfSearch">
+        <button type="submit" style="padding:10px 20px; background:var(--highlight); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+            📄 Baixar Relatório PDF
+        </button>
+    </form>
+</div>
+</div>
+
 
     <div class="filter-info" id="filterInfo">Total de produtos: <?= count($rows) ?></div>
 

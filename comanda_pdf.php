@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once 'vendor/autoload.php'; // ajuste se necessário
+require_once 'vendor/autoload.php';
 use Dompdf\Dompdf;
 
 if (!isset($_SESSION['ID_func'])) {
@@ -44,29 +44,42 @@ $total = 0;
 foreach ($comanda['itens'] as $i) $total += $i['valor_total'];
 $comanda['total'] = $total;
 
-// Montar HTML do PDF
+// Montar HTML estilizado
 $html = '
-<h1 style="text-align:center;">Comanda #'.$comanda['ID_vendas'].'</h1>
-<p><b>Status:</b> '.$comanda['status'].' | <b>Criada por:</b> '.$comanda['Nome_func'].'</p>
-<p><b>Data:</b> '.$comanda['venda_data'].'</p>
-<table border="1" cellpadding="5" cellspacing="0" width="100%" style="border-collapse: collapse;">
+<div style="text-align:center;margin-bottom:20px;">
+    <h1 style="margin:0;">Comanda #'.$comanda['ID_vendas'].'</h1>
+    <p style="margin:0;"><b>Status:</b> '.$comanda['status'].' | <b>Criada por:</b> '.$comanda['Nome_func'].'</p>
+    <p style="margin:0;"><b>Data:</b> '.$comanda['venda_data'].'</p>
+</div>
+<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Arial, sans-serif;">
 <thead>
-<tr style="background:#f2f2f2;"><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Valor</th></tr>
+<tr style="background-color:#0077b6; color:#fff; text-align:center;">
+<th>Produto</th>
+<th>Quantidade</th>
+<th>Preço Unit.</th>
+<th>Valor</th>
+</tr>
 </thead>
 <tbody>';
 
+$alt = false;
 foreach ($comanda['itens'] as $i) {
-    $html .= '<tr>
-    <td>'.htmlspecialchars($i['Nome_prod']).'</td>
-    <td>'.$i['Quantidade'].'</td>
-    <td>R$ '.$i['Preco_unitario'].'</td>
-    <td>R$ '.$i['valor_total'].'</td>
+    $bg = $alt ? '#f2f2f2' : '#ffffff';
+    $alt = !$alt;
+    $html .= '<tr style="background-color:'.$bg.'; text-align:center;">
+        <td>'.htmlspecialchars($i['Nome_prod']).'</td>
+        <td>'.$i['Quantidade'].'</td>
+        <td>R$ '.number_format($i['Preco_unitario'],2,',','.').'</td>
+        <td>R$ '.number_format($i['valor_total'],2,',','.').'</td>
     </tr>';
 }
 
 $html .= '</tbody>
 <tfoot>
-<tr><td colspan="3" style="text-align:right;"><b>Total</b></td><td>R$ '.$comanda['total'].'</td></tr>
+<tr style="background-color:#e0e0e0; font-weight:bold; text-align:center;">
+    <td colspan="3" style="text-align:right;">Total</td>
+    <td>R$ '.number_format($comanda['total'],2,',','.').'</td>
+</tr>
 </tfoot>
 </table>';
 
@@ -75,10 +88,6 @@ $dompdf = new Dompdf();
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
-
-// Limpar qualquer output anterior
 if (ob_get_length()) ob_end_clean();
-
-// Forçar download
 $dompdf->stream("comanda_".$comanda['ID_vendas'].".pdf", ["Attachment" => true]);
 exit();
