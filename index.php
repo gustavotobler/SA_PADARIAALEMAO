@@ -15,9 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($usuario) {
-        $_SESSION['funcionario'] = $usuario['ID_func'];
+        $_SESSION['ID_func'] = $usuario['ID_func'];
         $_SESSION['nivel'] = $usuario['nivel_de_acesso'];
-        $_SESSION['nome_func'] = $usuario['Nome_func'];
+        $_SESSION['Nome_func'] = $usuario['Nome_func'];
         $_SESSION['senha_temp'] = $usuario['senha_temporaria'];
 
         if ($usuario['senha_temporaria']) {

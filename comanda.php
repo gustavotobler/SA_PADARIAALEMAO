@@ -12,20 +12,16 @@ $pass = "";
 $dsn  = "mysql:host=$host;dbname=$db;charset=utf8mb4";
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
+    $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 } catch (Exception $e) {
     die("Erro na conexão: " . $e->getMessage());
 }
 
-/* ====== VERIFICA LOGIN ====== */
-if (!isset($_SESSION['ID_func']) || !isset($_SESSION['Nome_func'])) {
-    die("❌ Usuário não está logado.");
+/* ====== LOGIN (corrigido) ====== */
+if (!isset($_SESSION['ID_func'])) {
+    echo "<script>alert('Sessão expirada. Faça login novamente.'); window.location='login.php';</script>";
+    exit();
 }
-
-// Nome do funcionário logado
-$nomeFunc = $_SESSION['Nome_func']; // isso já vem da sessão
 
 /* ====== FUNÇÕES ====== */
 function listarComandas($pdo) {
@@ -37,22 +33,18 @@ function listarComandas($pdo) {
 }
 
 function detalheComanda($pdo, $id) {
-    $cab = $pdo->prepare("
-        SELECT v.*, f.Nome_func 
-        FROM vendas v 
-        LEFT JOIN funcionario f ON f.ID_func = v.ID_func 
-        WHERE v.ID_vendas = ?
-    ");
+    $cab = $pdo->prepare("SELECT v.*, f.Nome_func 
+                            FROM vendas v 
+                            LEFT JOIN funcionario f ON f.ID_func = v.ID_func 
+                           WHERE v.ID_vendas = ?");
     $cab->execute([$id]);
     $cab = $cab->fetch(PDO::FETCH_ASSOC);
     if (!$cab) return null;
 
-    $itens = $pdo->prepare("
-        SELECT iv.*, p.Nome_prod 
-        FROM itens_vendas iv
-        JOIN produtos p ON p.ID_produto = iv.ID_produto
-        WHERE iv.ID_vendas = ?
-    ");
+    $itens = $pdo->prepare("SELECT iv.*, p.Nome_prod 
+                              FROM itens_vendas iv
+                              JOIN produtos p ON p.ID_produto = iv.ID_produto
+                             WHERE iv.ID_vendas = ?");
     $itens->execute([$id]);
     $cab['itens'] = $itens->fetchAll(PDO::FETCH_ASSOC);
 
@@ -68,53 +60,37 @@ $msg = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $acao = $_POST['acao'] ?? "";
-    $id_venda = (int)($_POST['id_venda'] ?? 0);
-
-    if ($id_venda > 0) {
-        $st = $pdo->prepare("SELECT status FROM vendas WHERE ID_vendas=?");
-        $st->execute([$id_venda]);
-        $statusAtual = $st->fetchColumn();
-    } else {
-        $statusAtual = "ABERTA";
-    }
 
     if ($acao === "nova") {
-        try {
-            $stmt = $pdo->prepare("INSERT INTO vendas (ID_func, venda_data, status) VALUES (?, NOW(), 'ABERTA')");
-            $stmt->execute([$_SESSION['ID_func']]);
-            $novaId = $pdo->lastInsertId();
-            header("Location: comanda.php?id=" . $novaId);
-            exit();
-        } catch (PDOException $e) {
-            $msg = "Erro ao criar comanda: " . $e->getMessage();
-        }
+        $stmt = $pdo->prepare("INSERT INTO vendas (ID_func, venda_data, status) VALUES (?, NOW(), 'ABERTA')");
+        $stmt->execute([$_SESSION['ID_func']]);
+        $novaId = $pdo->lastInsertId();
+        header("Location: comanda.php?id=" . $novaId);
+        exit();
     }
 
-    if ($acao === "add_item" && $statusAtual === 'ABERTA') {
-        $id_prod  = (int)($_POST['id_produto'] ?? 0);
-        $qtd      = (int)($_POST['quantidade'] ?? 1);
+    if ($acao === "add_item") {
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
+        $id_prod  = isset($_POST['id_produto']) ? (int)$_POST['id_produto'] : 0;
+        $qtd      = isset($_POST['quantidade']) ? (int)$_POST['quantidade'] : 1;
 
-        $p = $pdo->prepare("SELECT Preco_unitario, Qntd_produto FROM produtos WHERE ID_produto = ?");
+        $p = $pdo->prepare("SELECT Preco_unitario FROM produtos WHERE ID_produto = ?");
         $p->execute([$id_prod]);
-        $produto = $p->fetch(PDO::FETCH_ASSOC);
+        $preco = $p->fetchColumn();
 
-        if (!$produto) {
-            $msg = "Produto não encontrado!";
-        } elseif ($qtd > $produto['Qntd_produto']) {
-            $msg = "Quantidade solicitada maior que o estoque!";
-        } else {
-            $valor_total = $produto['Preco_unitario'] * $qtd;
-            $ins = $pdo->prepare("INSERT INTO itens_vendas (ID_vendas, ID_produto, Quantidade, valor_total) VALUES (?, ?, ?, ?)");
-            $ins->execute([$id_venda, $id_prod, $qtd, $valor_total]);
-            $msg = "Item adicionado!";
-        }
+        $valor_total = $preco * $qtd;
+
+        $ins = $pdo->prepare("INSERT INTO itens_vendas (ID_vendas, ID_produto, Quantidade, valor_total) VALUES (?,?,?,?)");
+        $ins->execute([$id_venda, $id_prod, $qtd, $valor_total]);
+        $msg = "Item adicionado!";
     }
 
-    if ($acao === "fechar" && $statusAtual === 'ABERTA') {
+    if ($acao === "fechar") {
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
+
         $itens = $pdo->prepare("SELECT ID_produto, Quantidade FROM itens_vendas WHERE ID_vendas = ?");
         $itens->execute([$id_venda]);
         $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
-
         foreach ($itens as $i) {
             $upd = $pdo->prepare("UPDATE produtos SET Qntd_produto = Qntd_produto - ? WHERE ID_produto = ?");
             $upd->execute([$i['Quantidade'], $i['ID_produto']]);
@@ -125,24 +101,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    if ($acao === "cancelar" && $statusAtual === 'ABERTA') {
+    if ($acao === "cancelar") {
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
         $pdo->prepare("UPDATE vendas SET status='CANCELADA' WHERE ID_vendas=?")->execute([$id_venda]);
         header("Location: comanda.php?id=" . $id_venda);
         exit();
     }
 
-    if ($acao === "salvar" && $statusAtual === 'ABERTA') {
+    if ($acao === "reabrir") {
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
+        $pdo->prepare("UPDATE vendas SET status='ABERTA' WHERE ID_vendas=?")->execute([$id_venda]);
+        header("Location: comanda.php?id=" . $id_venda);
+        exit();
+    }
+
+    if ($acao === "salvar") {
+        $id_venda = isset($_POST['id_venda']) ? (int)$_POST['id_venda'] : 0;
         $pdo->prepare("UPDATE vendas SET venda_data=NOW() WHERE ID_vendas=?")->execute([$id_venda]);
         $msg = "Comanda salva com sucesso!";
     }
 }
 
-/* ====== LISTA E DETALHE ====== */
 $comandas = listarComandas($pdo);
 $comandaSel = isset($_GET['id']) ? detalheComanda($pdo, $_GET['id']) : null;
 $produtos = $pdo->query("SELECT * FROM produtos")->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 
 <!DOCTYPE html>
 <html lang="pt-br">
