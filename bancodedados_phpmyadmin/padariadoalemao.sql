@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 05/09/2025 às 21:48
+-- Tempo de geração: 05/09/2025 às 21:55
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -146,7 +146,8 @@ INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quanti
 (13, 20, 11, 1, 31.23),
 (14, 20, 8, 1, 5.50),
 (15, 21, 6, 1, 21.00),
-(16, 21, 11, 1, 31.23);
+(16, 21, 11, 1, 31.23),
+(17, 23, 4, 12, 96.00);
 
 -- --------------------------------------------------------
 
@@ -215,7 +216,9 @@ CREATE TABLE `vendas` (
 
 INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`, `status`) VALUES
 (20, 4, '2025-09-05 15:39:19', NULL, 'ABERTA'),
-(21, 4, '2025-09-05 16:46:29', NULL, 'ABERTA');
+(21, 4, '2025-09-05 16:46:29', NULL, 'ABERTA'),
+(22, 4, '2025-09-05 16:50:44', NULL, 'ABERTA'),
+(23, 4, '2025-09-05 16:50:50', NULL, 'ABERTA');
 
 --
 -- Índices para tabelas despejadas
@@ -298,7 +301,7 @@ ALTER TABLE `funcionario`
 -- AUTO_INCREMENT de tabela `itens_vendas`
 --
 ALTER TABLE `itens_vendas`
-  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de tabela `nivel`
@@ -316,7 +319,7 @@ ALTER TABLE `produtos`
 -- AUTO_INCREMENT de tabela `vendas`
 --
 ALTER TABLE `vendas`
-  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- Restrições para tabelas despejadas
