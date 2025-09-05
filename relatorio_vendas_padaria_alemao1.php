@@ -8,7 +8,7 @@ $pass = '';
 if ($_SESSION['nivel'] != 1) {
     echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
     exit;
-  }
+}
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
@@ -34,10 +34,23 @@ try {
     $stmt = $conn->query($sql);
     $rows = $stmt->fetchAll();
 
+    // Corrigir possíveis valores null para evitar erros
+    foreach ($rows as &$row) {
+        $row['ID_vendas']     = $row['ID_vendas'] ?? '';
+        $row['venda_data']    = $row['venda_data'] ?? '';
+        $row['Nome_func']     = $row['Nome_func'] ?? '';
+        $row['Nome_prod']     = $row['Nome_prod'] ?? '';
+        $row['quant_vendas']  = $row['quant_vendas'] ?? 0;
+        $row['preco_unit']    = $row['preco_unit'] ?? 0;
+        $row['preco_total']   = $row['preco_total'] ?? 0;
+        $row['forma_pagamento']= $row['forma_pagamento'] ?? '';
+    }
+
 } catch (PDOException $e) {
     die("Erro na conexão: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -127,6 +140,7 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
     <a href="#" onclick="showSection('grafico-pagamento')"><span class="material-icons icon">credit_card</span><span class="text">Gráfico Pagamento</span></a>
     <a href="#" onclick="showSection('grafico-funcionario')"><span class="material-icons icon">person</span><span class="text">Gráfico Funcionário</span></a>
     <a href="#" onclick="showSection('grafico-dia')"><span class="material-icons icon">calendar_today</span><span class="text">Gráfico Diário</span></a>
+
 </nav>
 
 <main class="main-content" id="mainContent">
@@ -147,6 +161,15 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
             <input type="text" id="search" placeholder="Pesquisar...">
         </div>
         <button id="clearFilters">Limpar Filtros</button>
+        <form method="POST" action="relatorio_vendas_pdf.php" target="_blank" style="text-align:center;margin-bottom:15px;">
+    <input type="hidden" name="startDate" id="pdfStartDate">
+    <input type="hidden" name="endDate" id="pdfEndDate">
+    <input type="hidden" name="search" id="pdfSearch">
+    <button type="submit" style="padding:8px 15px;background:#0077b6;color:#fff;border:none;border-radius:6px;cursor:pointer;">
+        📄 Gerar PDF
+    </button>
+</form>
+
     </div>
 
     <div class="filter-info" id="filterInfo">Total de vendas: <?= count($rows) ?></div>
@@ -166,19 +189,20 @@ tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($rows as $row): ?>
-                    <tr>
-                        <td data-label="ID"><?= $row['ID_vendas'] ?></td>
-                        <td data-label="Data"><?= $row['venda_data'] ?></td>
-                        <td data-label="Funcionário"><?= $row['Nome_func'] ?></td>
-                        <td data-label="Produto"><?= $row['Nome_prod'] ?></td>
-                        <td data-label="Qtd"><?= $row['quant_vendas'] ?></td>
-                        <td data-label="Preço"><?= number_format($row['preco_unit'], 2, ',', '.') ?></td>
-                        <td data-label="Total"><?= number_format($row['preco_total'], 2, ',', '.') ?></td>
-                        <td data-label="Pagamento"><?= $row['forma_pagamento'] ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
+<?php foreach ($rows as $row): ?>
+    <tr>
+        <td data-label="ID"><?= htmlspecialchars($row['ID_vendas'] ?? '') ?></td>
+        <td data-label="Data"><?= htmlspecialchars($row['venda_data'] ?? '') ?></td>
+        <td data-label="Funcionário"><?= htmlspecialchars($row['Nome_func'] ?? '') ?></td>
+        <td data-label="Produto"><?= htmlspecialchars($row['Nome_prod'] ?? '') ?></td>
+        <td data-label="Qtd"><?= htmlspecialchars($row['quant_vendas'] ?? 0) ?></td>
+        <td data-label="Preço"><?= number_format($row['preco_unit'] ?? 0, 2, ',', '.') ?></td>
+        <td data-label="Total"><?= number_format($row['preco_total'] ?? 0, 2, ',', '.') ?></td>
+        <td data-label="Pagamento"><?= htmlspecialchars($row['forma_pagamento'] ?? '') ?></td>
+    </tr>
+<?php endforeach; ?>
+</tbody>
+
         </table>
     </div>
 
