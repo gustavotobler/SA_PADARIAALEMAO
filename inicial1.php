@@ -145,7 +145,6 @@ $nomeFunc = $nome['Nome_func'] ?? '';
     <a href="fornecedores.php"><span class="material-icons">work</span> Fornecedores</a>
     <a href="estoque.php"><span class="material-icons">inventory_2</span> Estoque</a>
     <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons">analytics</span> Vendas</a>
-    <a href="selecionar_itens.php"><span class="material-icons">shopping_cart</span> Pagamento</a>
     <a href="comanda.php"><span class="material-icons">receipt_long</span> Comanda</a>
 
     <div class="logout">
