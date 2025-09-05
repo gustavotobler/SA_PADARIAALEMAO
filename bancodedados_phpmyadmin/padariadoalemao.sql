@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 04/09/2025 às 21:30
+-- Tempo de geração: 05/09/2025 às 21:48
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -139,7 +139,14 @@ INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quanti
 (6, 0, 4, 1, 8.00),
 (7, 1, 4, 1, 8.00),
 (8, 1, 4, 1, 8.00),
-(9, 1, 6, 1, 21.00);
+(9, 1, 6, 1, 21.00),
+(10, 19, 4, 12, 96.00),
+(11, 19, 6, 1, 21.00),
+(12, 20, 6, 1, 21.00),
+(13, 20, 11, 1, 31.23),
+(14, 20, 8, 1, 5.50),
+(15, 21, 6, 1, 21.00),
+(16, 21, 11, 1, 31.23);
 
 -- --------------------------------------------------------
 
@@ -185,7 +192,8 @@ INSERT INTO `produtos` (`ID_produto`, `ID_forn`, `id_categorias`, `Nome_prod`, `
 (4, 2, 3, 'bolo de leite', 8.00, 'un', '07/10/2025', 7),
 (6, 3, 2, 'Pão Frânces', 21.00, 'kg', '07/10/2025', 199),
 (7, 1, 3, 'Bolo de arroz', 2.00, 'kg', '2026-03-10', 80),
-(8, 1, 6, 'iogurte', 5.50, 'un', '2025-09-15', 100);
+(8, 1, 6, 'iogurte', 5.50, 'un', '2025-09-15', 100),
+(11, 1, 3, 'bolo de arrox', 31.23, 'g', '2000-32-32', 232332);
 
 -- --------------------------------------------------------
 
@@ -206,22 +214,8 @@ CREATE TABLE `vendas` (
 --
 
 INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`, `status`) VALUES
-(1, 1, '2025-09-04 15:46:50', NULL, 'FECHADA'),
-(2, 1, '2025-09-04 15:48:25', NULL, 'CANCELADA'),
-(3, 1, '2025-09-04 15:48:42', NULL, 'FECHADA'),
-(4, 1, '2025-09-04 15:58:47', NULL, 'FECHADA'),
-(5, 1, '2025-09-04 15:51:34', NULL, 'FECHADA'),
-(6, 1, '2025-09-04 15:58:53', NULL, 'FECHADA'),
-(7, 1, '2025-09-04 16:08:20', NULL, 'FECHADA'),
-(8, 1, '2025-09-04 16:08:16', NULL, 'FECHADA'),
-(9, 1, '2025-09-04 16:08:36', NULL, 'ABERTA'),
-(10, 1, '2025-09-04 16:14:54', NULL, 'ABERTA'),
-(11, 1, '2025-09-04 16:15:16', NULL, 'ABERTA'),
-(12, 1, '2025-09-04 16:15:54', NULL, 'CANCELADA'),
-(13, 1, '2025-09-04 16:17:56', NULL, 'FECHADA'),
-(14, 1, '2025-09-04 16:22:26', NULL, 'ABERTA'),
-(15, 1, '2025-09-04 16:26:58', NULL, 'ABERTA'),
-(16, 1, '2025-09-04 16:28:59', NULL, 'ABERTA');
+(20, 4, '2025-09-05 15:39:19', NULL, 'ABERTA'),
+(21, 4, '2025-09-05 16:46:29', NULL, 'ABERTA');
 
 --
 -- Índices para tabelas despejadas
@@ -304,7 +298,7 @@ ALTER TABLE `funcionario`
 -- AUTO_INCREMENT de tabela `itens_vendas`
 --
 ALTER TABLE `itens_vendas`
-  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de tabela `nivel`
@@ -316,13 +310,13 @@ ALTER TABLE `nivel`
 -- AUTO_INCREMENT de tabela `produtos`
 --
 ALTER TABLE `produtos`
-  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de tabela `vendas`
 --
 ALTER TABLE `vendas`
-  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- Restrições para tabelas despejadas
