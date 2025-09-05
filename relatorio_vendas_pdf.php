@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once 'vendor/autoload.php'; // ajuste conforme pasta do Dompdf
+require_once 'vendor/autoload.php'; 
 use Dompdf\Dompdf;
 
 if (!isset($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
@@ -21,7 +21,6 @@ try {
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    // SQL ajustado com COALESCE para evitar null
     $sql = "
     SELECT 
         v.ID_vendas,
@@ -45,11 +44,21 @@ try {
     die("Erro na conexão: " . $e->getMessage());
 }
 
-// Montar HTML do PDF
-$html = '<h1 style="text-align:center;">Relatório de Vendas</h1>';
-$html .= '<table border="1" cellpadding="5" cellspacing="0" width="100%" style="border-collapse: collapse;">
+// Calcular total geral
+$totalGeral = array_sum(array_column($rows, 'preco_total'));
+
+// Caminho absoluto da logo
+$logoPath = realpath('img/logopadaria.png'); // ajuste conforme a pasta correta
+
+// Montar HTML estilizado
+$html = '
+<div style="text-align:center;margin-bottom:20px;">
+    <img src="file://'.$logoPath.'" width="120" style="margin-bottom:10px;">
+    <h1 style="margin:0;">Relatório de Vendas</h1>
+</div>
+<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Arial, sans-serif;">
 <thead>
-<tr style="background:#f2f2f2;">
+<tr style="background-color:#0077b6; color:#fff; text-align:center;">
 <th>ID Venda</th>
 <th>Data</th>
 <th>Funcionário</th>
@@ -62,25 +71,36 @@ $html .= '<table border="1" cellpadding="5" cellspacing="0" width="100%" style="
 </thead>
 <tbody>';
 
+$alt = false;
 foreach ($rows as $row) {
-    $html .= '<tr>
-    <td>'.htmlspecialchars($row['ID_vendas']).'</td>
-    <td>'.htmlspecialchars($row['venda_data']).'</td>
-    <td>'.htmlspecialchars($row['Nome_func']).'</td>
-    <td>'.htmlspecialchars($row['Nome_prod']).'</td>
-    <td>'.number_format($row['quant_vendas'], 0, ',', '.').'</td>
-    <td>R$ '.number_format($row['preco_unit'], 2, ',', '.').'</td>
-    <td>R$ '.number_format($row['preco_total'], 2, ',', '.').'</td>
-    <td>'.htmlspecialchars($row['forma_pagamento']).'</td>
+    $bg = $alt ? '#f2f2f2' : '#ffffff';
+    $alt = !$alt;
+    $dataFormatada = date('d/m/Y', strtotime($row['venda_data']));
+    $html .= '<tr style="background-color:'.$bg.'; text-align:center;">
+        <td>'.htmlspecialchars($row['ID_vendas']).'</td>
+        <td>'.$dataFormatada.'</td>
+        <td>'.htmlspecialchars($row['Nome_func']).'</td>
+        <td>'.htmlspecialchars($row['Nome_prod']).'</td>
+        <td>'.number_format($row['quant_vendas'], 0, ',', '.').'</td>
+        <td>R$ '.number_format($row['preco_unit'], 2, ',', '.').'</td>
+        <td>R$ '.number_format($row['preco_total'], 2, ',', '.').'</td>
+        <td>'.htmlspecialchars($row['forma_pagamento']).'</td>
     </tr>';
 }
+
+// Linha de total geral
+$html .= '<tr style="background-color:#e0e0e0; font-weight:bold; text-align:center;">
+    <td colspan="6">Total Geral</td>
+    <td>R$ '.number_format($totalGeral, 2, ',', '.').'</td>
+    <td>-</td>
+</tr>';
 
 $html .= '</tbody></table>';
 
 // Gerar PDF
 $dompdf = new Dompdf();
 $dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'landscape'); // landscape para melhor visualização
+$dompdf->setPaper('A4', 'landscape');
 $dompdf->render();
 
 // Limpar output buffer
