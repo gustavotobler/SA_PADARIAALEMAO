@@ -14,11 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $stmt->execute();
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($usuario) {
+    if ($usuario && password_verify($senha, $usuario['Senha'])) {
         $_SESSION['funcionario'] = $usuario['ID_func'];
         $_SESSION['nivel'] = $usuario['nivel_de_acesso'];
         $_SESSION['nome_func'] = $usuario['Nome_func'];
         $_SESSION['senha_temp'] = $usuario['senha_temporaria'];
+        
 
         if ($usuario['senha_temporaria']) {
             header("Location: alterar_senha.php");
