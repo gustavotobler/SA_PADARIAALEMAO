@@ -2,33 +2,39 @@
 session_start();
 require_once 'conexao.php';
 
-// Se não estiver logado, redireciona
-if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
-    header('Location: index.php');
-    exit();
+// Se não estiver logado, redireciona para login
+if (!isset($_SESSION['ID_func']) || !isset($_SESSION['nivel'])) {
+  header('Location: index.php');
+  exit();
 }
 
 // OBTENDO O NOME DO PERFIL DO USUÁRIO LOGADO
-$id_Nome = $_SESSION['funcionario'];
+$id_Nome = $_SESSION['ID_func'];
 $sqlNome = 'SELECT Nome_func FROM funcionario WHERE ID_func = :ID_func';
 $stmtNome = $pdo->prepare($sqlNome);
 $stmtNome->bindParam(':ID_func', $id_Nome, PDO::PARAM_INT);
 $stmtNome->execute();
 $nome = $stmtNome->fetch(PDO::FETCH_ASSOC);
-$nomeFunc = $nome['Nome_func'] ?? '';
+$nomeFunc = $nome['Nome_func'] ?? ($_SESSION['nome_func'] ?? '');
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Página Inicial</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <style>
-    * {margin:0; padding:0; box-sizing:border-box;}
+  <meta charset="UTF-8">
+  <title>Página Inicial</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color:rgb(59, 75, 93);
+      background-color: rgb(59, 75, 93);
       height: 100vh;
       display: flex;
       color: #f8f9fa;
@@ -37,12 +43,14 @@ $nomeFunc = $nome['Nome_func'] ?? '';
     body::before {
       content: "";
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
-      opacity: 0.15; 
+      opacity: 0.15;
       z-index: -1;
     }
 
@@ -54,7 +62,7 @@ $nomeFunc = $nome['Nome_func'] ?? '';
       position: fixed;
       display: flex;
       flex-direction: column;
-      box-shadow: 3px 0 10px rgba(0,0,0,0.3);
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
     }
 
     .sidebar img {
@@ -101,6 +109,7 @@ $nomeFunc = $nome['Nome_func'] ?? '';
       cursor: pointer;
       transition: 0.3s;
     }
+
     .logout button:hover {
       background: #dc3545;
       color: #fff;
@@ -117,27 +126,30 @@ $nomeFunc = $nome['Nome_func'] ?? '';
       background: #1b263b;
       padding: 40px;
       border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
       max-width: 800px;
       margin: 80px auto;
       text-align: center;
       transition: transform 0.3s;
       margin-top: -10px;
     }
+
     .welcome-card:hover {
       transform: translateY(-5px);
     }
+
     .welcome-card h2 {
       font-size: 26px;
       line-height: 1.5;
       color: #f1f1f1;
     }
-    </style>
+  </style>
 </head>
+
 <body>
 
-<!-- Menu lateral -->
-<nav class="sidebar">
+  <!-- Menu lateral -->
+  <nav class="sidebar">
     <img src="img/Logopadaria.png" alt="Logo da Padaria Alemão">
 
     <a href="produtos.php"><span class="material-icons">bakery_dining</span> Produtos</a>
@@ -148,18 +160,19 @@ $nomeFunc = $nome['Nome_func'] ?? '';
     <a href="comanda.php"><span class="material-icons">receipt_long</span> Comanda</a>
 
     <div class="logout">
-        <a href="index.php"><button type="button">Logout</button></a>
+      <a href="index.php"><button type="button">Logout</button></a>
     </div>
-</nav>
+  </nav>
 
-<!-- Conteúdo principal -->
-<main class="main-content">
+  <!-- Conteúdo principal -->
+  <main class="main-content">
     <section>
-        <div class="welcome-card">
-            <h2>Seja bem-vindo <b><?=$nomeFunc?></b>, ao nosso sistema de gestão!</h2>
-        </div>
+      <div class="welcome-card">
+        <h2>Seja bem-vindo <b><?= $nomeFunc ?></b>, ao nosso sistema de gestão!</h2>
+      </div>
     </section>
-</main>
+  </main>
 
 </body>
+
 </html>

@@ -14,19 +14,42 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $stmt->execute();
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($usuario && password_verify($senha, $usuario['Senha'])) {
-        $_SESSION['ID_func'] = $usuario['ID_func'];
-        $_SESSION['nivel'] = $usuario['nivel_de_acesso'];
-        $_SESSION['Nome_func'] = $usuario['Nome_func'];
-        $_SESSION['senha_temp'] = $usuario['senha_temporaria'];
-        
+    if ($usuario) {
+        $stored = $usuario['Senha'];
 
-        if ($usuario['senha_temporaria']) {
-            header("Location: alterar_senha.php");
-            exit();
+        // 1) Primeiro tenta verificar com password_verify (hash moderno)
+        if (password_verify($senha, $stored)) {
+            $senha_ok = true;
+        }
+        // 2) Se não bateu e o valor armazenado parece ser senha em texto, tenta comparar direto
+        elseif ($senha === $stored) {
+            $senha_ok = true;
+            // Rehash para armazenar a senha corretamente como hash
+            $novo_hash = password_hash($senha, PASSWORD_DEFAULT);
+            $upd = $pdo->prepare("UPDATE funcionario SET Senha = :senha WHERE ID_func = :id");
+            $upd->execute([':senha' => $novo_hash, ':id' => $usuario['ID_func']]);
+            $stored = $novo_hash;
         } else {
-            header("Location: inicial1.php");
-            exit();
+            $senha_ok = false;
+        }
+
+        if ($senha_ok) {
+            // Defina sessões com nomes consistentes (usados por outras páginas)
+            $_SESSION['ID_func'] = $usuario['ID_func'];
+            $_SESSION['funcionario'] = $usuario['ID_func']; // compatibilidade
+            $_SESSION['nivel'] = $usuario['nivel_de_acesso'];
+            $_SESSION['nome_func'] = $usuario['Nome_func']; // lowercase, como usado em outras páginas
+            $_SESSION['senha_temp'] = (int) $usuario['senha_temporaria'];
+
+            if ($usuario['senha_temporaria']) {
+                header("Location: alterar_senha.php");
+                exit();
+            } else {
+                header("Location: inicial1.php");
+                exit();
+            }
+        } else {
+            $erro = true;
         }
     } else {
         $erro = true;
@@ -34,8 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background:  #1b263b;
+            background: #1b263b;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -55,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             background: #fff;
             padding: 35px 30px;
             border-radius: 20px;
-            box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+            box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 420px;
             text-align: center;
@@ -69,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
         h2 {
             margin-bottom: 15px;
-            color:rgb(0, 0, 0);
+            color: rgb(0, 0, 0);
         }
 
         label {
@@ -90,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
 
         input:focus {
-            border-color:rgb(5, 37, 91);
+            border-color: rgb(5, 37, 91);
             outline: none;
             box-shadow: 0 0 6px rgba(2, 31, 82, 0.5);
         }
@@ -106,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             padding: 14px;
             border: none;
             border-radius: 10px;
-            background: linear-gradient(90deg,rgb(4, 10, 21),rgb(5, 1, 69));
+            background: linear-gradient(90deg, rgb(4, 10, 21), rgb(5, 1, 69));
             color: white;
             font-size: 16px;
             font-weight: 600;
@@ -117,14 +142,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0px 5px 15px rgba(37,117,252,0.4);
+            box-shadow: 0px 5px 15px rgba(37, 117, 252, 0.4);
         }
 
         .esqueceu-senha {
             display: block;
             margin-top: 12px;
             font-size: 13px;
-            color:rgb(5, 37, 91);
+            color: rgb(5, 37, 91);
             text-decoration: none;
         }
 
@@ -139,36 +164,45 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-15px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <img src="img/Logopadaria.png" alt="Logo Padaria" class="logo">
-    <h2>Login</h2>
+    <div class="container">
+        <img src="img/Logopadaria.png" alt="Logo Padaria" class="logo">
+        <h2>Login</h2>
 
-    <form method="POST">
-        <label for="Email">E-mail:</label>
-        <input type="email" name="Email" id="Email" required>
+        <form method="POST">
+            <label for="Email">E-mail:</label>
+            <input type="email" name="Email" id="Email" required>
 
-        <label for="Senha">Senha:</label>
-        <input type="password" id="Senha" name="Senha" required>
+            <label for="Senha">Senha:</label>
+            <input type="password" id="Senha" name="Senha" required>
 
-        <?php if ($erro): ?>
-            <p class="erro">E-mail ou senha incorretos.</p>
-        <?php endif; ?>
+            <?php if ($erro): ?>
+                <p class="erro">E-mail ou senha incorretos.</p>
+            <?php endif; ?>
 
-        <button type="submit">Entrar</button>
-        <a href="RECUP_SENHA.php" class="esqueceu-senha">Esqueceu a senha?</a>
-    </form>
+            <button type="submit">Entrar</button>
+            <a href="RECUP_SENHA.php" class="esqueceu-senha">Esqueceu a senha?</a>
+        </form>
 
-    <footer>
-        &copy; 2025 Padaria do Alemão
-    </footer>
-</div>
+        <footer>
+            &copy; 2025 Padaria do Alemão
+        </footer>
+    </div>
 
 </body>
+
 </html>

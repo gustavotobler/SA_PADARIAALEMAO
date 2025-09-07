@@ -1,44 +1,48 @@
-<?php 
+<?php
 session_start();
 require_once 'conexao.php';
 
 // Função que gera uma senha temporária
-function gerarSenhaTemporaria($tamanho = 8) {
+function gerarSenhaTemporaria($tamanho = 8)
+{
     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%';
     return substr(str_shuffle($chars), 0, $tamanho);
 }
 
 // Função que simula envio de email (grava em txt)
-function simularEnvioEmail($email, $senha) {
+function simularEnvioEmail($email, $senha)
+{
     $arquivo = "emails_simulados.txt";
     $mensagem = "Para: $email - Senha temporária: $senha" . PHP_EOL;
     file_put_contents($arquivo, $mensagem, FILE_APPEND);
 }
 
-if($_SERVER["REQUEST_METHOD"]=="POST"){
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
 
-    if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo "<script>alert('Formato de email inválido');</script>";
     } else {
-        $sql="SELECT * FROM funcionario WHERE Email = :Email";
-        $stmt= $pdo->prepare($sql);
-        $stmt->bindParam(':Email',$email);
+        $sql = "SELECT * FROM funcionario WHERE Email = :Email";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':Email', $email);
         $stmt->execute();
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if($usuario){
+        if ($usuario) {
             $senha_temporaria = gerarSenhaTemporaria();
-            $senha_hash = password_hash($senha_temporaria,PASSWORD_DEFAULT);
+            $senha_hash = password_hash($senha_temporaria, PASSWORD_DEFAULT);
 
-            $sql="UPDATE funcionario SET Senha = :Senha, senha_temporaria = TRUE WHERE Email = :Email";
-            $stmt=$pdo->prepare($sql);
-            $stmt->bindParam(':Senha',$senha_hash);
-            $stmt->bindParam(':Email',$email);
+            $sql = "UPDATE funcionario SET Senha = :Senha, senha_temporaria = TRUE WHERE Email = :Email";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':Senha', $senha_hash);
+            $stmt->bindParam(':Email', $email);
             $stmt->execute();
 
-            simularEnvioEmail($email,$senha_temporaria);
-            echo "<script>alert('Uma senha temporária foi gerada e enviada (simulação). Verifique o arquivo emails_simulados.txt');window.location.href='index.php';</script>";
+            simularEnvioEmail($email, $senha_temporaria);
+            // Depois de simularEnvioEmail e execute:
+            echo "<script>alert('Senha temporária criada: $senha_temporaria\\n(arquivo: emails_simulados.txt)');window.location.href='index.php';</script>";
+
         } else {
             echo "<script>alert('Email não encontrado');</script>";
         }
@@ -47,6 +51,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,7 +59,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background:  #1b263b;
+            background: #1b263b;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -66,7 +71,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
             background: #fff;
             padding: 35px 30px;
             border-radius: 20px;
-            box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+            box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 420px;
             text-align: center;
@@ -80,7 +85,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 
         h2 {
             margin-bottom: 15px;
-            color:rgb(0, 0, 0);
+            color: rgb(0, 0, 0);
         }
 
         label {
@@ -100,7 +105,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         }
 
         input:focus {
-            border-color:rgb(5, 37, 91);
+            border-color: rgb(5, 37, 91);
             outline: none;
             box-shadow: 0 0 6px rgba(2, 31, 82, 0.5);
         }
@@ -110,7 +115,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
             padding: 14px;
             border: none;
             border-radius: 10px;
-            background: linear-gradient(90deg,rgb(4, 10, 21),rgb(5, 1, 69));
+            background: linear-gradient(90deg, rgb(4, 10, 21), rgb(5, 1, 69));
             color: white;
             font-size: 16px;
             font-weight: 600;
@@ -121,7 +126,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0px 5px 15px rgba(37,117,252,0.4);
+            box-shadow: 0px 5px 15px rgba(37, 117, 252, 0.4);
         }
 
         .btn-voltar {
@@ -148,11 +153,19 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-15px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <img src="img/Logopadaria.png" alt="Logo Padaria" class="logo">
@@ -166,25 +179,26 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         <footer>&copy; 2025 Padaria do Alemão</footer>
     </div>
     <script>
-      function validarFuncionario() {
-        const emailInput = document.getElementById("email");
-        const email = emailInput.value.trim();
+        function validarFuncionario() {
+            const emailInput = document.getElementById("email");
+            const email = emailInput.value.trim();
 
-        if (email === "") {
-            alert("Por favor, digite o seu e-mail.");
-            emailInput.focus();
-            return false;
+            if (email === "") {
+                alert("Por favor, digite o seu e-mail.");
+                emailInput.focus();
+                return false;
+            }
+
+            const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!regexEmail.test(email)) {
+                alert("Digite um e-mail válido (exemplo: usuario@email.com).");
+                emailInput.focus();
+                return false;
+            }
+
+            return true;
         }
-
-        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!regexEmail.test(email)) {
-            alert("Digite um e-mail válido (exemplo: usuario@email.com).");
-            emailInput.focus();
-            return false;
-        }
-
-        return true;
-      }
     </script>
 </body>
+
 </html>
