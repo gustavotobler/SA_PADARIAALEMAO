@@ -156,8 +156,7 @@ $nomeFunc = $nome['Nome_func'] ?? ($_SESSION['nome_func'] ?? '');
     <a href="funcionarios.php"><span class="material-icons">group</span> Funcionários</a>
     <a href="fornecedores.php"><span class="material-icons">work</span> Fornecedores</a>
     <a href="estoque.php"><span class="material-icons">inventory_2</span> Estoque</a>
-    <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons">analytics</span> Vendas</a>
-    <a href="comanda.php"><span class="material-icons">receipt_long</span> Comanda</a>
+    <a href="comandas_visualizar.php"><span class="material-icons">receipt_long</span> Pagamento</a>
 
     <div class="logout">
       <a href="index.php"><button type="button">Logout</button></a>
