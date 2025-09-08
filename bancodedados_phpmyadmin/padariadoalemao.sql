@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 08/09/2025 às 19:28
+-- Tempo de geração: 08/09/2025 às 19:36
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -58,7 +58,7 @@ CREATE TABLE `fornecedores` (
   `UF` char(2) DEFAULT NULL,
   `Cidade` varchar(30) DEFAULT NULL,
   `Bairro` varchar(30) DEFAULT NULL,
-  `CEP` char(9) DEFAULT NULL,
+  `CEP` char(8) DEFAULT NULL,
   `Num_empresa` int(11) DEFAULT NULL,
   `Logradouro` varchar(60) DEFAULT NULL,
   `Email` varchar(60) DEFAULT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE `fornecedores` (
 INSERT INTO `fornecedores` (`ID_forn`, `Nome_forn`, `Telefone`, `CNPJ`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_empresa`, `Logradouro`, `Email`, `Data_fundacao`) VALUES
 (1, 'João', '(13) 12321-3213', '21.213.148/1447-84', 'AP', '[joinville]', 'espinheiros', '23423-42', 0, 'rua osvaldo galiza', 'joao@gmail.com', NULL),
 (2, 'roberta bolos', '47991402801', '1345623', 'SC', 'Joinville', 'Jarivatuba', '89230455', 150, 'rua das flores', 'robertabolos@gmail.com', '0000-00-00'),
-(6, 'Borbinha dos pães franceses', '(47) 92394-2343', '12.213.323/3334-56', 'MG', 'Joinville', 'Paraíso', '23543-433', 2992, 'Avenida Costa', 'borbinha@gmail.com', '2023-03-08');
+(3, 'Padaria Pão Quente', '(11) 98765-4321', '12.345.678/0001-90', 'SP', 'São Paulo', 'Centro', '01000-00', 100, 'Rua das Flores', 'contato@paoqueente.com.br', '2005-03-15');
 
 -- --------------------------------------------------------
 
@@ -91,7 +91,7 @@ CREATE TABLE `funcionario` (
   `UF` char(2) DEFAULT NULL,
   `Cidade` varchar(30) DEFAULT NULL,
   `Bairro` varchar(30) DEFAULT NULL,
-  `CEP` char(9) DEFAULT NULL,
+  `CEP` char(8) DEFAULT NULL,
   `Num_casa` int(11) DEFAULT NULL,
   `Logradouro` varchar(60) DEFAULT NULL,
   `Senha` varchar(255) NOT NULL,
@@ -110,8 +110,8 @@ CREATE TABLE `funcionario` (
 INSERT INTO `funcionario` (`ID_func`, `Nome_func`, `Telefone`, `Sexo`, `RG`, `CPF`, `Esta_civil`, `UF`, `Cidade`, `Bairro`, `CEP`, `Num_casa`, `Logradouro`, `Senha`, `senha_temporaria`, `Email`, `nivel_de_acesso`, `Data_nascimento`, `Data_admissao`, `Cargo`) VALUES
 (1, 'Kerry King', '(47) 99685-5520', 'Masculino', '01.203.4013', '141.554.709-26', 'Casado', 'SP', 'São Paulo', 'Centro', '89230-45', 190, 'Rua 25 de março', '$2y$10$woPtv9merbKi/1pI9rpbIeHDWKouUttM4CK8l0hIZtputrL/KIDhW', 0, 'kerryking@padaria.com', 1, '0000-00-00', '0000-00-00', 'Gerente'),
 (2, 'Ian Lucas Borba', '(92) 03123-1321', 'Masculino', '01.203.4013', '193.239.402-32', 'Viúvo', 'Sa', 'Joinville', 'Espinheiros', '8922687', 189, 'rua', '$2y$10$oTvTgzi1VHWdr7dQzxHLYeMmypykkgAJeHK0SlJStyBUJQW9lyJ3e', 0, 'ian@gmail.com', 2, '0000-00-00', '0000-00-00', 'Padeiro'),
-(4, 'Gustavo Tobler', '(92) 03123-1321', 'Masculino', '23.342.34-23', '314.452.536-54', 'Solteiro', 'SC', 'Joinville', 'Paraíso', '90323-33', 189, 'rua das flores', '$2y$10$39hK..XKo3C39QCdLBma0uh68238tzRngj2T6JdTn8Cyrx6N7oRLi', 0, 'toblerone@gmail.com', 1, '2000-09-02', '2025-09-03', 'Gerente'),
-(8, 'Varaldo Costa', '(47) 83293-2323', 'Masculino', '21.442.35-45', '546.547.585-68', 'Casado', 'SC', 'Joinville', 'Paraíso', '31945-743', 189, 'Avenida', '$2y$10$7lKWcF.1yh9SSC7pTycQqus.N4/v7.3U82iQYaKbEro3VzWPZgxj6', 0, 'varaldo@gmail.com', 2, '2000-03-03', '2025-09-08', 'Gerente');
+(3, 'Lucas Borba', '(51) 98765-4321', '', '123456789', '123.456.789-00', 'Solteiro', 'RS', 'Porto Alegre', 'Centro', '90000-00', 101, 'Rua das Flores', '$2y$10$6xAGhyNac1c1Hir1PaQpN.ttWdQjNhYa2zjp6MMtotMAFNrcE3Xxq', 0, 'lucas.borba@email.com', 2, '1990-05-15', '2025-08-01', 'Analista de Sistemas'),
+(4, 'Gustavo Tobler', '(92) 03123-1321', '', '23.342.34-23', '314.452.536-54', 'Solteiro', 'SC', 'Joinville', 'Paraíso', '90323-33', 189, 'rua das flores', '$2y$10$sfS6FgkVVfa78RVMalM7vO1OIVJeiouVfk/KKPJDYY3hVjMn2kPiK', 0, 'toblerone@gmail.com', 1, '2000-09-02', '2025-09-03', 'Gerente');
 
 -- --------------------------------------------------------
 
@@ -180,7 +180,8 @@ INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quanti
 (46, 83, 4, 2, 8.00, 16.00),
 (47, 85, 11, 1, 31.23, 31.23),
 (48, 85, 8, 1, 5.50, 5.50),
-(49, 90, 14, 12, 1.23, 14.76);
+(49, 90, 11, 234, 31.23, 7307.82),
+(50, 90, 11, 23230, 31.23, 725472.90);
 
 -- --------------------------------------------------------
 
@@ -200,6 +201,75 @@ CREATE TABLE `nivel` (
 INSERT INTO `nivel` (`nivel_de_acesso`, `nome_acesso`) VALUES
 (1, 'NIVEL_1'),
 (2, 'NIVEL_2');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `pagamentos`
+--
+
+CREATE TABLE `pagamentos` (
+  `ID_pagamento` int(11) NOT NULL,
+  `ID_vendas` int(11) NOT NULL,
+  `metodo` varchar(50) DEFAULT NULL,
+  `valor_pago` decimal(10,2) NOT NULL,
+  `troco` decimal(10,2) DEFAULT 0.00,
+  `data` datetime DEFAULT current_timestamp(),
+  `ID_func_registro` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `pagamentos`
+--
+
+INSERT INTO `pagamentos` (`ID_pagamento`, `ID_vendas`, `metodo`, `valor_pago`, `troco`, `data`, `ID_func_registro`) VALUES
+(1, 30, 'DINHEIRO', 2.00, 0.00, '2025-09-07 15:17:13', 1),
+(2, 31, 'DINHEIRO', 4.44, 0.00, '2025-09-07 15:18:17', 1),
+(3, 35, 'DINHEIRO', 31.23, 0.00, '2025-09-07 16:02:30', 1),
+(4, 46, 'DINHEIRO', 8.00, 0.00, '2025-09-07 16:58:12', 1),
+(5, 46, 'DINHEIRO', 8.00, 0.00, '2025-09-07 16:58:15', 1),
+(6, 56, 'DINHEIRO', 36.73, 0.00, '2025-09-07 20:32:13', 1),
+(7, 59, 'DINHEIRO', 12.44, 0.00, '2025-09-07 20:36:44', 1),
+(8, 59, 'DINHEIRO', 12.44, 0.00, '2025-09-07 20:36:47', 1),
+(9, 59, 'DINHEIRO', 12.44, 0.00, '2025-09-07 20:36:57', 1),
+(10, 83, 'DINHEIRO', 0.00, 0.00, '2025-09-07 22:55:56', 1),
+(11, 90, 'DINHEIRO', 99999999.99, 99999999.99, '2025-09-08 14:01:08', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `pagamentos_itens`
+--
+
+CREATE TABLE `pagamentos_itens` (
+  `ID_pagamento_item` int(11) NOT NULL,
+  `ID_vendas` int(11) NOT NULL,
+  `ID_produto` int(11) NOT NULL,
+  `Quantidade` int(11) NOT NULL,
+  `valor_total` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `pagamentos_itens`
+--
+
+INSERT INTO `pagamentos_itens` (`ID_pagamento_item`, `ID_vendas`, `ID_produto`, `Quantidade`, `valor_total`) VALUES
+(1, 30, 7, 1, 2.00),
+(2, 31, 12, 1, 4.44),
+(3, 35, 11, 1, 31.23),
+(4, 46, 4, 1, 8.00),
+(5, 46, 4, 1, 8.00),
+(6, 56, 8, 1, 5.50),
+(7, 56, 11, 1, 31.23),
+(8, 59, 4, 1, 8.00),
+(9, 59, 12, 1, 4.44),
+(10, 59, 4, 1, 8.00),
+(11, 59, 12, 1, 4.44),
+(12, 59, 4, 1, 8.00),
+(13, 59, 12, 1, 4.44),
+(14, 83, 4, 2, 16.00),
+(15, 90, 11, 234, 7307.82),
+(16, 90, 11, 23230, 725472.90);
 
 -- --------------------------------------------------------
 
@@ -224,11 +294,11 @@ CREATE TABLE `produtos` (
 
 INSERT INTO `produtos` (`ID_produto`, `ID_forn`, `id_categorias`, `Nome_prod`, `Preco_unitario`, `Unid_medida`, `Validade`, `Qntd_produto`) VALUES
 (4, 2, 3, 'bolo de leite', 8.00, 'un', '07/10/2025', 0),
+(6, 3, 2, 'Pão Frânces', 21.00, 'kg', '07/10/2025', 198),
 (7, 1, 3, 'Bolo de arroz', 2.00, 'kg', '2026-03-10', 77),
 (8, 1, 6, 'iogurte', 5.50, 'un', '2025-09-15', 98),
 (11, 1, 3, 'bolo de arrox', 31.23, 'g', '2000-32-32', 232330),
-(12, 1, 3, 'skibidi suco', 4.44, 'mL', '2026-05-07', 7),
-(14, 1, 2, 'Pão de frango', 1.23, 'g', '2200-10-10', 110);
+(12, 1, 3, 'skibidi suco', 4.44, 'mL', '2026-05-07', 7);
 
 -- --------------------------------------------------------
 
@@ -319,7 +389,7 @@ INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`, `
 (87, 1, '2025-09-07 23:06:47', NULL, 'ABERTA'),
 (88, 1, '2025-09-07 23:10:14', NULL, 'ABERTA'),
 (89, 1, '2025-09-07 23:26:19', NULL, 'ABERTA'),
-(90, 1, '2025-09-08 14:26:29', NULL, 'FECHADA');
+(90, 1, '2025-09-08 14:00:44', NULL, 'ABERTA');
 
 --
 -- Índices para tabelas despejadas
@@ -362,6 +432,22 @@ ALTER TABLE `nivel`
   ADD PRIMARY KEY (`nivel_de_acesso`);
 
 --
+-- Índices de tabela `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  ADD PRIMARY KEY (`ID_pagamento`),
+  ADD KEY `idx_pagamentos_venda` (`ID_vendas`),
+  ADD KEY `idx_pagamentos_func` (`ID_func_registro`);
+
+--
+-- Índices de tabela `pagamentos_itens`
+--
+ALTER TABLE `pagamentos_itens`
+  ADD PRIMARY KEY (`ID_pagamento_item`),
+  ADD KEY `idx_pg_itens_venda` (`ID_vendas`),
+  ADD KEY `idx_pg_itens_prod` (`ID_produto`);
+
+--
 -- Índices de tabela `produtos`
 --
 ALTER TABLE `produtos`
@@ -390,19 +476,19 @@ ALTER TABLE `categorias`
 -- AUTO_INCREMENT de tabela `fornecedores`
 --
 ALTER TABLE `fornecedores`
-  MODIFY `ID_forn` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `ID_forn` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de tabela `funcionario`
 --
 ALTER TABLE `funcionario`
-  MODIFY `ID_func` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `ID_func` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de tabela `itens_vendas`
 --
 ALTER TABLE `itens_vendas`
-  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT de tabela `nivel`
@@ -411,10 +497,22 @@ ALTER TABLE `nivel`
   MODIFY `nivel_de_acesso` int(1) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT de tabela `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  MODIFY `ID_pagamento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT de tabela `pagamentos_itens`
+--
+ALTER TABLE `pagamentos_itens`
+  MODIFY `ID_pagamento_item` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
 -- AUTO_INCREMENT de tabela `produtos`
 --
 ALTER TABLE `produtos`
-  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `ID_produto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de tabela `vendas`
@@ -425,6 +523,20 @@ ALTER TABLE `vendas`
 --
 -- Restrições para tabelas despejadas
 --
+
+--
+-- Restrições para tabelas `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  ADD CONSTRAINT `fk_pagamentos_func` FOREIGN KEY (`ID_func_registro`) REFERENCES `funcionario` (`ID_func`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pagamentos_vendas` FOREIGN KEY (`ID_vendas`) REFERENCES `vendas` (`ID_vendas`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `pagamentos_itens`
+--
+ALTER TABLE `pagamentos_itens`
+  ADD CONSTRAINT `fk_pg_itens_prod` FOREIGN KEY (`ID_produto`) REFERENCES `produtos` (`ID_produto`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pg_itens_vendas` FOREIGN KEY (`ID_vendas`) REFERENCES `vendas` (`ID_vendas`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `produtos`
