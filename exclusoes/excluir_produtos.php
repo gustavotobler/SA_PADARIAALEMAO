@@ -1,45 +1,42 @@
 <?php
-session_start(); // Inicia a sessão
-require_once '../conexao.php'; // Arquivo de conexão com o banco
+session_start(); 
+require_once '../conexao.php';
 
-// Primeiro: verifica se o usuário está logado
-// Ele precisa ter as variáveis de sessão "funcionario" e "nivel"
+// Verifica login
 if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     echo "<script>alert('Você precisa estar logado!');window.location.href='../inicial1.php';</script>";
     exit;
 }
 
-// Segundo: verifica se o usuário é administrador
+// Verifica nível de acesso
 if ($_SESSION['nivel'] != 1) {
     echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
     exit;
 }
 
-// Terceiro: só aceita requisições feitas via POST (mais seguro para exclusões)
+// Só aceita POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    
-    // Verifica se o ID do produto foi enviado
     if (isset($_POST['id'])) {
         $id = $_POST['id'];
 
-        // Prepara a query de exclusão (DELETE) com parâmetro
-        $stmt = $pdo->prepare("DELETE FROM produtos WHERE ID_produto = ?");
-        
-        // Executa passando o ID
-        if ($stmt->execute([$id])) {
-            // Se der certo, mostra alerta e volta para a página de produtos
+        try {
+            $stmt = $pdo->prepare("DELETE FROM produtos WHERE ID_produto = ?");
+            $stmt->execute([$id]);
+
             echo "<script>alert('Produto excluído com sucesso!');window.location.href='../produtos.php'</script>";
             exit;
-        } else {
-            // Se der erro na exclusão
-            echo "Erro ao excluir produto.";
+        } catch (PDOException $e) {
+            if ($e->getCode() == "23000") {
+                // Erro de chave estrangeira
+                echo "<script>alert('Este produto está vinculado a pagamentos e não pode ser excluído.');window.location.href='../produtos.php'</script>";
+            } else {
+                echo "<script>alert('Erro ao excluir produto: ".addslashes($e->getMessage())."');window.location.href='../produtos.php'</script>";
+            }
         }
     } else {
-        // Caso não tenha sido enviado o ID
-        echo "ID do produto não informado.";
+        echo "<script>alert('ID do produto não informado.');window.location.href='../produtos.php'</script>";
     }
 } else {
-    // Se tentarem acessar via GET, bloqueia
-    echo "Método inválido.";
+    echo "<script>alert('Método inválido.');window.location.href='../produtos.php'</script>";
 }
 ?>
