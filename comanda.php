@@ -236,6 +236,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       exit();
     }
 
+    // --- Salvar comanda (mantém aberta, apenas atualiza timestamp) ---
+    if ($acao === 'salvar') {
+      $id_venda = isset($_POST['id_venda']) ? (int) $_POST['id_venda'] : 0;
+      if ($id_venda <= 0) {
+        if (is_ajax())
+          send_json(['success' => false, 'msg' => 'ID inválido'], 400);
+        throw new Exception('ID inválido');
+      }
+      $pdo->prepare("UPDATE vendas SET venda_data=NOW() WHERE ID_vendas=?")->execute([$id_venda]);
+      if (is_ajax())
+        send_json(['success' => true, 'msg' => 'Comanda salva com sucesso!']);
+      $msg = 'Comanda salva com sucesso!';
+    }
+
     if ($acao === 'pagar') {
       $id_venda = isset($_POST['id_venda']) ? (int) $_POST['id_venda'] : 0;
       if ($id_venda <= 0) {
@@ -806,6 +820,7 @@ if (isset($_GET['print']) && $comanda) {
 
 <body>
   <!-- SIDEBAR: alinhada ao segundo arquivo -->
+  <!-- SIDEBAR: alinhada ao segundo arquivo -->
   <nav class="sidebar" id="sidebar" aria-label="Menu lateral">
     <div class="toggle-btn" onclick="toggleSidebar()" title="Abrir/Fechar menu">☰</div>
 
@@ -823,7 +838,14 @@ if (isset($_GET['print']) && $comanda) {
       <span class="icon"><span class="material-icons">visibility</span></span>
       <span class="text">Ver Comandas</span>
     </a>
+
+    <!-- Adicionado: link para o Carrinho (somente ele) -->
+    <a href="carrinho.php" title="Abrir carrinho">
+      <span class="icon"><span class="material-icons">shopping_cart</span></span>
+      <span class="text">Carrinho</span>
+    </a>
   </nav>
+
 
   <!-- page-wrap (reserva espaço para a sidebar) -->
   <div class="page-wrap" id="pageWrap">
@@ -967,14 +989,18 @@ if (isset($_GET['print']) && $comanda) {
                 Cancelar</button>
             </form>
 
-            <form method="post" style="display:inline" onsubmit="return confirm('Registrar pagamento?')">
-              <input type="hidden" name="acao" value="pagar">
+            <!-- SALVAR: permanece disponível -->
+            <form method="post" style="display:inline">
+              <input type="hidden" name="acao" value="salvar">
               <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
               <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-              <input type="hidden" name="metodo" value="DINHEIRO">
-              <input type="hidden" name="valor_pago" value="<?= number_format($comanda['total'], 2, '.', '') ?>">
-              <button class="btn btn-primary" type="submit">💵 Confirmar Pagamento</button>
+              <button class="btn btn-ghost" type="submit">💾 Salvar</button>
             </form>
+
+            <!-- Botão que abre a tela de carrinho (substitui 'Confirmar Pagamento') -->
+            <a class="btn btn-primary" href="carrinho.php?id=<?= (int) $comanda['ID_vendas'] ?>" title="Abrir carrinho">🛒
+              Abrir Carrinho</a>
+
           <?php else: ?>
             <form method="post" style="display:inline">
               <input type="hidden" name="acao" value="reabrir">

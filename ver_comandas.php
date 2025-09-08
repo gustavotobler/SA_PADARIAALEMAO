@@ -593,13 +593,14 @@ body{
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
     <a href="comanda.php"><span class="material-icons icon">receipt</span><span class="text">Criar Comanda</span></a>
     <a href="ver_comandas.php"><span class="material-icons icon">visibility</span><span class="text">Ver Comandas</span></a>
+    <!-- Adição solicitada: link do carrinho na sidebar -->
+    <a href="carrinho.php"><span class="material-icons icon">shopping_cart</span><span class="text">Carrinho</span></a>
 </nav>
 
 <!-- Main content -->
 <div class="container">
   <div class="main">
     <div class="header">
-      <div class="h-title">Visualizar Comandas</div>
     </div>
 
     <form id="filterForm" method="get" class="filter-panel" onsubmit="">

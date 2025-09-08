@@ -92,7 +92,7 @@ body{
 /* Card container */
 .wrap{
     width:100%;
-    max-width:560px;
+    max-width:720px; /* aumentei levemente para acomodar 3 botões */
     display:flex;
     flex-direction:column;
     gap:20px;
@@ -115,18 +115,20 @@ h1{font-size:20px;margin:0}
 .lead{font-size:14px;color:var(--muted)}
 
 /* Actions area: cards botões mais bonitos */
+/* Ajustei para caber 3 botões lado a lado mantendo estilo */
 .actions{
     display:flex;
-    gap:16px;
+    gap:12px;
     justify-content:center;
     margin-top:10px;
     width:100%;
+    flex-wrap:wrap;
 }
 .action-card{
-  flex:1;
-  max-width:240px;
+  flex:1 1 180px; /* permite 3 cards confortavelmente */
+  max-width:180px; /* reduzido para caber 3 lado a lado */
   border-radius:12px;
-  padding:16px;
+  padding:12px;
   cursor:pointer;
   text-align:center;
   display:flex;
@@ -138,7 +140,7 @@ h1{font-size:20px;margin:0}
   color:#fff;
   position:relative;
   overflow:hidden;
-  min-height:96px;
+  min-height:84px; /* menor para compactar */
   justify-content:center;
   box-shadow: 0 8px 22px rgba(2,8,23,0.45);
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
@@ -146,10 +148,10 @@ h1{font-size:20px;margin:0}
 
 /* Icon badge */
 .action-card .icobg{
-  width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);backdrop-filter:blur(4px);
+  width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);backdrop-filter:blur(4px);
   box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
 }
-.action-card span.material-icons{font-size:26px}
+.action-card span.material-icons{font-size:22px}
 
 /* Create button style (green accent) */
 .action-card.create{
@@ -166,6 +168,14 @@ h1{font-size:20px;margin:0}
 }
 .action-card.view .icobg{background: linear-gradient(90deg,#0ea5ff,#00b4d8); box-shadow:none;}
 .action-card.view span.material-icons{color:#fff}
+
+/* Cart button style (mantendo o estilo similar) */
+.action-card.cart{
+  border:1px solid rgba(255,193,7,0.08);
+  background: linear-gradient(180deg, rgba(255,193,7,0.04), rgba(40,30,10,0.02));
+}
+.action-card.cart .icobg{background: linear-gradient(90deg,#ffb703,#ffdd57); box-shadow:none;}
+.action-card.cart span.material-icons{color:#fff}
 
 /* Hover / focus */
 .action-card:hover,
@@ -189,8 +199,9 @@ h1{font-size:20px;margin:0}
 @media(max-width:720px){
   .card{padding:18px}
   .logo img{height:50px;width:50px}
-  .actions{flex-direction:column;gap:12px}
-  .action-card{max-width:100%}
+  .actions{flex-direction:row;gap:10px;justify-content:space-between;flex-wrap:wrap}
+  .action-card{max-width:48%;min-height:72px;padding:10px}
+  .action-card .icobg{width:44px;height:44px}
 }
 </style>
 </head>
@@ -202,6 +213,8 @@ h1{font-size:20px;margin:0}
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
     <a href="comanda.php"><span class="material-icons icon">receipt</span><span class="text">Criar Comanda</span></a>
     <a href="ver_comandas.php"><span class="material-icons icon">visibility</span><span class="text">Ver Comandas</span></a>
+    <!-- Ícone do carrinho adicionado abaixo de Ver Comandas -->
+    <a href="carrinho.php"><span class="material-icons icon">shopping_cart</span><span class="text">Carrinho</span></a>
 </nav>
 
 <!-- Main content -->
@@ -228,6 +241,13 @@ h1{font-size:20px;margin:0}
           <h2>Ver Comandas</h2>
           <p>Listar e gerenciar comandas existentes</p>
         </div>
+
+        <!-- Botão carrinho adicionado ao lado de Ver Comandas -->
+        <div id="btnCart" class="action-card cart" role="button" tabindex="0" aria-label="Abrir carrinho">
+          <div class="icobg"><span class="material-icons">shopping_cart</span></div>
+          <h2>Carrinho</h2>
+          <p>Abrir carrinho de compras</p>
+        </div>
       </div>
 
       <div id="status" class="status" aria-live="polite" style="display:none"></div>
@@ -246,6 +266,7 @@ function toggleSidebar(){
 
 const btnCreate = document.getElementById("btnCreate");
 const btnView = document.getElementById("btnView");
+const btnCart = document.getElementById("btnCart");
 const statusEl = document.getElementById("status");
 
 /* acessibilidade: ativar via teclado */
@@ -267,15 +288,16 @@ function showStatus(msg, ok=true){
 }
 
 /* Apenas navega para a página de criação — NÃO faz POST/CREATE */
-btnCreate.addEventListener("click", ()=>{
-  // navega sem criar nada; o usuário poderá criar/editar na página comanda.php
-  location.href = "comanda.php";
-});
+btnCreate.addEventListener("click", ()=>{ location.href = "comanda.php"; });
 addKeyboardActivation(btnCreate, ()=> location.href = "comanda.php");
 
 /* Ver comandas */
 btnView.addEventListener("click", ()=>{ location.href="ver_comandas.php"; });
 addKeyboardActivation(btnView, ()=> location.href = "ver_comandas.php");
+
+/* Carrinho */
+btnCart.addEventListener("click", ()=>{ location.href="carrinho.php"; });
+addKeyboardActivation(btnCart, ()=> location.href = "carrinho.php");
 </script>
 
 </body>
