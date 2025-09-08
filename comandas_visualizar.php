@@ -39,13 +39,22 @@ $csrf = $_SESSION['csrf'];
     --blue: #00b4d8;
     --text: #f8f9fa; /* texto claro */
     --muted: #94a3b8;
+    --btn-surface: rgba(255,255,255,0.03);
+    --btn-border: rgba(255,255,255,0.06);
+    --glass: rgba(255,255,255,0.02);
 }
 
 /* Reset */
 *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
-body{background-color:var(--main-bg);display:flex;min-height:100vh}
+body{
+  background: linear-gradient(180deg,var(--main-bg),#0b2e3f);
+  color:var(--text);
+  display:flex;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
 
-/* Sidebar */
+/* Sidebar (mantida) */
 .sidebar {
     width:240px;
     background:var(--sidebar-bg);
@@ -83,7 +92,7 @@ body{background-color:var(--main-bg);display:flex;min-height:100vh}
 /* Card container */
 .wrap{
     width:100%;
-    max-width:500px;
+    max-width:560px;
     display:flex;
     flex-direction:column;
     gap:20px;
@@ -92,45 +101,92 @@ body{background-color:var(--main-bg);display:flex;min-height:100vh}
     background:var(--card-bg);
     color:var(--text);
     border-radius:14px;
-    padding:24px;
-    box-shadow:0 12px 36px rgba(0,0,0,.45);
+    padding:28px;
+    box-shadow:0 18px 48px rgba(0,0,0,.55);
     display:flex;
     flex-direction:column;
     gap:20px;
     align-items:center;
+    border:1px solid var(--glass);
 }
 .logo{display:flex;align-items:center;gap:12px}
 .logo img{height:60px;width:60px;border-radius:10px;object-fit:cover}
 h1{font-size:20px;margin:0}
 .lead{font-size:14px;color:var(--muted)}
+
+/* Actions area: cards botões mais bonitos */
 .actions{
     display:flex;
     gap:16px;
     justify-content:center;
     margin-top:10px;
+    width:100%;
 }
 .action-card{
   flex:1;
-  max-width:200px;
+  max-width:240px;
   border-radius:12px;
-  padding:14px;
+  padding:16px;
   cursor:pointer;
   text-align:center;
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:8px;
   align-items:center;
-  transition:.25s;
-  border:2px solid transparent;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  border:1px solid transparent;
   color:#fff;
+  position:relative;
+  overflow:hidden;
+  min-height:96px;
+  justify-content:center;
+  box-shadow: 0 8px 22px rgba(2,8,23,0.45);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
 }
-.action-card span.material-icons{font-size:28px}
-.action-card h2{font-size:15px;margin:0}
-.action-card.create{background:var(--green)}
-.action-card.view{background:var(--blue)}
-.action-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.25)}
-.status{margin-top:6px;font-size:14px;text-align:center}
-@media(max-width:540px){
+
+/* Icon badge */
+.action-card .icobg{
+  width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);backdrop-filter:blur(4px);
+  box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
+}
+.action-card span.material-icons{font-size:26px}
+
+/* Create button style (green accent) */
+.action-card.create{
+  border:1px solid rgba(6,163,90,0.12);
+  background: linear-gradient(180deg, rgba(6,163,90,0.08), rgba(6,110,70,0.03));
+}
+.action-card.create .icobg{background: linear-gradient(90deg,#14a352,#16ca6b); box-shadow:none;}
+.action-card.create span.material-icons{color:#fff}
+
+/* View button style (blue accent) */
+.action-card.view{
+  border:1px solid rgba(0,180,216,0.12);
+  background: linear-gradient(180deg, rgba(0,180,216,0.06), rgba(1,60,80,0.03));
+}
+.action-card.view .icobg{background: linear-gradient(90deg,#0ea5ff,#00b4d8); box-shadow:none;}
+.action-card.view span.material-icons{color:#fff}
+
+/* Hover / focus */
+.action-card:hover,
+.action-card:focus{
+  transform:translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 48px rgba(2,12,24,0.6);
+  outline: none;
+}
+.action-card:active{
+  transform:translateY(-2px);
+}
+
+/* headings inside */
+.action-card h2{font-size:15px;margin:0;font-weight:700;color:var(--text)}
+.action-card p{font-size:13px;color:var(--muted);margin:0}
+
+/* status text */
+.status{margin-top:6px;font-size:14px;text-align:center;color:var(--muted)}
+
+/* mobile */
+@media(max-width:720px){
   .card{padding:18px}
   .logo img{height:50px;width:50px}
   .actions{flex-direction:column;gap:12px}
@@ -149,29 +205,32 @@ h1{font-size:20px;margin:0}
 </nav>
 
 <!-- Main content -->
-<main class="main-content" id="mainContent">
+<main class="main-content" id="mainContent" role="main">
   <div class="wrap">
-    <div class="card">
+    <div class="card" role="region" aria-labelledby="title">
       <div class="logo">
         <img src="img/Logopadaria.png" alt="Logo Padaria">
         <div>
-          <h1>Comandas Rápido</h1>
+          <h1 id="title">Comandas Rápido</h1>
           <div class="lead">Olá, <strong><?= htmlspecialchars($nomeFunc) ?></strong>. Escolha uma ação.</div>
         </div>
       </div>
 
-      <div class="actions">
-        <div id="btnCreate" class="action-card create">
-          <span class="material-icons">add_circle</span>
+      <div class="actions" role="toolbar" aria-label="Ações rápidas">
+        <div id="btnCreate" class="action-card create" role="button" tabindex="0" aria-pressed="false" aria-label="Criar comanda">
+          <div class="icobg"><span class="material-icons">add_circle</span></div>
           <h2>Criar Comanda</h2>
+          <p>Ir para a tela de criação de comanda</p>
         </div>
-        <div id="btnView" class="action-card view">
-          <span class="material-icons">visibility</span>
+
+        <div id="btnView" class="action-card view" role="button" tabindex="0" aria-label="Ver comandas">
+          <div class="icobg"><span class="material-icons">visibility</span></div>
           <h2>Ver Comandas</h2>
+          <p>Listar e gerenciar comandas existentes</p>
         </div>
       </div>
 
-      <div id="status" class="status" style="display:none"></div>
+      <div id="status" class="status" aria-live="polite" style="display:none"></div>
     </div>
   </div>
 </main>
@@ -188,35 +247,35 @@ function toggleSidebar(){
 const btnCreate = document.getElementById("btnCreate");
 const btnView = document.getElementById("btnView");
 const statusEl = document.getElementById("status");
-const csrf = <?= json_encode($csrf) ?>;
 
+/* acessibilidade: ativar via teclado */
+function addKeyboardActivation(el, handler){
+  el.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      handler();
+    }
+  });
+}
+
+/* Mostrar status temporário (usado se necessário) */
 function showStatus(msg, ok=true){
   statusEl.style.display="block";
   statusEl.textContent=msg;
-  statusEl.style.color=ok?"#0b7285":"#b91c1c";
+  statusEl.style.color = ok ? '#9ee6d1' : '#fca5a5';
+  setTimeout(()=>{ statusEl.style.display="none"; }, 3000);
 }
 
-btnCreate.addEventListener("click", async ()=>{
-  if(!confirm("Criar nova comanda agora?")) return;
-  showStatus("Criando comanda...");
-  try{
-    const data = new FormData();
-    data.append("acao","nova");
-    data.append("csrf", csrf);
-    const res = await fetch("comanda.php", {method:"POST", body:data, credentials:"same-origin"});
-    if(res.ok){
-      const ct = res.headers.get("content-type")||"";
-      if(ct.includes("json")){
-        const j = await res.json();
-        if(j.id||j.novo_id){ location.href="comanda.php?id="+(j.id||j.novo_id); return; }
-        if(j.redirect){ location.href=j.redirect; return; }
-      }
-      location.reload();
-    } else { showStatus("Erro ao criar comanda", false); }
-  } catch(e){ showStatus("Erro de rede", false); }
+/* Apenas navega para a página de criação — NÃO faz POST/CREATE */
+btnCreate.addEventListener("click", ()=>{
+  // navega sem criar nada; o usuário poderá criar/editar na página comanda.php
+  location.href = "comanda.php";
 });
+addKeyboardActivation(btnCreate, ()=> location.href = "comanda.php");
 
-btnView.addEventListener("click", ()=>{ location.href="comandas_unificado.php"; });
+/* Ver comandas */
+btnView.addEventListener("click", ()=>{ location.href="ver_comandas.php"; });
+addKeyboardActivation(btnView, ()=> location.href = "ver_comandas.php");
 </script>
 
 </body>

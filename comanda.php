@@ -1,8 +1,6 @@
 <?php
-// comanda_single.php
-// Página enxuta: criar / editar / operar uma única comanda
-// Salve como comanda_single.php
-
+// comanda_single_styled.php
+// Arquivo atualizado: CSS/Sidebar alinhados; addItemForm via AJAX atualiza tabela sem reload.
 session_start();
 
 // -> Em desenvolvimento, útil ativar; em produção comente.
@@ -117,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       // buscar preço e validar estoque
-      $p = $pdo->prepare("SELECT Preco_unitario, Qntd_produto FROM produtos WHERE ID_produto = ?");
+      $p = $pdo->prepare("SELECT Preco_unitario, Qntd_produto, Nome_prod FROM produtos WHERE ID_produto = ?");
       $p->execute([$id_prod]);
       $prod = $p->fetch();
       if (!$prod) {
@@ -141,7 +139,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("SELECT SUM(valor_total) as total FROM itens_vendas WHERE ID_vendas = ?");
         $stmt->execute([$id_venda]);
         $totalRow = $stmt->fetch();
-        send_json(['success' => true, 'msg' => 'Item adicionado', 'novo_total' => (float) ($totalRow['total'] ?? 0)]);
+        // devolver também informações do item recém-adicionado para atualização no client
+        send_json([
+          'success' => true,
+          'msg' => 'Item adicionado',
+          'novo_total' => (float) ($totalRow['total'] ?? 0),
+          'item' => [
+            'ID_produto' => $id_prod,
+            'Nome_prod' => $prod['Nome_prod'] ?? '',
+            'Quantidade' => $qtd,
+            'valor_unitario' => number_format($valor_unitario, 2, '.', ''),
+            'valor_total' => number_format($valor_total, 2, '.', '')
+          ]
+        ]);
       }
 
       $msg = "Item adicionado.";
@@ -275,6 +285,54 @@ $idParam = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $comanda = $idParam ? carregar_comanda($pdo, $idParam) : null;
 $produtos = get_products($pdo);
 
+// ===== Impressão: se ?print=1 presente, gerar página de impressão minimalista =====
+if (isset($_GET['print']) && $comanda) {
+  // reusar impressão do primeiro arquivo
+  $itemsHtml = '';
+  foreach ($comanda['itens'] as $it) {
+    $nome = htmlspecialchars($it['Nome_prod'] ?? '-');
+    $qtd = (int) $it['Quantidade'];
+    $valor = number_format($it['valor_total'], 2, ',', '.');
+    $itemsHtml .= "<tr><td style=\"padding:6px 0;\">" . $nome . "</td><td style=\"text-align:center;padding:6px 0;width:60px\">" . $qtd . "</td><td style=\"text-align:right;padding:6px 0;width:90px\">R$ " . $valor . "</td></tr>";
+  }
+
+  $vendaData = htmlspecialchars($comanda['venda_data'] ?? '');
+  $total = 'R$ ' . number_format($comanda['total'], 2, ',', '.');
+  $func = htmlspecialchars($comanda['Nome_func'] ?? '-');
+  $idv = (int) $comanda['ID_vendas'];
+
+  echo "<!doctype html><html lang=\"pt-br\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Imprimir Comanda #$idv</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:20px}
+    .ticket{max-width:420px;margin:0 auto}
+    h1{font-size:18px;margin:0 0 8px}
+    .meta{font-size:13px;color:#444;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin-bottom:10px}
+    td{font-size:13px}
+    .total{font-weight:800;font-size:16px;border-top:1px dashed #ccc;padding-top:8px}
+    @media print{body{margin:0} .no-print{display:none}}
+  </style>
+  </head><body onload=\"setTimeout(()=>{window.print();window.close()},300);\">
+  <div class=\"ticket\">
+    <h1>Padaria do Alemão</h1>
+    <div class=\"meta\">Comanda: <strong>#$idv</strong> — Funcionário: <strong>$func</strong><br>Data: <strong>$vendaData</strong></div>
+    <table>
+      <thead>
+        <tr><th style=\"text-align:left\">Produto</th><th style=\"text-align:center\">Qtd</th><th style=\"text-align:right\">Valor</th></tr>
+      </thead>
+      <tbody>
+        $itemsHtml
+      </tbody>
+    </table>
+    <div class=\"total\">TOTAL: <span style=\"float:right\">$total</span></div>
+    <div style=\"clear:both;height:8px\"></div>
+    <div style=\"font-size:12px;color:#666;margin-top:12px\">Obrigado pela preferência!</div>
+    <div class=\"no-print\" style=\"margin-top:12px;\"><button onclick=\"window.print()\">📄 Imprimir</button></div>
+  </div>
+  </body></html>";
+  exit();
+}
+
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -284,325 +342,654 @@ $produtos = get_products($pdo);
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Comanda — Editar</title>
 
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
   <style>
-:root {
-    --bg: rgb(59, 75, 93);               /* fundo geral do sistema */
-    --card: #ffffff;                     /* cartão branco do sistema */
-    --card-contrast: #1b263b;            /* contraste azul escuro */
-    --text: #072433;                      /* texto escuro para cards */
-    --muted: #555;                        /* texto secundário */
-    --highlight: #0077b6;                 /* destaque azul */
-    --success: #16a34a;
-    --danger: #ef4444;
-    --input-bg: #f0f0f0;                  /* inputs claros como no sistema */
-    --shadow: 0 6px 16px rgba(0,0,0,0.25);
-}
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-collapsed-width: 60px;
+      --sidebar-bg: linear-gradient(180deg, #0d1b2a, #1b263b);
+      --primary-text: #f8f9fa;
+      --hover-bg: #1e3a5f;
+      --highlight: #0077b6;
+      --card-bg: #1c2a3a;
+      /* cartão acinzentado */
+      --card-contrast: #243447;
+      /* contraste mais acinzentado */
+      --green: #06a34a;
+      --blue: #00b4d8;
+      --text: #f8f9fa;
+      --muted: #94a3b8;
+      --accent: #0077b6;
+      --success: #16a34a;
+      --danger: #ef4444;
+      --glass-border: rgba(255, 255, 255, 0.04);
+    }
 
-/* reset + base */
-*{box-sizing:border-box;}
-html,body{height:100%;}
-body{
-  margin:0;
-  font-family:"Segoe UI",Tahoma,Arial,sans-serif;
-  background-color:var(--bg);
-  color:var(--text);
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  padding:28px;
-}
+    /* Reset + base */
+    * {
+      box-sizing: border-box
+    }
 
-/* container */
-.box{
-  width:100%;
-  max-width:980px;
-  background: var(--card);
-  border-radius:14px;
-  padding:20px;
-  box-shadow:var(--shadow);
-  border: 1px solid rgba(0,0,0,0.1);
-  overflow:hidden;
-}
+    html,
+    body {
+      height: 100%
+    }
 
-/* header */
-.comanda-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:18px;
-}
-.comanda-title{
-  display:flex;
-  gap:14px;
-  align-items:center;
-}
-.logo-chip{
-  width:64px;height:64px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,var(--highlight),var(--card-contrast));
-  box-shadow: var(--shadow);
-  font-weight:700;font-size:20px;color:#fff;
-}
-.meta{
-  display:flex;flex-direction:column;
-}
-.meta .title{font-size:20px;font-weight:700;color:var(--text)}
-.meta .subtitle{font-size:13px;color:var(--muted);margin-top:3px}
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, 'Helvetica Neue', Arial;
+      background: linear-gradient(180deg, rgb(59, 75, 93), #0b2e3f);
+      /* fundo acinzentado */
+      min-height: 100vh;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-.status-badge{
-  padding:8px 12px;border-radius:999px;
-  color:#fff;
-  font-weight:600;
-  display:inline-flex;align-items:center;gap:10px;
-  box-shadow:var(--shadow);
-}
-.status-open{ background: var(--highlight);}
-.status-closed{ background: var(--success);}
-.status-cancel{ background: var(--danger);}
+    /* Sidebar (mantida sem alterações) */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      height: 100vh;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      transition: width .3s;
+      box-shadow: 3px 0 10px rgba(0, 0, 0, .3);
+    }
 
-/* forms */
-form{margin:0}
-.controls{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  margin-bottom:14px;
-  flex-wrap:wrap;
-}
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
+    }
 
-select, input[type=number]{
-  background: var(--input-bg);
-  border:1px solid #ccc;
-  color:#000;
-  padding:10px 12px;
-  border-radius:10px;
-  font-size:15px;
-  outline: none;
-}
-select{appearance:none; -webkit-appearance:none; padding-right:40px;}
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      color: var(--primary-text);
+      text-decoration: none;
+      padding: 15px 20px;
+      white-space: nowrap;
+      transition: background .2s, padding .3s
+    }
 
-/* buttons */
-.btn{
-  display:inline-flex;align-items:center;gap:10px;justify-content:center;
-  padding:10px 16px;border-radius:12px;border:none;cursor:pointer;
-  font-weight:700;color:#fff;font-size:14px;
-  transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
-  box-shadow: var(--shadow);
-}
+    .sidebar a:hover {
+      background: var(--hover-bg);
+      border-left: 4px solid var(--highlight);
+      padding-left: 16px
+    }
 
-.btn:active{transform:translateY(1px);}
-.btn:disabled{opacity:.6;cursor:not-allowed;box-shadow:none;transform:none;}
+    .sidebar .icon {
+      margin-right: 8px
+    }
 
-.btn-primary{background: var(--highlight);}
-.btn-success{background: var(--success);}
-.btn-danger{background: var(--danger);}
-.btn-ghost{background:transparent;border:1px solid #ccc;color:#fff;padding:8px 12px;border-radius:10px;}
+    .sidebar.collapsed .text {
+      display: none
+    }
 
-/* tabela */
-.items-table{
-  width:100%;border-collapse:collapse;margin-top:8px;
-  border-radius:12px;overflow:hidden;background:transparent;
-}
-.items-table thead th{
-  background: var(--card-contrast);
-  color:#fff;
-  padding:12px 14px;font-weight:700;font-size:13px;text-align:left;
-}
-.items-table tbody td{
-  padding:14px;border-bottom:1px dashed rgba(0,0,0,0.05);
-  color:var(--text);font-size:14px;
-}
-.items-table tbody tr:hover td{ background: rgba(0,119,182,0.1); transform: translateY(-1px); }
-.total-row td{font-weight:800;font-size:15px;padding:12px 14px;background:transparent}
+    .sidebar.collapsed .icon {
+      margin-right: 0;
+      justify-content: center
+    }
 
-/* ações */
-.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+    .toggle-btn {
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: var(--primary-text)
+    }
 
-/* mensagens */
-.msg{padding:12px;border-radius:10px;margin-bottom:12px;font-weight:700;color:var(--text)}
-.msg.ok{background: rgba(22,163,74,0.12); color:var(--success)}
-.msg.err{background: rgba(239,68,68,0.12); color:var(--danger)}
+    /* page-wrap / container */
+    .page-wrap {
+      margin-left: var(--sidebar-width);
+      padding: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      transition: margin-left .28s ease
+    }
 
-/* responsivo */
-@media(max-width:820px){
-  .comanda-header{flex-direction:column;align-items:flex-start;gap:10px}
-  .controls{flex-direction:column;align-items:stretch}
-  .logo-chip{width:56px;height:56px}
-  .actions{justify-content:stretch}
-  .items-table thead th{font-size:12px}
-}
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      padding: 20px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(28, 42, 58, 0.85), rgba(23, 34, 49, 0.95));
+      /* acinzentado mais elegante */
+      box-shadow: 0 18px 50px rgba(2, 12, 24, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+    }
 
+    /* header / brand */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 14px;
+      flex-wrap: wrap
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 20px;
+      background: linear-gradient(135deg, #0e6190, #0093d0);
+      box-shadow: 0 8px 24px rgba(13, 73, 119, 0.12)
+    }
+
+    .meta {
+      display: flex;
+      flex-direction: column
+    }
+
+    .meta .title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text)
+    }
+
+    .meta .sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px
+    }
+
+    /* status */
+    .status-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px
+    }
+
+    .badge {
+      padding: 8px 12px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px
+    }
+
+    .badge.open {
+      background: linear-gradient(90deg, var(--success), #12b45a)
+    }
+
+    .badge.closed {
+      background: linear-gradient(90deg, var(--danger), #ff6b6b)
+    }
+
+    .badge.cancel {
+      background: linear-gradient(90deg, #6b7280, #334155)
+    }
+
+    .info-line {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    /* form inputs */
+    input[type=text],
+    select,
+    input[type=number],
+    input[type=search] {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      min-height: 44px;
+      transition: box-shadow .12s, border-color .12s;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder {
+      color: rgba(230, 244, 251, 0.45)
+    }
+
+    select {
+      min-width: 260px;
+      padding-right: 38px
+    }
+
+    /* formulário de adicionar item (alinhado e responsivo) */
+    #addItemForm {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      margin-bottom: 12px;
+    }
+
+    #addItemForm>* {
+      margin: 0
+    }
+
+    #produtoSearch {
+      min-width: 180px
+    }
+
+    #produtoSelect {
+      min-width: 280px
+    }
+
+    #quantidadeInput {
+      width: 110px;
+      min-height: 44px;
+      padding: 10px;
+      border-radius: 10px
+    }
+
+    /* buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+      transition: transform .08s, box-shadow .12s
+    }
+
+    .btn:active {
+      transform: translateY(1px)
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #1373b8, #0093d0);
+      box-shadow: 0 10px 30px rgba(4, 30, 60, 0.25)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 9px 12px
+    }
+
+    .btn-success {
+      background: linear-gradient(90deg, #14a352, #16ca6b)
+    }
+
+    .btn-danger {
+      background: linear-gradient(90deg, #ff5b5b, #ff7b7b)
+    }
+
+    /* table */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: transparent
+    }
+
+    .table thead th {
+      background: linear-gradient(90deg, #063a52, #0e6190);
+      color: #fff;
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .table tbody td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-size: 14px
+    }
+
+    .table tbody tr:hover td {
+      background: rgba(12, 45, 70, 0.04)
+    }
+
+    .table tfoot td {
+      font-weight: 800;
+      padding: 12px 14px;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px
+    }
+
+    /* empty / messages */
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted)
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-weight: 700
+    }
+
+    .message.ok {
+      background: rgba(18, 163, 74, 0.08);
+      color: var(--success)
+    }
+
+    .message.err {
+      background: rgba(239, 68, 68, 0.08);
+      color: var(--danger)
+    }
+
+    /* actions */
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 18px
+    }
+
+    .print-link {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      text-decoration: none
+    }
+
+    /* small screens */
+    @media(max-width:900px) {
+      .page-wrap {
+        margin-left: 0;
+        padding: 16px
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px
+      }
+
+      select {
+        min-width: 100%
+      }
+
+      #addItemForm {
+        justify-content: stretch
+      }
+
+      .actions {
+        justify-content: stretch
+      }
+    }
+
+    /* Inputs e selects mais claros */
+    input[type=text],
+    select,
+    input[type=number],
+    input[type=search] {
+      background: rgba(255, 255, 255, 0.12);
+      /* cinza claro translúcido */
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      /* texto branco */
+    }
+
+    select option {
+      background: #1c2a3a;
+      /* fundo escuro no dropdown */
+      color: #fff;
+    }
+
+
+    /* Botão fantasma (limpar) mais visível */
+    .btn-ghost {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #e6f4fb;
+    }
   </style>
 </head>
 
 <body>
-  <div class="box">
-    <div class="comanda-header">
-      <div class="comanda-title">
-        <div class="logo-chip">PD</div>
-        <div class="meta">
-          <div class="title">Comanda — Edição</div>
-          <div class="subtitle">Operação rápida — painel de vendas</div>
-        </div>
-      </div>
+  <!-- SIDEBAR: alinhada ao segundo arquivo -->
+  <nav class="sidebar" id="sidebar" aria-label="Menu lateral">
+    <div class="toggle-btn" onclick="toggleSidebar()" title="Abrir/Fechar menu">☰</div>
 
-      <?php if ($comanda): ?>
-        <?php
+    <a href="inicial1.php" title="Voltar">
+      <span class="icon"><span class="material-icons">arrow_back</span></span>
+      <span class="text">Voltar</span>
+    </a>
+
+    <a href="comanda.php" title="Criar/Ver comanda" class="active">
+      <span class="icon"><span class="material-icons">receipt</span></span>
+      <span class="text">Criar Comanda</span>
+    </a>
+
+    <a href="ver_comandas.php" title="Ver todas as comandas">
+      <span class="icon"><span class="material-icons">visibility</span></span>
+      <span class="text">Ver Comandas</span>
+    </a>
+  </nav>
+
+  <!-- page-wrap (reserva espaço para a sidebar) -->
+  <div class="page-wrap" id="pageWrap">
+    <div class="container" role="main" aria-live="polite">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">PD</div>
+          <div class="meta">
+            <div class="title">Comanda — Edição</div>
+            <div class="sub">Operação rápida — painel de vendas</div>
+          </div>
+        </div>
+
+        <?php if ($comanda): ?>
+          <?php
           $st = $comanda['status'] ?? 'ABERTA';
-          $cls = $st === 'ABERTA' ? 'status-open' : ($st === 'FECHADA' ? 'status-closed' : 'status-cancel');
-        ?>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div class="status-badge <?= $cls ?>"><?= htmlspecialchars($comanda['status']) ?></div>
-          <div style="font-size:12px;color:var(--muted)">ID <?= htmlspecialchars($comanda['ID_vendas']) ?> — <?= htmlspecialchars($comanda['Nome_func'] ?? '-') ?></div>
-        </div>
-      <?php else: ?>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div class="status-badge" style="background:transparent;color:var(--muted);border:1px dashed rgba(255,255,255,0.03)">Sem comanda</div>
-          <div style="font-size:12px;color:var(--muted)">Clique em criar para iniciar</div>
-        </div>
-      <?php endif; ?>
-    </div>
-
-    <?php if (!$comanda): ?>
-      <p style="color:var(--muted);margin-bottom:12px">Nenhuma comanda selecionada no momento.</p>
-      <form method="post" style="display:inline-block">
-        <input type="hidden" name="acao" value="nova">
-        <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-        <button class="btn btn-primary" type="submit" title="Criar nova comanda">➕ Criar nova comanda</button>
-      </form>
-      <?php if ($msg): ?>
-        <div class="msg <?= strpos($msg, 'Erro') === 0 ? 'err' : 'ok' ?>"><?= htmlspecialchars($msg) ?></div>
-      <?php endif; ?>
-
-    <?php else: ?>
-
-      <?php if ($msg): ?>
-        <div class="msg <?= strpos($msg, 'Erro') === 0 ? 'err' : 'ok' ?>"><?= htmlspecialchars($msg) ?></div>
-      <?php endif; ?>
-
-      <div style="color:var(--muted);margin-bottom:8px">
-        <strong>Comanda:</strong> <?= htmlspecialchars($comanda['ID_vendas']) ?> —
-        <strong>Status:</strong> <?= htmlspecialchars($comanda['status']) ?> —
-        <strong>Funcionário:</strong> <?= htmlspecialchars($comanda['Nome_func'] ?? '-') ?>
+          $cls = $st === 'ABERTA' ? 'open' : ($st === 'FECHADA' ? 'closed' : 'cancel');
+          ?>
+          <div class="status-block">
+            <div class="badge <?= $cls ?>"><?= htmlspecialchars($comanda['status']) ?></div>
+            <div class="info-line">ID <?= htmlspecialchars($comanda['ID_vendas']) ?> —
+              <?= htmlspecialchars($comanda['Nome_func'] ?? '-') ?></div>
+          </div>
+        <?php else: ?>
+          <div class="status-block">
+            <div class="badge" style="background:transparent;color:var(--muted);border:1px dashed rgba(12,45,70,0.06)">Sem
+              comanda</div>
+            <div class="info-line">Clique em criar para iniciar</div>
+          </div>
+        <?php endif; ?>
       </div>
 
-      <?php if ($comanda['status'] === 'ABERTA'): ?>
-        <form id="addItemForm" method="post" style="margin-bottom:8px">
-          <input type="hidden" name="acao" value="add_item">
-          <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+      <?php if (!$comanda): ?>
+        <p style="color:var(--muted);margin-bottom:12px">Nenhuma comanda selecionada no momento.</p>
+        <form method="post" style="display:inline-block">
+          <input type="hidden" name="acao" value="nova">
           <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-          <div class="controls">
-            <select name="id_produto" required style="min-width:260px">
+          <button class="btn btn-primary" type="submit" title="Criar nova comanda">➕ Criar nova comanda</button>
+        </form>
+        <?php if ($msg): ?>
+          <div class="message <?= strpos($msg, 'Erro') === 0 ? 'err' : 'ok' ?>"><?= htmlspecialchars($msg) ?></div>
+        <?php endif; ?>
+
+      <?php else: ?>
+
+        <?php if ($msg): ?>
+          <div class="message <?= strpos($msg, 'Erro') === 0 ? 'err' : 'ok' ?>"><?= htmlspecialchars($msg) ?></div>
+        <?php endif; ?>
+
+        <div style="color:var(--muted);margin-bottom:8px">
+          <strong>Comanda:</strong> <?= htmlspecialchars($comanda['ID_vendas']) ?> —
+          <strong>Status:</strong> <?= htmlspecialchars($comanda['status']) ?> —
+          <strong>Funcionário:</strong> <?= htmlspecialchars($comanda['Nome_func'] ?? '-') ?>
+        </div>
+
+        <?php if ($comanda['status'] === 'ABERTA'): ?>
+          <!-- FORM: corrigido, sem tags soltas -->
+          <form id="addItemForm" method="post" style="margin-bottom:8px">
+            <input type="hidden" name="acao" value="add_item">
+            <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+
+            <input type="text" id="produtoSearch" name="produtoSearch" placeholder="Pesquisar produto..."
+              aria-label="Pesquisar produto">
+            <select name="id_produto" required aria-label="Produto" id="produtoSelect">
               <option value="">-- Selecionar produto --</option>
               <?php foreach ($produtos as $p): ?>
-                <option value="<?= $p['ID_produto'] ?>"><?= htmlspecialchars($p['Nome_prod']) ?> — R$ <?= number_format($p['Preco_unitario'], 2, ',', '.') ?> (Est: <?= (int) $p['Qntd_produto'] ?>)</option>
+                <option value="<?= $p['ID_produto'] ?>"><?= htmlspecialchars($p['Nome_prod']) ?> — R$
+                  <?= number_format($p['Preco_unitario'], 2, ',', '.') ?> (Est: <?= (int) $p['Qntd_produto'] ?>)</option>
               <?php endforeach; ?>
             </select>
 
-            <input type="number" name="quantidade" value="1" min="1" style="width:110px">
-
-            <button class="btn btn-primary" type="submit" title="Adicionar item">
-              <!-- emoji + texto mantêm compatibilidade -->
-              ➕ Adicionar
-            </button>
-
-            <button type="button" class="btn btn-ghost" onclick="document.getElementById('addItemForm').reset();" title="Limpar campos">Limpar</button>
-          </div>
-        </form>
-      <?php endif; ?>
-
-      <table class="items-table" role="table">
-        <thead>
-          <tr>
-            <th>Produto</th>
-            <th style="width:90px;text-align:center">Qtd</th>
-            <th style="width:140px;text-align:right">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (!empty($comanda['itens'])):
-            foreach ($comanda['itens'] as $it): ?>
-              <tr>
-                <td><?= htmlspecialchars($it['Nome_prod'] ?? '-') ?></td>
-                <td style="text-align:center"><?= (int) $it['Quantidade'] ?></td>
-                <td style="text-align:right">R$ <?= number_format($it['valor_total'], 2, ',', '.') ?></td>
-              </tr>
-            <?php endforeach; else: ?>
-            <tr>
-              <td colspan="3" style="text-align:center;color:var(--muted);padding:22px">Nenhum item nesta comanda.</td>
-            </tr>
-          <?php endif; ?>
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td style="text-align:left">TOTAL</td>
-            <td></td>
-            <td style="text-align:right">R$ <?= number_format($comanda['total'], 2, ',', '.') ?></td>
-          </tr>
-        </tfoot>
-      </table>
-
-      <div class="actions">
-        <?php if ($comanda['status'] === 'ABERTA'): ?>
-          <form method="post" style="display:inline">
-            <input type="hidden" name="acao" value="fechar">
-            <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-            <button class="btn btn-success" type="submit" onclick="return confirm('Confirma fechar esta comanda?')">✔ Fechar</button>
-          </form>
-
-          <form method="post" style="display:inline">
-            <input type="hidden" name="acao" value="cancelar">
-            <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-            <button class="btn btn-danger" type="submit" onclick="return confirm('Confirma cancelar esta comanda?')">✖ Cancelar</button>
-          </form>
-
-          <form method="post" style="display:inline">
-            <input type="hidden" name="acao" value="salvar">
-            <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-            <button class="btn btn-ghost" type="submit">💾 Salvar</button>
-          </form>
-
-          <form method="post" style="display:inline" onsubmit="return confirm('Registrar pagamento?')">
-            <input type="hidden" name="acao" value="pagar">
-            <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-            <input type="hidden" name="metodo" value="DINHEIRO">
-            <input type="hidden" name="valor_pago" value="<?= number_format($comanda['total'], 2, '.', '') ?>">
-            <button class="btn btn-primary" type="submit">💵 Confirmar Pagamento</button>
-          </form>
-        <?php else: ?>
-          <form method="post" style="display:inline">
-            <input type="hidden" name="acao" value="reabrir">
-            <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-            <button class="btn btn-primary" type="submit">🔄 Reabrir</button>
+            <input type="number" name="quantidade" value="1" min="1" aria-label="Quantidade" id="quantidadeInput">
+            <button class="btn btn-primary" type="submit" title="Adicionar item">➕ Adicionar</button>
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('addItemForm').reset();"
+              title="Limpar campos">Limpar</button>
           </form>
         <?php endif; ?>
 
-        <a class="print-link" href="?id=<?= (int) $comanda['ID_vendas'] ?>&print=1" target="_blank">🖨 Abrir impressão</a>
-      </div>
+        <table class="table" role="table" aria-label="Itens da comanda" id="itensTable">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th style="width:90px;text-align:center">Qtd</th>
+              <th style="width:140px;text-align:right">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="itensBody">
+            <?php if (!empty($comanda['itens'])):
+              foreach ($comanda['itens'] as $it): ?>
+                <tr>
+                  <td><?= htmlspecialchars($it['Nome_prod'] ?? '-') ?></td>
+                  <td style="text-align:center"><?= (int) $it['Quantidade'] ?></td>
+                  <td style="text-align:right">R$ <?= number_format($it['valor_total'], 2, ',', '.') ?></td>
+                </tr>
+              <?php endforeach; else: ?>
+              <tr id="noItemsRow">
+                <td colspan="3" class="empty">Nenhum item nesta comanda.</td>
+              </tr>
+            <?php endif; ?>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td style="text-align:left">TOTAL</td>
+              <td></td>
+              <td style="text-align:right" id="totalCell">R$ <?= number_format($comanda['total'], 2, ',', '.') ?></td>
+            </tr>
+          </tfoot>
+        </table>
 
-    <?php endif; ?>
-  </div>
+        <div class="actions">
+          <?php if ($comanda['status'] === 'ABERTA'): ?>
+            <form method="post" style="display:inline">
+              <input type="hidden" name="acao" value="fechar">
+              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+              <button class="btn btn-success" type="submit" onclick="return confirm('Confirma fechar esta comanda?')">✔
+                Fechar</button>
+            </form>
+
+            <form method="post" style="display:inline">
+              <input type="hidden" name="acao" value="cancelar">
+              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+              <button class="btn btn-danger" type="submit" onclick="return confirm('Confirma cancelar esta comanda?')">✖
+                Cancelar</button>
+            </form>
+
+            <form method="post" style="display:inline">
+              <input type="hidden" name="acao" value="salvar">
+              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+              <button class="btn btn-ghost" type="submit">💾 Salvar</button>
+            </form>
+
+            <form method="post" style="display:inline" onsubmit="return confirm('Registrar pagamento?')">
+              <input type="hidden" name="acao" value="pagar">
+              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+              <input type="hidden" name="metodo" value="DINHEIRO">
+              <input type="hidden" name="valor_pago" value="<?= number_format($comanda['total'], 2, '.', '') ?>">
+              <button class="btn btn-primary" type="submit">💵 Confirmar Pagamento</button>
+            </form>
+          <?php else: ?>
+            <form method="post" style="display:inline">
+              <input type="hidden" name="acao" value="reabrir">
+              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
+              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+              <button class="btn btn-primary" type="submit">🔄 Reabrir</button>
+            </form>
+          <?php endif; ?>
+
+          <a class="print-link" href="?id=<?= (int) $comanda['ID_vendas'] ?>&print=1" target="_blank"
+            title="Abrir impressão">🖨 Abrir impressão</a>
+        </div>
+
+      <?php endif; ?>
+    </div>
+  </div> <!-- .page-wrap -->
 
   <script>
-    // JS minimal para captura AJAX do formulário de adicionar item
+    // toggle da sidebar (mantendo comportamento do segundo arquivo)
+    const sidebar = document.getElementById('sidebar');
+    function toggleSidebar() {
+      sidebar.classList.toggle('collapsed');
+      const pageWrap = document.getElementById('pageWrap');
+      const rootStyles = getComputedStyle(document.documentElement);
+      const collapsed = rootStyles.getPropertyValue('--sidebar-collapsed-width').trim() || '60px';
+      const normal = rootStyles.getPropertyValue('--sidebar-width').trim() || '240px';
+      pageWrap.style.marginLeft = sidebar.classList.contains('collapsed') ? collapsed : normal;
+    }
+
+    // margem inicial correta
+    (function initPageWrapMargin() {
+      const pw = document.getElementById('pageWrap');
+      pw.style.marginLeft = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
+    })();
+
+    // ---------- AJAX: adicionar item sem reload (atualiza DOM) ----------
     const addForm = document.getElementById('addItemForm');
     if (addForm) {
       addForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const data = new FormData(addForm);
+        const formData = new FormData(addForm);
         try {
           const res = await fetch(window.location.pathname + window.location.search, {
             method: 'POST',
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: data,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: formData,
             credentials: 'same-origin'
           });
+
           const ct = res.headers.get('content-type') || '';
           if (!res.ok) {
             if (ct.indexOf('application/json') !== -1) {
@@ -615,21 +1002,88 @@ select{appearance:none; -webkit-appearance:none; padding-right:40px;}
             }
             return;
           }
+
           if (ct.indexOf('application/json') !== -1) {
             const j = await res.json();
             if (j.success) {
+              // se o servidor mandar redirect, segue
               if (j.redirect) { window.location = j.redirect; return; }
-              location.reload();
-            } else alert(j.msg || 'Falha');
+
+              // se veio item + novo_total, atualiza tabela dinamicamente
+              if (j.item) {
+                // remover linha "nenhum item" se existir
+                const noRow = document.getElementById('noItemsRow');
+                if (noRow) noRow.remove();
+
+                const tbody = document.getElementById('itensBody');
+                const tr = document.createElement('tr');
+                const tdNome = document.createElement('td'); tdNome.textContent = j.item.Nome_prod || '-';
+                const tdQtd = document.createElement('td'); tdQtd.style.textAlign = 'center'; tdQtd.textContent = j.item.Quantidade || '1';
+                const tdVal = document.createElement('td'); tdVal.style.textAlign = 'right';
+                const valorFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(j.item.valor_total || 0));
+                tdVal.textContent = valorFormatado;
+                tr.appendChild(tdNome); tr.appendChild(tdQtd); tr.appendChild(tdVal);
+                tbody.appendChild(tr);
+
+                // atualizar total no rodapé
+                const totalCell = document.getElementById('totalCell');
+                if (totalCell && (typeof j.novo_total !== 'undefined')) {
+                  totalCell.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(j.novo_total || 0));
+                }
+
+                // limpar seleção e quantidade
+                const sel = document.getElementById('produtoSelect');
+                const qtdInp = document.getElementById('quantidadeInput');
+                if (sel) sel.value = '';
+                if (qtdInp) qtdInp.value = '1';
+
+              } else {
+                // fallback: recarrega
+                location.reload();
+              }
+
+            } else {
+              alert(j.msg || 'Falha');
+            }
           } else {
+            // resposta não-json -> recarrega
             location.reload();
           }
+
         } catch (err) {
           console.error(err);
           alert('Erro: ' + err.message);
         }
       });
     }
+    // filtro de produtos (pesquisar)
+    const produtoSearch = document.getElementById('produtoSearch');
+    const produtoSelect = document.getElementById('produtoSelect');
+    if (produtoSearch && produtoSelect) {
+      produtoSearch.addEventListener('input', function (e) {
+        const q = produtoSearch.value.trim().toLowerCase();
+        let any = false;
+        for (let i = 0; i < produtoSelect.options.length; i++) {
+          const opt = produtoSelect.options[i];
+          const text = (opt.textContent || opt.innerText || '').toLowerCase();
+          if (!q) {
+            opt.hidden = false; opt.style.display = '';
+            if (opt.value !== '') any = true;
+          } else {
+            const match = text.indexOf(q) !== -1;
+            opt.hidden = !match;
+            opt.style.display = match ? '' : 'none';
+            if (match && opt.value !== '') any = true;
+          }
+        }
+        // se não houver opções visíveis, limpa a seleção
+        if (!any && produtoSelect) produtoSelect.value = '';
+      });
+    }
+
+    // manter compatibilidade com outras ações do modal/print do segundo arquivo se necessário
+    const phpSelf = "<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>";
+
   </script>
 </body>
 
