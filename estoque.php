@@ -9,11 +9,50 @@ if (!isset($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
     echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
     exit;
 }
+
+/**
+ * Função utilitária para tentar criar um objeto DateTime a partir de várias
+ * formatações comuns (d/m/Y, Y-m-d, timestamp) e retornar null se inválido.
+ */
+function parseDateSafe(?string $val): ?DateTime {
+    $val = trim((string)$val);
+    if ($val === '' || $val === '0000-00-00' || $val === '0000-00-00 00:00:00') return null;
+
+    // Tenta d/m/Y (formato brasileiro)
+    $d = DateTime::createFromFormat('d/m/Y', $val);
+    $err = DateTime::getLastErrors();
+    if ($d && empty($err['warning_count']) && empty($err['error_count'])) return $d;
+
+    // Tenta d/m/Y H:i:s
+    $d = DateTime::createFromFormat('d/m/Y H:i:s', $val);
+    $err = DateTime::getLastErrors();
+    if ($d && empty($err['warning_count']) && empty($err['error_count'])) return $d;
+
+    // Tenta Y-m-d (ISO)
+    $d = DateTime::createFromFormat('Y-m-d', $val);
+    $err = DateTime::getLastErrors();
+    if ($d && empty($err['warning_count']) && empty($err['error_count'])) return $d;
+
+    // Tenta Y-m-d H:i:s
+    $d = DateTime::createFromFormat('Y-m-d H:i:s', $val);
+    $err = DateTime::getLastErrors();
+    if ($d && empty($err['warning_count']) && empty($err['error_count'])) return $d;
+
+    // Tenta parse geral (strtotime/new DateTime)
+    try {
+        $d = new DateTime($val);
+        return $d;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
+    // ---------- Consulta produtos (usando prepare/execute com verificação) ----------
     $sql = "
     SELECT 
         p.ID_produto,
@@ -31,8 +70,16 @@ try {
     LEFT JOIN categorias c ON p.id_categorias = c.id_categorias
     ORDER BY p.Nome_prod ASC
     ";
-    $stmt = $conn->query($sql);
-    $rows = $stmt->fetchAll();
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        $err = $conn->errorInfo();
+        throw new Exception('Erro preparando SQL produtos: ' . ($err[2] ?? 'sem mensagem'));
+    }
+    if (!$stmt->execute()) {
+        $err = $stmt->errorInfo();
+        throw new Exception('Erro executando SQL produtos: ' . ($err[2] ?? 'sem mensagem'));
+    }
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
     // Estatísticas básicas
     $totalProducts = count($rows);
@@ -47,7 +94,7 @@ try {
     $expiredItems = [];
     $lowStockThreshold = 5; // ajuste se quiser
 
-    $today = new DateTime();
+    $today = (new DateTime())->setTime(0,0,0);
     $in30 = (clone $today)->modify('+30 days');
 
     foreach ($rows as $r) {
@@ -56,33 +103,31 @@ try {
         $totalQuantity += $q;
         $totalValue += $v;
 
-        $val = trim($r['Validade']);
-        if ($val === '' || $val === null) {
+        $val = $r['Validade'] ?? '';
+        $d = parseDateSafe($val);
+        if ($d === null) {
             $noDateCount++;
         } else {
-            try {
-                $d = new DateTime($val);
-                if ($d < $today) {
-                    $expiredCount++;
-                    $expiredItems[] = [
-                        'id' => $r['ID_produto'],
-                        'nome' => $r['Nome_prod'],
-                        'q' => $q,
-                        'validade' => $d
-                    ];
-                } elseif ($d <= $in30) {
-                    $soonCount++;
-                    $soonItems[] = [
-                        'id' => $r['ID_produto'],
-                        'nome' => $r['Nome_prod'],
-                        'q' => $q,
-                        'validade' => $d
-                    ];
-                } else {
-                    $okCount++;
-                }
-            } catch (Exception $e) {
-                $noDateCount++;
+            // compara apenas a data (sem hora)
+            $dOnly = (clone $d)->setTime(0,0,0);
+            if ($dOnly < $today) {
+                $expiredCount++;
+                $expiredItems[] = [
+                    'id' => $r['ID_produto'],
+                    'nome' => $r['Nome_prod'],
+                    'q' => $q,
+                    'validade' => $dOnly
+                ];
+            } elseif ($dOnly <= $in30) {
+                $soonCount++;
+                $soonItems[] = [
+                    'id' => $r['ID_produto'],
+                    'nome' => $r['Nome_prod'],
+                    'q' => $q,
+                    'validade' => $dOnly
+                ];
+            } else {
+                $okCount++;
             }
         }
 
@@ -122,7 +167,7 @@ try {
         $productByQty[] = ['name'=>$name,'q'=>$q,'v'=>$v];
         $productByValue[] = ['name'=>$name,'v'=>$v,'q'=>$q];
 
-        if (isset($r['Preco_unitario'])) { $sumUnitPrice += floatval($r['Preco_unitario']); $unitCount++; }
+        if (isset($r['Preco_unitario']) && $r['Preco_unitario'] !== null && $r['Preco_unitario'] !== '') { $sumUnitPrice += floatval($r['Preco_unitario']); $unitCount++; }
         if ($q <= 0) $zeroStock[] = ['id'=>$r['ID_produto'],'nome'=>$name,'q'=>$q];
     }
 
@@ -171,7 +216,9 @@ try {
     // --- Export All Rows JSON (para export CSV do front) ---
     $exportRows = [];
     foreach ($rows as $r) {
-        $valBr = !empty($r['Validade']) ? date('d/m/Y', strtotime($r['Validade'])) : '';
+        $valBr = '';
+        $d = parseDateSafe($r['Validade'] ?? '');
+        if ($d) $valBr = $d->format('d/m/Y');
         $exportRows[] = [
             'id' => $r['ID_produto'],
             'nome' => $r['Nome_prod'],
@@ -186,10 +233,41 @@ try {
     }
     $exportRowsJSON = json_encode($exportRows);
 
+    // --- Saídas (vendas) — últimos períodos (7 e 30 dias)
+    // OBS: evito INTERVAL :days em placeholder — calculo a data em PHP.
+    $date7 = (new DateTime())->modify('-7 days')->format('Y-m-d H:i:s');
+    $date30 = (new DateTime())->modify('-30 days')->format('Y-m-d H:i:s');
+
+    $sqlSaida = "SELECT p.ID_produto, p.Nome_prod, SUM(iv.Quantidade) AS qty, SUM(iv.valor_total) AS total
+        FROM itens_vendas iv
+        JOIN vendas v ON iv.ID_vendas = v.ID_vendas
+        JOIN produtos p ON iv.ID_produto = p.ID_produto
+        WHERE v.venda_data >= :date AND v.status = 'FECHADA'
+        GROUP BY p.ID_produto
+        ORDER BY qty DESC
+        LIMIT 12";
+
+    $stmt7 = $conn->prepare($sqlSaida);
+    if ($stmt7 === false) throw new Exception('Erro preparando SQL saídas 7d');
+    $stmt7->execute([':date' => $date7]);
+    $saidas7 = $stmt7->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    $stmt30 = $conn->prepare($sqlSaida);
+    if ($stmt30 === false) throw new Exception('Erro preparando SQL saídas 30d');
+    $stmt30->execute([':date' => $date30]);
+    $saidas30 = $stmt30->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    // Formata arrays para JSON (garantindo tipos)
+    $saidas7JSON = json_encode(array_map(function($r){ return ['id'=>intval($r['ID_produto']),'name'=>$r['Nome_prod'],'qty'=>floatval($r['qty']),'total'=>floatval($r['total'])]; }, $saidas7));
+    $saidas30JSON = json_encode(array_map(function($r){ return ['id'=>intval($r['ID_produto']),'name'=>$r['Nome_prod'],'qty'=>floatval($r['qty']),'total'=>floatval($r['total'])]; }, $saidas30));
+
 } catch (PDOException $e) {
-    die("Erro na conexão: " . $e->getMessage());
+    // Em ambiente de desenvolvimento é útil ver a mensagem.
+    // Em produção, troque por um log e mensagem genérica.
+    die("Erro na conexão/consulta: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -211,26 +289,14 @@ try {
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif}
 body{background:var(--main-bg);display:flex}
 
-/* Sidebar (USADO: estilo igual ao script que você enviou) */
-.sidebar{
-    width:240px;
-    background:var(--sidebar-bg);
-    height:100vh;
-    position:fixed;
-    display:flex;
-    flex-direction:column;
-    padding-top:20px;
-    transition:width .3s;
-    box-shadow:3px 0 10px rgba(0,0,0,.3);
-}
+/* Sidebar */
+.sidebar{width:240px;background:var(--sidebar-bg);height:100vh;position:fixed;display:flex;flex-direction:column;padding-top:20px;transition:width .3s;box-shadow:3px 0 10px rgba(0,0,0,.3);} 
 .sidebar.collapsed{width:60px}
 .sidebar a{display:flex;align-items:center;color:var(--primary-text);text-decoration:none;padding:15px 20px;white-space:nowrap;transition:background .2s,padding .3s}
 .sidebar a:hover{background:#1e3a5f;border-left:4px solid var(--highlight);padding-left:16px}
 .sidebar .icon{margin-right:8px}
 .sidebar.collapsed .text{display:none}
 .sidebar.collapsed .icon{margin-right:0;justify-content:center}
-
-/* Toggle button (restaurado idêntico ao outro script) */
 .toggle-btn { cursor: pointer; text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--primary-text); }
 
 /* Main */
@@ -270,25 +336,19 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
 .row-soon td{background:rgba(245,158,11,0.06)}
 .row-lowstock td{box-shadow:inset 0 0 0 1px rgba(245,158,11,0.04)}
 
-/* info / charts panels */
-.info-panel,.charts-panel{position:fixed;top:0;right:0;height:100vh;width:420px;max-width:92%;background:linear-gradient(180deg,#021727,#063749);color:var(--primary-text);box-shadow:-20px 0 40px rgba(0,0,0,.6);transform:translateX(110%);transition:transform .25s ease;z-index:1200;display:flex;flex-direction:column;padding:16px}
-.info-panel.open,.charts-panel.open{transform:translateX(0)}
+/* panels */
+.info-panel,.charts-panel,.saidas-panel{position:fixed;top:0;right:0;height:100vh;width:420px;max-width:92%;background:linear-gradient(180deg,#021727,#063749);color:var(--primary-text);box-shadow:-20px 0 40px rgba(0,0,0,.6);transform:translateX(110%);transition:transform .25s ease;z-index:1200;display:flex;flex-direction:column;padding:16px}
+.info-panel.open,.charts-panel.open,.saidas-panel.open{transform:translateX(0)}
 .panel-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:10px;padding:10px;margin-bottom:10px}
 .panel-card .muted{color:rgba(159,179,200,1);font-size:13px}
 .panel-card .big{font-weight:800;font-size:18px;margin-top:6px;color:#fff}
 .compact-list{max-height:140px;overflow:auto;margin-top:8px}
 .compact-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
-
-/* charts */
 .chart-wrapper{position:relative;min-height:180px}
 .chart-canvas{width:100%;height:240px;display:block;margin-bottom:12px;background:rgba(255,255,255,0.02);border-radius:8px;padding:8px}
-
-/* small lists */
 .small-list{list-style:none;padding:0;margin:6px 0 0 0;max-height:220px;overflow:auto}
 .small-list li{padding:8px 6px;border-bottom:1px dashed rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center}
 .small-list .meta{font-size:12px;color:rgba(200,220,240,0.8)}
-
-/* expired badge in info */
 .expired-badge{background:#ff6b6b;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800;margin-left:8px}
 .expired-text{color:#ffb4a6;font-weight:700}
 
@@ -306,12 +366,12 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
 <body>
 
 <nav class="sidebar" id="sidebar">
-    <!-- Restaurado: mesmo ícone/padding do seu outro script -->
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
 
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
     <a href="#" onclick="openInfoPanel();return false;"><span class="material-icons icon">insights</span><span class="text">Informações</span></a>
     <a href="#" onclick="openChartsPanel();return false;"><span class="material-icons icon">bar_chart</span><span class="text">Gráficos</span></a>
+    <a href="#" onclick="openSaidasPanel();return false;"><span class="material-icons icon">exit_to_app</span><span class="text">Saídas</span></a>
 </nav>
 
 <!-- painel de informações -->
@@ -511,6 +571,36 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
     </div>
 </aside>
 
+<!-- painel de SAÍDAS (novo) -->
+<aside id="saidasPanel" class="saidas-panel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Saídas — Itens Mais Vendidos</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+            <button id="exportSaidas7" class="btn btn-ghost" title="Exportar (7 dias)">Exportar 7d</button>
+            <button id="exportSaidas30" class="btn btn-ghost" title="Exportar (30 dias)">Exportar 30d</button>
+            <button class="close-btn" onclick="closeSaidasPanel()" aria-label="Fechar" style="background:transparent;border:none;color:var(--primary-text);font-size:20px;cursor:pointer">✕</button>
+        </div>
+    </div>
+
+    <div style="margin-top:12px;overflow:auto;padding-right:6px;flex:1">
+        <div class="panel-card">
+            <div class="muted">Top vendidos — últimos 7 dias</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartSaidas7" class="chart-canvas"></canvas></div>
+            <ul id="listSaidas7" class="small-list"></ul>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Top vendidos — últimos 30 dias</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartSaidas30" class="chart-canvas"></canvas></div>
+            <ul id="listSaidas30" class="small-list"></ul>
+        </div>
+    </div>
+
+    <div style="padding-top:8px;display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-ghost" onclick="closeSaidasPanel()" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--primary-text)">Fechar</button>
+    </div>
+</aside>
+
 <main class="main-content" id="mainContent">
     <h1>RELATÓRIO DE ESTOQUE</h1>
 
@@ -547,34 +637,29 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
             </thead>
             <tbody>
                 <?php
-                // Reusar $today e $in30 do PHP acima para calcular status por linha
                 foreach ($rows as $row):
                     $statusClass = 'status-ok';
                     $statusText = 'OK';
                     $rowClass = '';
-                    $valStr = trim($row['Validade'] ?? '');
-                    if ($valStr === '' ) {
+                    $valStr = $row['Validade'] ?? '';
+                    $d = parseDateSafe($valStr);
+                    if ($d === null) {
                         $statusClass = 'status-nodate';
                         $statusText = 'Sem data';
                         $rowClass = 'row-nodate';
                     } else {
-                        try {
-                            $d = new DateTime($row['Validade']);
-                            if ($d < $today) {
-                                $statusClass = 'status-expired';
-                                $statusText = 'Expirado';
-                                $rowClass = 'row-expired';
-                            } elseif ($d <= $in30) {
-                                $statusClass = 'status-soon';
-                                $statusText = 'Próx. 30d';
-                                $rowClass = 'row-soon';
-                            } else {
-                                $statusClass = 'status-ok';
-                                $statusText = 'OK';
-                            }
-                        } catch (Exception $e) {
-                            $statusClass = 'status-nodate';
-                            $statusText = 'Sem data';
+                        $dOnly = (clone $d)->setTime(0,0,0);
+                        if ($dOnly < $today) {
+                            $statusClass = 'status-expired';
+                            $statusText = 'Expirado';
+                            $rowClass = 'row-expired';
+                        } elseif ($dOnly <= $in30) {
+                            $statusClass = 'status-soon';
+                            $statusText = 'Próx. 30d';
+                            $rowClass = 'row-soon';
+                        } else {
+                            $statusClass = 'status-ok';
+                            $statusText = 'OK';
                         }
                     }
                     $q = floatval($row['Qntd_produto'] ?? 0);
@@ -589,7 +674,7 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
                     <td data-label="Quantidade"><?= number_format($row['Qntd_produto'],2,',','.') ?></td>
                     <td data-label="Preço Unit.">R$ <?= number_format($row['Preco_unitario'],2,',','.') ?></td>
                     <td data-label="Valor Total">R$ <?= number_format($row['valor_total'],2,',','.') ?></td>
-                    <td data-label="Validade"><?= !empty($row['Validade']) ? date('d/m/Y', strtotime($row['Validade'])) : '---' ?></td>
+                    <td data-label="Validade"><?= ($d) ? $d->format('d/m/Y') : '---' ?></td>
                     <td data-label="Status"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
                 </tr>
                 <?php endforeach; ?>
@@ -600,34 +685,19 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
 
 <script>
 // abrir/fechar painel
-function openInfoPanel(){
-    const p = document.getElementById('infoPanel');
-    p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow = 'hidden';
-}
-function closeInfoPanel(){
-    const p = document.getElementById('infoPanel');
-    p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow = '';
-}
-function openChartsPanel(){
-    const p = document.getElementById('chartsPanel');
-    p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow = 'hidden';
-    renderCharts(true);
-}
-function closeChartsPanel(){
-    const p = document.getElementById('chartsPanel');
-    p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow = '';
-    if (chartInstances.length) { chartInstances.forEach(c=>{ try{ c.destroy() }catch(e){} }); chartInstances = []; chartsInitialized=false; }
-}
+function openInfoPanel(){ const p=document.getElementById('infoPanel'); p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+function closeInfoPanel(){ const p=document.getElementById('infoPanel'); p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+function openChartsPanel(){ const p=document.getElementById('chartsPanel'); p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; renderCharts(true); }
+function closeChartsPanel(){ const p=document.getElementById('chartsPanel'); p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow=''; if (chartInstances.length){ chartInstances.forEach(c=>{ try{ c.destroy() }catch(e){} }); chartInstances=[]; chartsInitialized=false; } }
+function openSaidasPanel(){ const p=document.getElementById('saidasPanel'); p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; renderSaidas(); }
+function closeSaidasPanel(){ const p=document.getElementById('saidasPanel'); p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow=''; if (saidasChartInstances.length){ saidasChartInstances.forEach(c=>{ try{ c.destroy() }catch(e){} }); saidasChartInstances=[]; saidasChartsInitialized=false; } }
 
-// sidebar toggle (mesma função usada no outro script)
+// sidebar toggle
 const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
 function toggleSidebar(){ sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('collapsed'); }
 
-// ensure toggle works if using keyboard / other events
-document.querySelectorAll('.toggle-btn').forEach(btn=>{
-    btn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebar(); } });
-});
+document.querySelectorAll('.toggle-btn').forEach(btn=>{ btn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebar(); } }); });
 
 /* filtros */
 const estoqueTbody = document.querySelector('#estoqueTable tbody');
@@ -670,11 +740,7 @@ function applyFilters(){
 if (startDateEl) startDateEl.addEventListener('input', applyFilters);
 if (endDateEl) endDateEl.addEventListener('input', applyFilters);
 if (searchEl) searchEl.addEventListener('input', applyFilters);
-if (clearBtn) clearBtn.addEventListener('click', () => {
-    if (startDateEl) startDateEl.value=''; if (endDateEl) endDateEl.value=''; if (searchEl) searchEl.value='';
-    if (pdfStart) pdfStart.value=''; if (pdfEnd) pdfEnd.value=''; if (pdfSearch) pdfSearch.value='';
-    applyFilters();
-});
+if (clearBtn) clearBtn.addEventListener('click', () => { if (startDateEl) startDateEl.value=''; if (endDateEl) endDateEl.value=''; if (searchEl) searchEl.value=''; if (pdfStart) pdfStart.value=''; if (pdfEnd) pdfEnd.value=''; if (pdfSearch) pdfSearch.value=''; applyFilters(); });
 const pdfForm = document.querySelector('form[action="relatorio_estoque_pdf.php"]');
 if (pdfForm) pdfForm.addEventListener('submit', function(){ if (pdfStart) pdfStart.value = startDateEl ? startDateEl.value : ''; if (pdfEnd) pdfEnd.value = endDateEl ? endDateEl.value : ''; if (pdfSearch) pdfSearch.value = searchEl ? searchEl.value : ''; });
 
@@ -689,16 +755,14 @@ const prodByVal = <?php echo $prodByValJSON ?? '[]'; ?>;
 const suppliersData = <?php echo $suppliersJSON ?? '[]'; ?>;
 const lowStockData = <?php echo $lowStockJSON ?? '[]'; ?>;
 const stockStatus = <?php echo $stockStatusJSON ?? '{}'; ?>;
+const saidas7 = <?php echo $saidas7JSON ?? '[]'; ?>;
+const saidas30 = <?php echo $saidas30JSON ?? '[]'; ?>;
 
 /* CSV export util */
 function downloadCSV(filename, rows) {
     if (!rows || !rows.length) { alert('Nenhum dado para exportar'); return; }
     const headers = Object.keys(rows[0]);
-    const escape = (v) => {
-        if (v === null || v === undefined) return '';
-        const s = String(v).replace(/"/g,'""');
-        return `"${s}"`;
-    };
+    const escape = (v) => { if (v === null || v === undefined) return ''; const s = String(v).replace(/"/g,'""'); return `"${s}"`; };
     const csv = [headers.map(h=>escape(h)).join(',')].concat(
         rows.map(r => headers.map(h => escape(r[h])).join(','))
     ).join('\n');
@@ -716,6 +780,10 @@ document.getElementById('exportAllBtn')?.addEventListener('click', ()=> download
 document.getElementById('exportExpiredBtn')?.addEventListener('click', ()=> downloadCSV('expirados.csv', expiredItemsData));
 document.getElementById('exportSoonBtn')?.addEventListener('click', ()=> downloadCSV('proximos_validade.csv', soonItemsData));
 document.getElementById('exportZeroBtn')?.addEventListener('click', ()=> downloadCSV('sem_estoque.csv', zeroStockData));
+
+// export das saídas
+document.getElementById('exportSaidas7')?.addEventListener('click', ()=> downloadCSV('saidas_7dias.csv', saidas7.map(s=>({id:s.id,name:s.name,quantidade:s.qty,valor_total:s.total}))));
+document.getElementById('exportSaidas30')?.addEventListener('click', ()=> downloadCSV('saidas_30dias.csv', saidas30.map(s=>({id:s.id,name:s.name,quantidade:s.qty,valor_total:s.total}))));
 
 /* --- Charts (Chart.js) --- */
 let chartsInitialized = false;
@@ -735,6 +803,13 @@ function drawNoDataMessage(canvas, msg) {
     } catch (e) { console.warn(e); }
 }
 
+/* ... restante do JS para renderCharts/renderSaidas (mantido sem alterações além das já aplicadas) ... */
+
+/* Para economizar espaço no arquivo aqui, o restante do JS (renderCharts, renderSaidas) já está incluído acima no código PHP/HTML enviado.
+   Se preferir, posso enviar uma versão com todo o JS minificado ou separado em arquivo .js.
+*/
+
+let saidasChartsInitialized=false; let saidasChartInstances=[];
 function renderCharts(force=false){
     if (chartsInitialized && !force) return;
     if (typeof Chart === 'undefined') {
@@ -817,7 +892,56 @@ function renderCharts(force=false){
     });
 }
 
-// não inicializa os gráficos automaticamente — só quando o painel abrir
+// --- SAÍDAS: gráfico e lista ---
+function renderSaidas(force=false){
+    if (saidasChartsInitialized && !force) return;
+    if (typeof Chart === 'undefined') {
+        ['chartSaidas7','chartSaidas30'].forEach(id=>{ const c=document.getElementById(id); if(c) drawNoDataMessage(c,'Chart.js ausente');}); saidasChartsInitialized=true; return;
+    }
+    requestAnimationFrame(()=>{
+        setTimeout(()=>{
+            if (saidasChartInstances.length) { saidasChartInstances.forEach(c=>{ try{ c.destroy() }catch(e){} }); saidasChartInstances = []; }
+            function fit(id){ const el=document.getElementById(id); if(!el) return; const w=Math.max(300, Math.round(el.clientWidth)); const h=(el.clientHeight && el.clientHeight>20)?Math.round(el.clientHeight):240; if(el.width!==w||el.height!==h){el.width=w;el.height=h;} }
+            ['chartSaidas7','chartSaidas30'].forEach(fit);
+            const palette = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'];
+
+            // 7 dias
+            try{
+                const el=document.getElementById('chartSaidas7');
+                if (el && Array.isArray(saidas7) && saidas7.length){
+                    const labels=saidas7.map(s=>s.name);
+                    const values=saidas7.map(s=>Number(s.qty));
+                    const bg=labels.map((_,i)=>palette[i%palette.length]);
+                    const ctx=el.getContext('2d');
+                    const chart=new Chart(ctx,{ type:'bar', data:{ labels, datasets:[{ label:'Qtd vendida', data:values, backgroundColor:bg, borderWidth:1 }] }, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }});
+                    saidasChartInstances.push(chart);
+
+                    // preencher lista
+                    const ul=document.getElementById('listSaidas7'); ul.innerHTML='';
+                    saidas7.forEach(s=>{ const li=document.createElement('li'); li.innerHTML = `<div style="font-weight:700">${s.name}</div><div class="meta">${Number(s.qty)} • R$ ${Number(s.total).toFixed(2)}</div>`; ul.appendChild(li); });
+                } else drawNoDataMessage(el,'Sem dados (7 dias)');
+            }catch(e){console.error(e);} 
+
+            // 30 dias
+            try{
+                const el=document.getElementById('chartSaidas30');
+                if (el && Array.isArray(saidas30) && saidas30.length){
+                    const labels=saidas30.map(s=>s.name);
+                    const values=saidas30.map(s=>Number(s.qty));
+                    const bg=labels.map((_,i)=>palette[i%palette.length]);
+                    const ctx=el.getContext('2d');
+                    const chart=new Chart(ctx,{ type:'bar', data:{ labels, datasets:[{ label:'Qtd vendida', data:values, backgroundColor:bg, borderWidth:1 }] }, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }});
+                    saidasChartInstances.push(chart);
+
+                    const ul=document.getElementById('listSaidas30'); ul.innerHTML='';
+                    saidas30.forEach(s=>{ const li=document.createElement('li'); li.innerHTML = `<div style="font-weight:700">${s.name}</div><div class="meta">${Number(s.qty)} • R$ ${Number(s.total).toFixed(2)}</div>`; ul.appendChild(li); });
+                } else drawNoDataMessage(el,'Sem dados (30 dias)');
+            }catch(e){console.error(e);} 
+
+            saidasChartsInitialized = true;
+        },80);
+    });
+}
 
 </script>
 </body>

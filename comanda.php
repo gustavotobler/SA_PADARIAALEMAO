@@ -166,8 +166,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         throw new Exception('ID inválido');
       }
 
+      // Verifica se existe pagamento registrado para esta comanda
+      $payStmt = $pdo->prepare("SELECT SUM(valor_pago) as total_pago FROM pagamentos WHERE ID_vendas = ?");
+      $payStmt->execute([$id_venda]);
+      $payRow = $payStmt->fetch();
+      $total_pago = (float) ($payRow['total_pago'] ?? 0);
+
+      if ($total_pago <= 0.0) {
+        if (is_ajax())
+          send_json(['success' => false, 'msg' => 'Pagamento não registrado. Confirme o pagamento antes de fechar a comanda.'], 400);
+        throw new Exception('Pagamento não registrado. Confirme o pagamento antes de fechar a comanda.');
+      }
+
       try {
         $pdo->beginTransaction();
+        // bloqueia itens para checar estoque
         $itens = $pdo->prepare("SELECT iv.ID_produto, iv.Quantidade, p.Qntd_produto FROM itens_vendas iv JOIN produtos p ON p.ID_produto = iv.ID_produto WHERE iv.ID_vendas = ? FOR UPDATE");
         $itens->execute([$id_venda]);
         $itensList = $itens->fetchAll();
@@ -221,19 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         send_json(['success' => true, 'redirect' => '?id=' . $id_venda]);
       header('Location:?id=' . $id_venda);
       exit();
-    }
-
-    if ($acao === 'salvar') {
-      $id_venda = isset($_POST['id_venda']) ? (int) $_POST['id_venda'] : 0;
-      if ($id_venda <= 0) {
-        if (is_ajax())
-          send_json(['success' => false, 'msg' => 'ID inválido'], 400);
-        throw new Exception('ID inválido');
-      }
-      $pdo->prepare("UPDATE vendas SET venda_data=NOW() WHERE ID_vendas=?")->execute([$id_venda]);
-      if (is_ajax())
-        send_json(['success' => true, 'msg' => 'Comanda salva com sucesso!']);
-      $msg = 'Comanda salva com sucesso!';
     }
 
     if ($acao === 'pagar') {
@@ -797,11 +797,10 @@ if (isset($_GET['print']) && $comanda) {
       min-height: 44px;
       padding: 8px 10px;
       border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
       color: #fff;
     }
-
   </style>
 </head>
 
@@ -846,7 +845,8 @@ if (isset($_GET['print']) && $comanda) {
           <div class="status-block">
             <div class="badge <?= $cls ?>"><?= htmlspecialchars($comanda['status']) ?></div>
             <div class="info-line">ID <?= htmlspecialchars($comanda['ID_vendas']) ?> —
-              <?= htmlspecialchars($comanda['Nome_func'] ?? '-') ?></div>
+              <?= htmlspecialchars($comanda['Nome_func'] ?? '-') ?>
+            </div>
           </div>
         <?php else: ?>
           <div class="status-block">
@@ -906,7 +906,8 @@ if (isset($_GET['print']) && $comanda) {
               <option value="">-- Selecionar produto --</option>
               <?php foreach ($produtos as $p): ?>
                 <option value="<?= $p['ID_produto'] ?>"><?= htmlspecialchars($p['Nome_prod']) ?> — R$
-                  <?= number_format($p['Preco_unitario'], 2, ',', '.') ?> (Est: <?= (int) $p['Qntd_produto'] ?>)</option>
+                  <?= number_format($p['Preco_unitario'], 2, ',', '.') ?> (Est: <?= (int) $p['Qntd_produto'] ?>)
+                </option>
               <?php endforeach; ?>
             </select>
 
@@ -964,13 +965,6 @@ if (isset($_GET['print']) && $comanda) {
               <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
               <button class="btn btn-danger" type="submit" onclick="return confirm('Confirma cancelar esta comanda?')">✖
                 Cancelar</button>
-            </form>
-
-            <form method="post" style="display:inline">
-              <input type="hidden" name="acao" value="salvar">
-              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-              <button class="btn btn-ghost" type="submit">💾 Salvar</button>
             </form>
 
             <form method="post" style="display:inline" onsubmit="return confirm('Registrar pagamento?')">
