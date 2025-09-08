@@ -160,13 +160,6 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
 <nav class="sidebar" id="sidebar">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
-    <a href="produtos.php"><span class="material-icons icon">bakery_dining</span><span class="text">Produtos</span></a>
-    <a href="funcionarios.php"><span class="material-icons icon">person</span><span class="text">Funcionários</span></a>
-    <a href="fornecedores.php"><span class="material-icons icon">work</span><span class="text">Fornecedores</span></a>
-    <a href="estoque.php"><span class="material-icons icon">analytics</span><span class="text">Estoque</span></a>
-    <a href="relatorio_vendas_padaria_alemao1.php"><span class="material-icons icon">analytics</span><span class="text">Vendas</span></a>
-     <a href="comanda.php"><span class="material-icons">receipt_long</span> Comanda</a>
-
 </nav>
 
 <main class="main-content" id="mainContent">

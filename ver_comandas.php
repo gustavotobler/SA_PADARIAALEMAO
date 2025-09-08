@@ -480,7 +480,7 @@ body{
 
 /* Filter panel — mais estilizado */
 .filter-panel{
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  background:linear-gradient(180deg, rgba(28, 42, 58, 0.85), rgba(28, 42, 58, 0.85));
   border-radius:12px;
   padding:14px 18px;
   display:flex;

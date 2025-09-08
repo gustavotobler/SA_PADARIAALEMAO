@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 07/09/2025 às 20:21
+-- Tempo de geração: 08/09/2025 às 05:28
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -154,7 +154,32 @@ INSERT INTO `itens_vendas` (`ID_itensvendas`, `ID_vendas`, `ID_produto`, `Quanti
 (20, 20, 4, 1, 8.00, 8.00),
 (21, 20, 7, 1, 2.00, 2.00),
 (22, 30, 7, 1, 2.00, 2.00),
-(23, 31, 12, 1, 4.44, 4.44);
+(23, 31, 12, 1, 4.44, 4.44),
+(24, 35, 11, 1, 31.23, 31.23),
+(25, 46, 4, 1, 8.00, 8.00),
+(26, 52, 7, 1, 2.00, 2.00),
+(27, 56, 11, 1, 31.23, 31.23),
+(28, 56, 8, 1, 5.50, 5.50),
+(29, 59, 4, 1, 8.00, 8.00),
+(30, 59, 12, 1, 4.44, 4.44),
+(31, 64, 11, 1, 31.23, 31.23),
+(32, 65, 7, 1, 2.00, 2.00),
+(33, 66, 7, 1, 2.00, 2.00),
+(34, 67, 7, 1, 2.00, 2.00),
+(35, 67, 7, 1, 2.00, 2.00),
+(36, 67, 7, 1, 2.00, 2.00),
+(37, 68, 7, 1, 2.00, 2.00),
+(38, 69, 7, 1, 2.00, 2.00),
+(39, 70, 7, 1, 2.00, 2.00),
+(40, 71, 7, 1, 2.00, 2.00),
+(41, 72, 7, 1, 2.00, 2.00),
+(42, 73, 11, 1, 31.23, 31.23),
+(43, 74, 11, 1, 31.23, 31.23),
+(44, 75, 11, 1, 31.23, 31.23),
+(45, 76, 8, 1, 5.50, 5.50),
+(46, 83, 4, 2, 8.00, 16.00),
+(47, 85, 11, 1, 31.23, 31.23),
+(48, 85, 8, 1, 5.50, 5.50);
 
 -- --------------------------------------------------------
 
@@ -197,7 +222,15 @@ CREATE TABLE `pagamentos` (
 
 INSERT INTO `pagamentos` (`ID_pagamento`, `ID_vendas`, `metodo`, `valor_pago`, `troco`, `data`, `ID_func_registro`) VALUES
 (1, 30, 'DINHEIRO', 2.00, 0.00, '2025-09-07 15:17:13', 1),
-(2, 31, 'DINHEIRO', 4.44, 0.00, '2025-09-07 15:18:17', 1);
+(2, 31, 'DINHEIRO', 4.44, 0.00, '2025-09-07 15:18:17', 1),
+(3, 35, 'DINHEIRO', 31.23, 0.00, '2025-09-07 16:02:30', 1),
+(4, 46, 'DINHEIRO', 8.00, 0.00, '2025-09-07 16:58:12', 1),
+(5, 46, 'DINHEIRO', 8.00, 0.00, '2025-09-07 16:58:15', 1),
+(6, 56, 'DINHEIRO', 36.73, 0.00, '2025-09-07 20:32:13', 1),
+(7, 59, 'DINHEIRO', 12.44, 0.00, '2025-09-07 20:36:44', 1),
+(8, 59, 'DINHEIRO', 12.44, 0.00, '2025-09-07 20:36:47', 1),
+(9, 59, 'DINHEIRO', 12.44, 0.00, '2025-09-07 20:36:57', 1),
+(10, 83, 'DINHEIRO', 0.00, 0.00, '2025-09-07 22:55:56', 1);
 
 -- --------------------------------------------------------
 
@@ -219,7 +252,19 @@ CREATE TABLE `pagamentos_itens` (
 
 INSERT INTO `pagamentos_itens` (`ID_pagamento_item`, `ID_vendas`, `ID_produto`, `Quantidade`, `valor_total`) VALUES
 (1, 30, 7, 1, 2.00),
-(2, 31, 12, 1, 4.44);
+(2, 31, 12, 1, 4.44),
+(3, 35, 11, 1, 31.23),
+(4, 46, 4, 1, 8.00),
+(5, 46, 4, 1, 8.00),
+(6, 56, 8, 1, 5.50),
+(7, 56, 11, 1, 31.23),
+(8, 59, 4, 1, 8.00),
+(9, 59, 12, 1, 4.44),
+(10, 59, 4, 1, 8.00),
+(11, 59, 12, 1, 4.44),
+(12, 59, 4, 1, 8.00),
+(13, 59, 12, 1, 4.44),
+(14, 83, 4, 2, 16.00);
 
 -- --------------------------------------------------------
 
@@ -243,12 +288,12 @@ CREATE TABLE `produtos` (
 --
 
 INSERT INTO `produtos` (`ID_produto`, `ID_forn`, `id_categorias`, `Nome_prod`, `Preco_unitario`, `Unid_medida`, `Validade`, `Qntd_produto`) VALUES
-(4, 2, 3, 'bolo de leite', 8.00, 'un', '07/10/2025', 5),
+(4, 2, 3, 'bolo de leite', 8.00, 'un', '07/10/2025', 0),
 (6, 3, 2, 'Pão Frânces', 21.00, 'kg', '07/10/2025', 198),
 (7, 1, 3, 'Bolo de arroz', 2.00, 'kg', '2026-03-10', 77),
-(8, 1, 6, 'iogurte', 5.50, 'un', '2025-09-15', 99),
-(11, 1, 3, 'bolo de arrox', 31.23, 'g', '2000-32-32', 232331),
-(12, 1, 3, 'skibidi suco', 4.44, 'mL', '2026-05-07', 9);
+(8, 1, 6, 'iogurte', 5.50, 'un', '2025-09-15', 98),
+(11, 1, 3, 'bolo de arrox', 31.23, 'g', '2000-32-32', 232330),
+(12, 1, 3, 'skibidi suco', 4.44, 'mL', '2026-05-07', 7);
 
 -- --------------------------------------------------------
 
@@ -280,7 +325,65 @@ INSERT INTO `vendas` (`ID_vendas`, `ID_func`, `venda_data`, `forma_pagamento`, `
 (28, 1, '2025-09-07 15:11:39', NULL, 'ABERTA'),
 (29, 1, '2025-09-07 15:16:22', NULL, 'CANCELADA'),
 (30, 1, '2025-09-07 15:17:06', NULL, 'FECHADA'),
-(31, 1, '2025-09-07 15:18:11', NULL, 'FECHADA');
+(31, 1, '2025-09-07 15:18:11', NULL, 'FECHADA'),
+(32, 1, '2025-09-07 15:47:03', NULL, 'ABERTA'),
+(33, 1, '2025-09-07 15:47:13', NULL, 'ABERTA'),
+(34, 1, '2025-09-07 15:59:43', NULL, 'ABERTA'),
+(35, 1, '2025-09-07 16:02:25', NULL, 'ABERTA'),
+(36, 1, '2025-09-07 16:05:30', 'PIX', 'ABERTA'),
+(37, 1, '2025-09-07 16:05:32', 'FIADO', 'ABERTA'),
+(38, 1, '2025-09-07 16:10:43', NULL, 'ABERTA'),
+(39, 1, '2025-09-07 16:10:44', NULL, 'ABERTA'),
+(40, 1, '2025-09-07 16:11:22', NULL, 'ABERTA'),
+(41, 1, '2025-09-07 16:12:44', NULL, 'ABERTA'),
+(42, 1, '2025-09-07 16:22:14', NULL, 'ABERTA'),
+(43, 1, '2025-09-07 16:30:01', NULL, 'ABERTA'),
+(44, 1, '2025-09-07 16:35:57', NULL, 'ABERTA'),
+(45, 1, '2025-09-07 16:55:48', NULL, 'ABERTA'),
+(46, 1, '2025-09-07 16:58:17', NULL, 'FECHADA'),
+(47, 1, '2025-09-07 17:07:32', NULL, 'ABERTA'),
+(48, 1, '2025-09-07 17:07:34', NULL, 'ABERTA'),
+(49, 1, '2025-09-07 17:09:52', NULL, 'ABERTA'),
+(50, 1, '2025-09-07 17:12:17', NULL, 'ABERTA'),
+(51, 1, '2025-09-07 17:12:27', NULL, 'ABERTA'),
+(52, 1, '2025-09-07 17:14:10', NULL, 'ABERTA'),
+(53, 1, '2025-09-07 17:17:56', NULL, 'ABERTA'),
+(54, 1, '2025-09-07 17:17:57', NULL, 'ABERTA'),
+(55, 1, '2025-09-07 17:17:59', NULL, 'ABERTA'),
+(56, 1, '2025-09-07 20:32:11', NULL, 'FECHADA'),
+(57, 1, '2025-09-07 20:33:16', NULL, 'ABERTA'),
+(58, 1, '2025-09-07 20:33:21', NULL, 'ABERTA'),
+(59, 1, '2025-09-07 20:36:40', NULL, 'FECHADA'),
+(60, 1, '2025-09-07 21:42:02', NULL, 'ABERTA'),
+(61, 1, '2025-09-07 22:04:10', NULL, 'ABERTA'),
+(62, 1, '2025-09-07 22:25:18', NULL, 'ABERTA'),
+(63, 1, '2025-09-07 22:28:10', NULL, 'ABERTA'),
+(64, 1, '2025-09-08 03:33:57', NULL, 'ABERTA'),
+(65, 1, '2025-09-08 03:34:00', NULL, 'ABERTA'),
+(66, 1, '2025-09-08 03:34:00', NULL, 'ABERTA'),
+(67, 1, '2025-09-08 03:34:15', NULL, 'CANCELADA'),
+(68, 1, '2025-09-08 03:34:25', NULL, 'ABERTA'),
+(69, 1, '2025-09-08 03:34:26', NULL, 'ABERTA'),
+(70, 1, '2025-09-08 03:34:26', NULL, 'ABERTA'),
+(71, 1, '2025-09-08 03:34:26', NULL, 'ABERTA'),
+(72, 1, '2025-09-08 03:36:14', NULL, 'ABERTA'),
+(73, 1, '2025-09-08 03:36:14', NULL, 'ABERTA'),
+(74, 1, '2025-09-08 03:36:15', NULL, 'ABERTA'),
+(75, 1, '2025-09-08 03:36:15', NULL, 'ABERTA'),
+(76, 1, '2025-09-08 03:36:15', NULL, 'ABERTA'),
+(77, 1, '2025-09-07 22:36:18', NULL, 'ABERTA'),
+(78, 1, '2025-09-07 22:36:27', NULL, 'ABERTA'),
+(79, 1, '2025-09-07 22:46:52', NULL, 'ABERTA'),
+(80, 1, '2025-09-07 22:52:53', NULL, 'ABERTA'),
+(81, 1, '2025-09-07 22:52:58', NULL, 'ABERTA'),
+(82, 1, '2025-09-07 22:53:07', NULL, 'ABERTA'),
+(83, 1, '2025-09-07 22:55:58', NULL, 'FECHADA'),
+(84, 1, '2025-09-07 22:59:38', NULL, 'ABERTA'),
+(85, 1, '2025-09-07 23:01:11', NULL, 'CANCELADA'),
+(86, 1, '2025-09-07 23:04:39', NULL, 'ABERTA'),
+(87, 1, '2025-09-07 23:06:47', NULL, 'ABERTA'),
+(88, 1, '2025-09-07 23:10:14', NULL, 'ABERTA'),
+(89, 1, '2025-09-07 23:26:19', NULL, 'ABERTA');
 
 --
 -- Índices para tabelas despejadas
@@ -379,7 +482,7 @@ ALTER TABLE `funcionario`
 -- AUTO_INCREMENT de tabela `itens_vendas`
 --
 ALTER TABLE `itens_vendas`
-  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `ID_itensvendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT de tabela `nivel`
@@ -391,13 +494,13 @@ ALTER TABLE `nivel`
 -- AUTO_INCREMENT de tabela `pagamentos`
 --
 ALTER TABLE `pagamentos`
-  MODIFY `ID_pagamento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID_pagamento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de tabela `pagamentos_itens`
 --
 ALTER TABLE `pagamentos_itens`
-  MODIFY `ID_pagamento_item` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID_pagamento_item` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT de tabela `produtos`
@@ -409,7 +512,7 @@ ALTER TABLE `produtos`
 -- AUTO_INCREMENT de tabela `vendas`
 --
 ALTER TABLE `vendas`
-  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `ID_vendas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- Restrições para tabelas despejadas

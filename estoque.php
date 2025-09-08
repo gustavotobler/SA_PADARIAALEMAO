@@ -5,7 +5,7 @@ $host = 'localhost';
 $dbname = 'padariadoalemao';
 $user = 'root';
 $pass = '';
-if ($_SESSION['nivel'] != 1) {
+if (!isset($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
     echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='inicial1.php';</script>";
     exit;
 }
@@ -34,6 +34,158 @@ try {
     $stmt = $conn->query($sql);
     $rows = $stmt->fetchAll();
 
+    // Estatísticas básicas
+    $totalProducts = count($rows);
+    $totalQuantity = 0.0;
+    $totalValue = 0.0;
+    $expiredCount = 0;
+    $soonCount = 0;
+    $okCount = 0;
+    $noDateCount = 0;
+    $lowStock = [];
+    $soonItems = [];
+    $expiredItems = [];
+    $lowStockThreshold = 5; // ajuste se quiser
+
+    $today = new DateTime();
+    $in30 = (clone $today)->modify('+30 days');
+
+    foreach ($rows as $r) {
+        $q = floatval($r['Qntd_produto'] ?? 0);
+        $v = floatval($r['valor_total'] ?? 0);
+        $totalQuantity += $q;
+        $totalValue += $v;
+
+        $val = trim($r['Validade']);
+        if ($val === '' || $val === null) {
+            $noDateCount++;
+        } else {
+            try {
+                $d = new DateTime($val);
+                if ($d < $today) {
+                    $expiredCount++;
+                    $expiredItems[] = [
+                        'id' => $r['ID_produto'],
+                        'nome' => $r['Nome_prod'],
+                        'q' => $q,
+                        'validade' => $d
+                    ];
+                } elseif ($d <= $in30) {
+                    $soonCount++;
+                    $soonItems[] = [
+                        'id' => $r['ID_produto'],
+                        'nome' => $r['Nome_prod'],
+                        'q' => $q,
+                        'validade' => $d
+                    ];
+                } else {
+                    $okCount++;
+                }
+            } catch (Exception $e) {
+                $noDateCount++;
+            }
+        }
+
+        if ($q <= $lowStockThreshold) {
+            $lowStock[] = [
+                'id' => $r['ID_produto'],
+                'nome' => $r['Nome_prod'],
+                'q' => $q
+            ];
+        }
+    }
+
+    usort($soonItems, function($a,$b){ return $a['validade'] <=> $b['validade']; });
+    $soonItems = array_slice($soonItems, 0, 12);
+    usort($expiredItems, function($a,$b){ return $a['validade'] <=> $b['validade']; });
+    $expiredItems = array_slice($expiredItems, 0, 50); // lista maior para revisar
+    usort($lowStock, function($a,$b){ return $a['q'] <=> $b['q']; });
+    $lowStock = array_slice($lowStock, 0, 12);
+
+    // Prepara dados avançados para o painel (top fornecedores, categorias, produtos)
+    $suppliers = []; $categoriesTotals = []; $productByQty = []; $productByValue = []; $zeroStock = [];
+    $sumUnitPrice = 0.0; $unitCount = 0;
+    foreach ($rows as $r) {
+        $q = floatval($r['Qntd_produto'] ?? 0);
+        $v = floatval($r['valor_total'] ?? 0);
+        $forn = trim($r['Nome_forn'] ?: '—');
+        $cat = trim($r['nome_categoria'] ?: '—');
+        $name = trim($r['Nome_prod']);
+
+        if (!isset($suppliers[$forn])) $suppliers[$forn] = ['q'=>0,'v'=>0];
+        $suppliers[$forn]['q'] += $q;
+        $suppliers[$forn]['v'] += $v;
+
+        if (!isset($categoriesTotals[$cat])) $categoriesTotals[$cat] = 0;
+        $categoriesTotals[$cat] += $v;
+
+        $productByQty[] = ['name'=>$name,'q'=>$q,'v'=>$v];
+        $productByValue[] = ['name'=>$name,'v'=>$v,'q'=>$q];
+
+        if (isset($r['Preco_unitario'])) { $sumUnitPrice += floatval($r['Preco_unitario']); $unitCount++; }
+        if ($q <= 0) $zeroStock[] = ['id'=>$r['ID_produto'],'nome'=>$name,'q'=>$q];
+    }
+
+    usort($productByQty, function($a,$b){ return $b['q'] <=> $a['q']; });
+    usort($productByValue, function($a,$b){ return $b['v'] <=> $a['v']; });
+
+    // --- Preparar JSON para gráficos --- 
+    arsort($categoriesTotals);
+    $catLabels = array_slice(array_keys($categoriesTotals), 0, 10);
+    $catValues = array_slice(array_values($categoriesTotals), 0, 10);
+    $catLabelsJSON = json_encode(array_values($catLabels));
+    $catValuesJSON = json_encode(array_values($catValues));
+
+    $prodByValTop = array_slice($productByValue, 0, 12);
+    $prodByQtyTop = array_slice($productByQty, 0, 12);
+    $prodByValJSON = json_encode(array_values(array_map(function($p){ return ['name'=>$p['name'],'v'=>floatval($p['v'])]; }, $prodByValTop)));
+    $prodByQtyJSON = json_encode(array_values(array_map(function($p){ return ['name'=>$p['name'],'q'=>floatval($p['q'])]; }, $prodByQtyTop)));
+
+    $supArr = [];
+    foreach ($suppliers as $name => $vals) $supArr[] = ['name'=>$name,'q'=>$vals['q'],'v'=>$vals['v']];
+    usort($supArr, function($a,$b){ return $b['v'] <=> $a['v']; });
+    $supArrTop = array_slice($supArr, 0, 10);
+    $suppliersJSON = json_encode($supArrTop);
+
+    $lowStockJSON = json_encode(array_values(array_map(function($p){ return ['name'=>$p['nome'],'q'=>floatval($p['q'])]; }, $lowStock)));
+    $zeroStockJSON = json_encode(array_values(array_map(function($p){ return ['name'=>$p['nome'],'q'=>floatval($p['q'])]; }, $zeroStock)));
+
+    $stockStatusJSON = json_encode([
+        'expired' => $expiredCount,
+        'soon' => $soonCount,
+        'ok' => $okCount,
+        'nodate' => $noDateCount
+    ]);
+
+    // expiredItems / soonItems JSON (formatando datas para exibição)
+    $expiredItemsForJson = array_map(function($it){
+        return ['id'=>$it['id'],'name'=>$it['nome'],'q'=>floatval($it['q']),'validade'=>$it['validade']->format('Y-m-d'),'validade_br'=>$it['validade']->format('d/m/Y')];
+    }, $expiredItems);
+    $soonItemsForJson = array_map(function($it){
+        return ['id'=>$it['id'],'name'=>$it['nome'],'q'=>floatval($it['q']),'validade'=>$it['validade']->format('Y-m-d'),'validade_br'=>$it['validade']->format('d/m/Y')];
+    }, $soonItems);
+
+    $expiredItemsJSON = json_encode($expiredItemsForJson);
+    $soonItemsJSON = json_encode($soonItemsForJson);
+
+    // --- Export All Rows JSON (para export CSV do front) ---
+    $exportRows = [];
+    foreach ($rows as $r) {
+        $valBr = !empty($r['Validade']) ? date('d/m/Y', strtotime($r['Validade'])) : '';
+        $exportRows[] = [
+            'id' => $r['ID_produto'],
+            'nome' => $r['Nome_prod'],
+            'fornecedor' => $r['Nome_forn'] ?? '',
+            'categoria' => $r['nome_categoria'] ?? '',
+            'unidade' => $r['Unid_medida'],
+            'quantidade' => floatval($r['Qntd_produto']),
+            'preco_unitario' => floatval($r['Preco_unitario']),
+            'valor_total' => floatval($r['valor_total']),
+            'validade' => $valBr
+        ];
+    }
+    $exportRowsJSON = json_encode($exportRows);
+
 } catch (PDOException $e) {
     die("Erro na conexão: " . $e->getMessage());
 }
@@ -42,26 +194,25 @@ try {
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Relatório de Estoque</title>
+<title>Produtos — Padaria do Alemão</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-:root {
-    --sidebar-bg: linear-gradient(180deg, #0d1b2a, #1b263b);
-    --primary-text: #f8f9fa;
-    --hover-bg: #1e3a5f;
-    --main-bg: rgb(59, 75, 93);
-    --card-bg: #ffffff;
-    --accent: #1b263b;
-    --highlight: #0077b6;
+:root{
+  --sidebar-bg: linear-gradient(180deg,#0d1b2a,#1b263b);
+  --primary-text:#f8f9fa;
+  --main-bg: rgb(59,75,93);
+  --card-bg:#ffffff;
+  --accent:#1b263b;
+  --highlight:#0077b6;
 }
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif}
+body{background:var(--main-bg);display:flex}
 
-/* Reset */
-*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
-body{background-color:var(--main-bg);display:flex}
-
-/* Sidebar */
-.sidebar {
+/* Sidebar (USADO: estilo igual ao script que você enviou) */
+.sidebar{
     width:240px;
     background:var(--sidebar-bg);
     height:100vh;
@@ -73,395 +224,601 @@ body{background-color:var(--main-bg);display:flex}
     box-shadow:3px 0 10px rgba(0,0,0,.3);
 }
 .sidebar.collapsed{width:60px}
-.sidebar a{
-    display:flex;align-items:center;color:var(--primary-text);text-decoration:none;
-    padding:15px 20px;white-space:nowrap;transition:background .2s,padding .3s
-}
-.sidebar a:hover{background:var(--hover-bg);border-left:4px solid var(--highlight);padding-left:16px}
+.sidebar a{display:flex;align-items:center;color:var(--primary-text);text-decoration:none;padding:15px 20px;white-space:nowrap;transition:background .2s,padding .3s}
+.sidebar a:hover{background:#1e3a5f;border-left:4px solid var(--highlight);padding-left:16px}
 .sidebar .icon{margin-right:8px}
 .sidebar.collapsed .text{display:none}
 .sidebar.collapsed .icon{margin-right:0;justify-content:center}
-.toggle-btn{cursor:pointer;text-align:center;margin-bottom:20px;font-size:22px;color:var(--primary-text)}
+
+/* Toggle button (restaurado idêntico ao outro script) */
+.toggle-btn { cursor: pointer; text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--primary-text); }
 
 /* Main */
 .main-content{margin-left:240px;padding:20px 30px;width:100%;transition:margin-left .3s}
 .main-content.collapsed{margin-left:60px}
+h1{color:#fff;text-align:center;margin-bottom:12px}
 
-h1,h2{text-align:center;margin-bottom:20px;color:#fff}
+/* filters */
+.filter-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px}
+.field{display:flex;flex-direction:column}
+.filter-row label{color:var(--primary-text);font-size:13px;margin-bottom:6px}
+input[type="date"], input[type="text"]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,0.03);color:var(--primary-text)}
 
-/* Filtros */
-#filters{display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;align-items:flex-end}
-.filter-group{display:flex;flex-direction:column;color:#fff}
-.filter-group input{padding:8px;border-radius:6px;border:1px solid #ccc;background:#f0f0f0;color:#000}
-#clearFilters{background:var(--highlight);color:#fff;padding:8px 15px;border:none;border-radius:6px;cursor:pointer}
-#clearFilters:hover{background:#023e8a}
+/* buttons */
+.btn{padding:8px 12px;border-radius:8px;border:none;background:var(--highlight);color:#fff;cursor:pointer;font-weight:700}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.06)}
+.action-row{display:flex;gap:8px;align-items:center}
 
-/* Tabela */
-table{width:100%;border-collapse:collapse;background:var(--card-bg);border-radius:12px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.15)}
+/* table */
+table{width:100%;border-collapse:collapse;background:var(--card-bg);border-radius:12px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,0.15)}
 thead{background:var(--accent);color:var(--primary-text)}
-thead th{padding:14px 10px;text-align:center;font-size:.9rem;font-weight:600;letter-spacing:.5px}
-tbody td{padding:12px 10px;border-bottom:1px solid #eee;font-size:.9rem;text-align:center}
+thead th{padding:14px 10px;text-align:left;font-size:.9rem;font-weight:600}
+tbody td{padding:12px 10px;border-bottom:1px solid #eee;font-size:.9rem}
 tbody tr:nth-child(even){background:#f9fbfd}
 tbody tr:hover{background:var(--highlight);color:#fff;transition:.2s}
+td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor Total"]{text-align:right}
 
-/* Paginação */
-.pagination{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}
-.pagination button{padding:8px 12px;border:none;background:var(--accent);color:var(--primary-text);border-radius:6px;cursor:pointer}
-.pagination button:disabled{background:#999;cursor:default}
+/* status badges */
+.status-badge{display:inline-block;padding:6px 8px;border-radius:999px;font-weight:700;font-size:12px;color:#fff}
+.status-expired{background:#d9534f}
+.status-soon{background:#f0ad4e;color:#071a1f}
+.status-ok{background:#28a745}
+.status-nodate{background:#6c757d}
 
-/* Gráficos */
-/* importante: esconder seção quando não ativa (corrige o problema) */
-.section {display:none}
-.section.active {display:block}
+/* row highlights */
+.row-expired td{background:rgba(255,107,107,0.06)}
+.row-soon td{background:rgba(245,158,11,0.06)}
+.row-lowstock td{box-shadow:inset 0 0 0 1px rgba(245,158,11,0.04)}
 
-.chart-section{margin:40px auto;background:var(--card-bg);padding:20px;border-radius:12px;max-width:900px;display:none}
-.chart-section.active{display:block}
-.chart-container{position:relative;height:400px;width:100%}
-.filter-info{text-align:center;margin-bottom:10px;font-weight:bold;color:#fff}
+/* info / charts panels */
+.info-panel,.charts-panel{position:fixed;top:0;right:0;height:100vh;width:420px;max-width:92%;background:linear-gradient(180deg,#021727,#063749);color:var(--primary-text);box-shadow:-20px 0 40px rgba(0,0,0,.6);transform:translateX(110%);transition:transform .25s ease;z-index:1200;display:flex;flex-direction:column;padding:16px}
+.info-panel.open,.charts-panel.open{transform:translateX(0)}
+.panel-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:10px;padding:10px;margin-bottom:10px}
+.panel-card .muted{color:rgba(159,179,200,1);font-size:13px}
+.panel-card .big{font-weight:800;font-size:18px;margin-top:6px;color:#fff}
+.compact-list{max-height:140px;overflow:auto;margin-top:8px}
+.compact-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
 
-/* Responsivo */
+/* charts */
+.chart-wrapper{position:relative;min-height:180px}
+.chart-canvas{width:100%;height:240px;display:block;margin-bottom:12px;background:rgba(255,255,255,0.02);border-radius:8px;padding:8px}
+
+/* small lists */
+.small-list{list-style:none;padding:0;margin:6px 0 0 0;max-height:220px;overflow:auto}
+.small-list li{padding:8px 6px;border-bottom:1px dashed rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center}
+.small-list .meta{font-size:12px;color:rgba(200,220,240,0.8)}
+
+/* expired badge in info */
+.expired-badge{background:#ff6b6b;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800;margin-left:8px}
+.expired-text{color:#ffb4a6;font-weight:700}
+
 @media(max-width:768px){
   .main-content{margin-left:0;padding:1rem}
-  table{font-size:.8rem}
   thead{display:none}
   tbody td{display:block;text-align:right;padding:8px;border:none;border-bottom:1px solid #eee}
-  tbody td::before{content: attr(data-label);float:left;font-weight:600;color:#555}
-  #filters{flex-direction:column;gap:10px;align-items:stretch}
+  tbody td::before{content:attr(data-label);float:left;font-weight:600;color:#555}
+  .filter-row{gap:8px}
+  .filter-row .search-field{flex:1 1 auto}
 }
+@media(min-width:1000px){ .charts-panel{width:920px} }
 </style>
 </head>
 <body>
 
 <nav class="sidebar" id="sidebar">
+    <!-- Restaurado: mesmo ícone/padding do seu outro script -->
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
-    <a href="#" onclick="event.preventDefault(); showSection('tabela')"><span class="material-icons icon">table_chart</span><span class="text">Tabela</span></a>
-    <a href="#" onclick="event.preventDefault(); showSection('grafico-qtd')"><span class="material-icons icon">inventory</span><span class="text">Gráfico Quantidade</span></a>
-    <a href="#" onclick="event.preventDefault(); showSection('grafico-valor')"><span class="material-icons icon">attach_money</span><span class="text">Gráfico Valor</span></a>
-    <a href="#" onclick="event.preventDefault(); showSection('grafico-fornecedor')"><span class="material-icons icon">factory</span><span class="text">Gráfico Fornecedor</span></a>
-    <a href="#" onclick="event.preventDefault(); showSection('grafico-validade')"><span class="material-icons icon">hourglass_bottom</span><span class="text">Gráfico Validade</span></a>
-    <a href="#" onclick="event.preventDefault(); showSection('grafico-preco')"><span class="material-icons icon">paid</span><span class="text">Gráfico Preço</span></a>
+    <a href="#" onclick="document.getElementById('tabela').scrollIntoView();return false;"><span class="material-icons icon">table_chart</span><span class="text">Tabela</span></a>
+    <a href="#" onclick="openInfoPanel();return false;"><span class="material-icons icon">insights</span><span class="text">Informações</span></a>
+    <a href="#" onclick="openChartsPanel();return false;"><span class="material-icons icon">bar_chart</span><span class="text">Gráficos</span></a>
 </nav>
 
-<main class="main-content" id="mainContent">
-<section id="tabela" class="section active">
-    <h1>Relatório de Estoque</h1>
-
-    <div id="filters">
-        <div class="filter-group">
-            <label for="startDate">📅 Data Inicial</label>
-            <input type="date" id="startDate">
+<!-- painel de informações -->
+<aside id="infoPanel" class="info-panel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Informações do Estoque</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+            <button id="exportAllBtn" class="btn btn-ghost" title="Exportar todos (CSV)">Exportar CSV</button>
+            <button class="close-btn" onclick="closeInfoPanel()" aria-label="Fechar" style="background:transparent;border:none;color:var(--primary-text);font-size:20px;cursor:pointer">✕</button>
         </div>
-        <div class="filter-group">
-            <label for="endDate">📅 Data Final</label>
-            <input type="date" id="endDate">
-        </div>
-        <div class="filter-group">
-            <label for="search">🔍 Produto / Categoria / Fornecedor</label>
-            <input type="text" id="search" placeholder="Pesquisar...">
-        </div>
-        <button id="clearFilters">Limpar Filtros</button>
     </div>
-    <div style="text-align:center;margin-bottom:15px;">
-    <form method="POST" action="relatorio_estoque_pdf.php" target="_blank">
-        <input type="hidden" name="startDate" id="pdfStartDate">
-        <input type="hidden" name="endDate" id="pdfEndDate">
-        <input type="hidden" name="search" id="pdfSearch">
-        <button type="submit" style="padding:10px 20px; background:var(--highlight); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-            📄 Baixar Relatório PDF
-        </button>
-    </form>
-</div>
-</div>
 
+    <div style="margin-top:12px;overflow:auto;padding-right:6px;flex:1">
+        <!-- Resumo -->
+        <div class="panel-card">
+            <div class="muted">Resumo</div>
+            <div class="big">Produtos: <?= number_format($totalProducts) ?></div>
+            <div style="margin-top:6px" class="muted">Quantidade total: <strong style="color:#fff"><?= number_format($totalQuantity,2,',','.') ?></strong></div>
+            <div class="muted" style="margin-top:4px">Valor estimado: <strong style="color:#fff">R$ <?= number_format($totalValue,2,',','.') ?></strong></div>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                <div style="padding:6px 8px;border-radius:8px;background:#ff6b6b;color:#fff;font-weight:700">Expirados: <?= $expiredCount ?></div>
+                <div style="padding:6px 8px;border-radius:8px;background:#f59e0b;color:#071a1f;font-weight:700">Próx.30d: <?= $soonCount ?></div>
+                <div style="padding:6px 8px;border-radius:8px;background:#10b981;color:#042018;font-weight:700">OK: <?= $okCount ?></div>
+                <div style="padding:6px 8px;border-radius:8px;background:#64748b;color:#fff;font-weight:700">Sem data: <?= $noDateCount ?></div>
+            </div>
+        </div>
 
-    <div class="filter-info" id="filterInfo">Total de produtos: <?= count($rows) ?></div>
+        <!-- Métricas -->
+        <div class="panel-card">
+            <div class="muted">Métricas</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                <div>
+                    <div class="muted">Média preço unitário</div>
+                    <div class="big">R$ <?= $unitCount ? number_format($sumUnitPrice/$unitCount,2,',','.') : '0,00' ?></div>
+                </div>
+                <div style="text-align:right">
+                    <div class="muted">Categorias distintas</div>
+                    <div class="big"><?= count($categoriesTotals) ?></div>
+                </div>
+            </div>
+            <div style="margin-top:8px" class="muted">Itens sem estoque: <strong style="color:#fff"><?= count($zeroStock) ?></strong></div>
+        </div>
 
-    <div style="overflow-x:auto;">
+        <!-- Estoque baixo -->
+        <div class="panel-card">
+            <div class="muted">Estoque baixo (limiar: <?= $lowStockThreshold ?>)</div>
+            <div class="compact-list">
+                <?php if(count($lowStock)===0): ?>
+                    <div class="compact-item"><div style="font-weight:700">Nenhum item com estoque baixo</div></div>
+                <?php else: foreach($lowStock as $it): ?>
+                    <div class="compact-item">
+                        <div style="font-weight:700"><?= htmlspecialchars(mb_strimwidth($it['nome'],0,32,'...')) ?></div>
+                        <div style="color:var(--muted)"><?= number_format($it['q'],2,',','.') ?></div>
+                    </div>
+                <?php endforeach; endif; ?>
+            </div>
+        </div>
+
+        <!-- Próximas validades -->
+        <div class="panel-card">
+            <div class="muted">Próximas validades</div>
+            <div class="compact-list">
+                <?php if(count($soonItems)===0): ?>
+                    <div class="compact-item"><div style="font-weight:700">Nenhum item próximo da validade</div></div>
+                <?php else: foreach($soonItems as $it): ?>
+                    <div class="compact-item">
+                        <div style="font-weight:700"><?= htmlspecialchars(mb_strimwidth($it['nome'],0,32,'...')) ?></div>
+                        <div style="color:var(--muted)"><?= $it['validade']->format('d/m/Y') ?> • <?= number_format($it['q'],2,',','.') ?></div>
+                    </div>
+                <?php endforeach; endif; ?>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+                <button id="exportSoonBtn" class="btn btn-ghost">Exportar próximos (CSV)</button>
+            </div>
+        </div>
+
+        <!-- Produtos expirados -->
+        <div class="panel-card">
+            <div class="muted">Produtos expirados</div>
+            <ul class="small-list">
+                <?php if(count($expiredItems) === 0): ?>
+                    <li>Nenhum produto expirado</li>
+                <?php else: foreach($expiredItems as $it): ?>
+                    <li>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="expired-text"><?= htmlspecialchars(mb_strimwidth($it['nome'],0,36,'...')) ?></div>
+                            <span class="expired-badge">EXPIRADO</span>
+                        </div>
+                        <div class="meta"><?= $it['validade']->format('d/m/Y') ?> • <?= number_format($it['q'],2,',','.') ?></div>
+                    </li>
+                <?php endforeach; endif; ?>
+            </ul>
+            <div style="margin-top:8px;display:flex;gap:8px">
+                <button id="exportExpiredBtn" class="btn btn-ghost">Exportar expirados (CSV)</button>
+            </div>
+        </div>
+
+        <!-- Produtos sem estoque -->
+        <div class="panel-card">
+            <div class="muted">Produtos sem estoque</div>
+            <ul class="small-list">
+                <?php if(count($zeroStock) === 0): ?>
+                    <li>Nenhum produto sem estoque</li>
+                <?php else: foreach($zeroStock as $z): ?>
+                    <li>
+                        <div style="font-weight:700"><?= htmlspecialchars(mb_strimwidth($z['nome'],0,36,'...')) ?></div>
+                        <div class="meta"><?= number_format($z['q'],2,',','.') ?></div>
+                    </li>
+                <?php endforeach; endif; ?>
+            </ul>
+            <div style="margin-top:8px;display:flex;gap:8px">
+                <button id="exportZeroBtn" class="btn btn-ghost">Exportar sem estoque (CSV)</button>
+            </div>
+        </div>
+
+        <!-- Top / Fornecedores / etc (mantidos) -->
+        <div class="panel-card">
+            <div class="muted">Top produtos (quantidade)</div>
+            <div class="compact-list">
+                <?php foreach(array_slice($productByQty,0,12) as $p): ?>
+                    <div class="compact-item">
+                        <div style="font-weight:700"><?= htmlspecialchars(mb_strimwidth($p['name'],0,28,'...')) ?></div>
+                        <div style="color:var(--muted)"><?= number_format($p['q'],2,',','.') ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Top produtos (valor)</div>
+            <div class="compact-list">
+                <?php foreach(array_slice($productByValue,0,12) as $p): ?>
+                    <div class="compact-item">
+                        <div style="font-weight:700"><?= htmlspecialchars(mb_strimwidth($p['name'],0,28,'...')) ?></div>
+                        <div style="color:var(--muted)">R$ <?= number_format($p['v'],2,',','.') ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Fornecedores (top por valor)</div>
+            <div class="compact-list">
+                <?php foreach(array_slice($supArrTop,0,12) as $s): ?>
+                    <div class="compact-item">
+                        <div style="font-weight:700"><?= htmlspecialchars(mb_strimwidth($s['name'],0,28,'...')) ?></div>
+                        <div style="color:var(--muted)"><?= number_format($s['q'],2,',','.') ?> • R$ <?= number_format($s['v'],2,',','.') ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+    </div>
+
+    <div style="padding-top:8px;display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-ghost" onclick="closeInfoPanel()" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--primary-text)">Fechar</button>
+        <button class="btn" onclick="window.print()">Imprimir</button>
+    </div>
+</aside>
+
+<!-- painel de GRÁFICOS -->
+<aside id="chartsPanel" class="charts-panel" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Gráficos — Detalhes de Produtos</h3>
+        <button class="close-btn" onclick="closeChartsPanel()" aria-label="Fechar" style="background:transparent;border:none;color:var(--primary-text);font-size:20px;cursor:pointer">✕</button>
+    </div>
+
+    <div style="margin-top:12px;overflow:auto;padding-right:6px;flex:1">
+        <div class="panel-card">
+            <div class="muted">Categorias (valor) — Top 10</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartCategories" class="chart-canvas"></canvas></div>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Fornecedores (valor) — Top 10</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartSuppliers" class="chart-canvas"></canvas></div>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Status do estoque</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartStockStatus" class="chart-canvas"></canvas></div>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Estoque baixo (quantidade)</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartLowStock" class="chart-canvas"></canvas></div>
+        </div>
+
+        <div class="panel-card">
+            <div class="muted">Top produtos (valor) — Top 12</div>
+            <div style="margin-top:8px" class="chart-wrapper"><canvas id="chartTopProducts" class="chart-canvas"></canvas></div>
+        </div>
+    </div>
+
+    <div style="padding-top:8px;display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-ghost" onclick="closeChartsPanel()" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--primary-text)">Fechar</button>
+    </div>
+</aside>
+
+<main class="main-content" id="mainContent">
+    <h1>RELATÓRIO DE ESTOQUE</h1>
+
+    <div class="filter-row">
+        <div class="field"><label for="startDate">Data inicial</label><input type="date" id="startDate" name="startDate"></div>
+        <div class="field"><label for="endDate">Data final</label><input type="date" id="endDate" name="endDate"></div>
+        <div class="field search-field"><label for="search">Pesquisar</label><input type="text" id="search" placeholder="Produto / Cat. / Forn."></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+            <button id="clearFilters" class="btn btn-ghost">Limpar</button>
+            <form method="POST" action="relatorio_estoque_pdf.php" target="_blank" style="display:inline-flex;gap:8px;align-items:end">
+                <input type="hidden" name="startDate" id="pdfStartDate">
+                <input type="hidden" name="endDate" id="pdfEndDate">
+                <input type="hidden" name="search" id="pdfSearch">
+                <button class="btn" type="submit">📄 Baixar PDF</button>
+            </form>
+        </div>
+    </div>
+
+    <div style="margin-top:14px;overflow:auto" id="tabela">
         <table id="estoqueTable">
             <thead>
                 <tr>
-                    <th>ID Produto</th>
+                    <th>ID</th>
                     <th>Nome</th>
                     <th>Fornecedor</th>
                     <th>Categoria</th>
                     <th>Unidade</th>
-                    <th>Quantidade</th>
-                    <th>Preço Unitário</th>
-                    <th>Valor Total</th>
+                    <th style="text-align:right">Quantidade</th>
+                    <th style="text-align:right">Preço Unit.</th>
+                    <th style="text-align:right">Valor Total</th>
                     <th>Validade</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($rows as $row): ?>
-                    <tr>
-                        <td data-label="ID"><?= $row['ID_produto'] ?></td>
-                        <td data-label="Nome"><?= $row['Nome_prod'] ?></td>
-                        <td data-label="Fornecedor"><?= $row['Nome_forn'] ?? '---' ?></td>
-                        <td data-label="Categoria"><?= $row['nome_categoria'] ?? '---' ?></td>
-                        <td data-label="Unidade"><?= $row['Unid_medida'] ?></td>
-                        <td data-label="Quantidade"><?= number_format($row['Qntd_produto'],2,',','.') ?></td>
-                        <td data-label="Preço"><?= number_format($row['Preco_unitario'],2,',','.') ?></td>
-                        <td data-label="Valor"><?= number_format($row['valor_total'],2,',','.') ?></td>
-                        <td data-label="Validade"><?= !empty($row['Validade']) ? date('d/m/Y', strtotime($row['Validade'])) : '---' ?></td>
-                    </tr>
+                <?php
+                // Reusar $today e $in30 do PHP acima para calcular status por linha
+                foreach ($rows as $row):
+                    $statusClass = 'status-ok';
+                    $statusText = 'OK';
+                    $rowClass = '';
+                    $valStr = trim($row['Validade'] ?? '');
+                    if ($valStr === '' ) {
+                        $statusClass = 'status-nodate';
+                        $statusText = 'Sem data';
+                        $rowClass = 'row-nodate';
+                    } else {
+                        try {
+                            $d = new DateTime($row['Validade']);
+                            if ($d < $today) {
+                                $statusClass = 'status-expired';
+                                $statusText = 'Expirado';
+                                $rowClass = 'row-expired';
+                            } elseif ($d <= $in30) {
+                                $statusClass = 'status-soon';
+                                $statusText = 'Próx. 30d';
+                                $rowClass = 'row-soon';
+                            } else {
+                                $statusClass = 'status-ok';
+                                $statusText = 'OK';
+                            }
+                        } catch (Exception $e) {
+                            $statusClass = 'status-nodate';
+                            $statusText = 'Sem data';
+                        }
+                    }
+                    $q = floatval($row['Qntd_produto'] ?? 0);
+                    if ($q <= $lowStockThreshold) $rowClass .= ' row-lowstock';
+                ?>
+                <tr class="<?= $rowClass ?>">
+                    <td data-label="ID"><?= $row['ID_produto'] ?></td>
+                    <td data-label="Nome"><?= htmlspecialchars($row['Nome_prod']) ?></td>
+                    <td data-label="Fornecedor"><?= htmlspecialchars($row['Nome_forn'] ?? '---') ?></td>
+                    <td data-label="Categoria"><?= htmlspecialchars($row['nome_categoria'] ?? '---') ?></td>
+                    <td data-label="Unidade"><?= htmlspecialchars($row['Unid_medida']) ?></td>
+                    <td data-label="Quantidade"><?= number_format($row['Qntd_produto'],2,',','.') ?></td>
+                    <td data-label="Preço Unit.">R$ <?= number_format($row['Preco_unitario'],2,',','.') ?></td>
+                    <td data-label="Valor Total">R$ <?= number_format($row['valor_total'],2,',','.') ?></td>
+                    <td data-label="Validade"><?= !empty($row['Validade']) ? date('d/m/Y', strtotime($row['Validade'])) : '---' ?></td>
+                    <td data-label="Status"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
+                </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
-
-    <div class="pagination">
-        <button id="prevBtn" disabled>&larr; Anterior</button>
-        <span id="pageInfo">Página 1</span>
-        <button id="nextBtn">Próxima &rarr;</button>
-    </div>
-</section>
-
-<section id="grafico-qtd" class="chart-section"><h2>Quantidade em Estoque por Produto</h2><div class="chart-container"><canvas id="chartQtd"></canvas></div></section>
-<section id="grafico-valor" class="chart-section"><h2>Valor Total em Estoque por Produto</h2><div class="chart-container"><canvas id="chartValor"></canvas></div></section>
-<section id="grafico-fornecedor" class="chart-section"><h2>Distribuição por Fornecedor</h2><div class="chart-container"><canvas id="chartForn"></canvas></div></section>
-<section id="grafico-validade" class="chart-section"><h2>Validade dos Produtos</h2><div class="chart-container"><canvas id="chartValidade"></canvas></div></section>
-<section id="grafico-preco" class="chart-section"><h2>Preço Unitário dos Produtos</h2><div class="chart-container"><canvas id="chartPreco"></canvas></div></section>
-
 </main>
 
 <script>
+// abrir/fechar painel
+function openInfoPanel(){
+    const p = document.getElementById('infoPanel');
+    p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow = 'hidden';
+}
+function closeInfoPanel(){
+    const p = document.getElementById('infoPanel');
+    p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow = '';
+}
+function openChartsPanel(){
+    const p = document.getElementById('chartsPanel');
+    p.classList.add('open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow = 'hidden';
+    renderCharts(true);
+}
+function closeChartsPanel(){
+    const p = document.getElementById('chartsPanel');
+    p.classList.remove('open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow = '';
+    if (chartInstances.length) { chartInstances.forEach(c=>{ try{ c.destroy() }catch(e){} }); chartInstances = []; chartsInitialized=false; }
+}
+
+// sidebar toggle (mesma função usada no outro script)
 const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
-function toggleSidebar(){
-    sidebar.classList.toggle('collapsed');
-    mainContent.classList.toggle('collapsed');
-}
+function toggleSidebar(){ sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('collapsed'); }
 
-function showSection(id){
-    // remove active de todas as seções
-    document.querySelectorAll('.section, .chart-section').forEach(sec => sec.classList.remove('active'));
-    const target = document.getElementById(id);
-    if(!target) return;
-    target.classList.add('active');
+// ensure toggle works if using keyboard / other events
+document.querySelectorAll('.toggle-btn').forEach(btn=>{
+    btn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebar(); } });
+});
 
-    // se for aba de gráfico, inicializa/atualiza gráficos
-    if(id.startsWith('grafico-')) {
-        initChartsFromTable();
-        // dar um pequeno timeout para garantir que o canvas esteja renderizado (ajuda em alguns browsers)
-        setTimeout(()=> {
-            Object.values(window._charts || {}).forEach(c=>{ try { c.resize(); c.update(); } catch(e){} });
-            // rolar para topo da seção
-            target.scrollIntoView({behavior:'smooth', block:'start'});
-        }, 80);
-    } else {
-        // rolar para topo da tabela
-        target.scrollIntoView({behavior:'smooth', block:'start'});
-    }
-}
+/* filtros */
+const estoqueTbody = document.querySelector('#estoqueTable tbody');
+const estoqueRows = Array.from(estoqueTbody ? estoqueTbody.querySelectorAll('tr') : []);
+const startDateEl = document.getElementById('startDate');
+const endDateEl = document.getElementById('endDate');
+const searchEl = document.getElementById('search');
+const clearBtn = document.getElementById('clearFilters');
+const pdfStart = document.getElementById('pdfStartDate');
+const pdfEnd = document.getElementById('pdfEndDate');
+const pdfSearch = document.getElementById('pdfSearch');
 
-// Simples paginação
-let currentPage=1; const rowsPerPage=10;
-const tbody = document.getElementById('estoqueTable').getElementsByTagName('tbody')[0];
-const rows = tbody.getElementsByTagName('tr');
-const pageInfo = document.getElementById('pageInfo');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-
-function displayRows(){
-    const start=(currentPage-1)*rowsPerPage;
-    const end=start+rowsPerPage;
-    for(let i=0;i<rows.length;i++){
-        // se linha estiver escondida por filtro, manter escondida
-        const shouldShow = rows[i].classList.contains('filtered-hidden') ? false : (i>=start && i<end);
-        rows[i].style.display = shouldShow ? '' : 'none';
-    }
-    // calcular páginas considerando apenas linhas não filtradas
-    const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('filtered-hidden'));
-    pageInfo.textContent=`Página ${currentPage} de ${Math.max(1, Math.ceil(visibleRows.length/rowsPerPage))}`;
-    prevBtn.disabled=currentPage===1;
-    nextBtn.disabled=currentPage>=Math.ceil(visibleRows.length/rowsPerPage);
-}
-prevBtn.onclick=()=>{currentPage--;displayRows();}
-nextBtn.onclick=()=>{currentPage++;displayRows();}
-displayRows();
-
-// Filtros
-const startDate = document.getElementById('startDate');
-const endDate = document.getElementById('endDate');
-const search = document.getElementById('search');
-const clearFilters = document.getElementById('clearFilters');
-
-function brToISO(dateStr){ // 'dd/mm/yyyy' -> 'yyyy-mm-dd'
+function brToISO(dateStr){
     const parts = dateStr.split('/');
-    if(parts.length!==3) return null;
+    if(parts.length !== 3) return null;
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
-}
-function parseBRNumber(str){ // '1.234,56' -> 1234.56
-    if(!str) return 0;
-    let s = str.trim().replace(/\./g,'').replace(',','.');
-    s = s.replace(/[^\d\.\-]/g,'');
-    return parseFloat(s) || 0;
 }
 
 function applyFilters(){
-    let sDate = startDate.value? new Date(startDate.value):null;
-    let eDate = endDate.value? new Date(endDate.value):null;
-    let term = search.value.toLowerCase();
-    let count=0;
-    Array.from(rows).forEach(r=>{
-        r.classList.remove('filtered-hidden'); // reset
-        let cells=r.getElementsByTagName('td');
-        let val = cells[8].textContent.trim();
-        let rowDate = val!=='---'?new Date(brToISO(val)):null;
-        let text = Array.from(cells).slice(1,4).map(c=>c.textContent.toLowerCase()).join(' ');
-        let show=true;
-        if(sDate && rowDate && rowDate < sDate) show=false;
-        if(eDate && rowDate && rowDate > eDate) show=false;
-        if(term && !text.includes(term)) show=false;
-        if(!show){
-            r.classList.add('filtered-hidden');
-        } else {
-            count++;
-        }
-    });
-    document.getElementById('filterInfo').textContent=`Produtos filtrados: ${count}`;
-    currentPage=1;
-    displayRows();
+    const s = startDateEl && startDateEl.value ? new Date(startDateEl.value) : null;
+    const e = endDateEl && endDateEl.value ? new Date(endDateEl.value) : null;
+    const term = (searchEl && searchEl.value || '').trim().toLowerCase();
 
-    // Atualiza gráficos imediatamente se alguma aba de gráfico estiver ativa
-    const activeChartSection = document.querySelector('.chart-section.active');
-    if(activeChartSection){
-        initChartsFromTable();
-        setTimeout(()=> {
-            Object.values(window._charts || {}).forEach(c=>{ try { c.resize(); c.update(); } catch(e){} });
+    estoqueRows.forEach(tr => {
+        tr.style.display = '';
+        const cells = tr.querySelectorAll('td');
+        const valStr = cells[8] ? cells[8].textContent.trim() : '---';
+        const valDate = (valStr === '---') ? null : new Date(brToISO(valStr));
+        let show = true;
+
+        if (s && valDate && valDate < s) show = false;
+        if (e && valDate && valDate > e) show = false;
+        const text = Array.from(cells).slice(1,4).map(c => c.textContent.toLowerCase()).join(' ');
+        if (term && !text.includes(term)) show = false;
+
+        tr.style.display = show ? '' : 'none';
+    });
+}
+
+if (startDateEl) startDateEl.addEventListener('input', applyFilters);
+if (endDateEl) endDateEl.addEventListener('input', applyFilters);
+if (searchEl) searchEl.addEventListener('input', applyFilters);
+if (clearBtn) clearBtn.addEventListener('click', () => {
+    if (startDateEl) startDateEl.value=''; if (endDateEl) endDateEl.value=''; if (searchEl) searchEl.value='';
+    if (pdfStart) pdfStart.value=''; if (pdfEnd) pdfEnd.value=''; if (pdfSearch) pdfSearch.value='';
+    applyFilters();
+});
+const pdfForm = document.querySelector('form[action="relatorio_estoque_pdf.php"]');
+if (pdfForm) pdfForm.addEventListener('submit', function(){ if (pdfStart) pdfStart.value = startDateEl ? startDateEl.value : ''; if (pdfEnd) pdfEnd.value = endDateEl ? endDateEl.value : ''; if (pdfSearch) pdfSearch.value = searchEl ? searchEl.value : ''; });
+
+/* --- Dados injetados do PHP (para export e charts) --- */
+const exportAllData = <?php echo $exportRowsJSON ?? '[]'; ?>;
+const expiredItemsData = <?php echo $expiredItemsJSON ?? '[]'; ?>;
+const soonItemsData = <?php echo $soonItemsJSON ?? '[]'; ?>;
+const zeroStockData = <?php echo $zeroStockJSON ?? '[]'; ?>;
+const catLabels = <?php echo $catLabelsJSON ?? '[]'; ?>;
+const catValues = <?php echo $catValuesJSON ?? '[]'; ?>;
+const prodByVal = <?php echo $prodByValJSON ?? '[]'; ?>;
+const suppliersData = <?php echo $suppliersJSON ?? '[]'; ?>;
+const lowStockData = <?php echo $lowStockJSON ?? '[]'; ?>;
+const stockStatus = <?php echo $stockStatusJSON ?? '{}'; ?>;
+
+/* CSV export util */
+function downloadCSV(filename, rows) {
+    if (!rows || !rows.length) { alert('Nenhum dado para exportar'); return; }
+    const headers = Object.keys(rows[0]);
+    const escape = (v) => {
+        if (v === null || v === undefined) return '';
+        const s = String(v).replace(/"/g,'""');
+        return `"${s}"`;
+    };
+    const csv = [headers.map(h=>escape(h)).join(',')].concat(
+        rows.map(r => headers.map(h => escape(r[h])).join(','))
+    ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
+/* hook dos botões de export */
+document.getElementById('exportAllBtn')?.addEventListener('click', ()=> downloadCSV('estoque_todos.csv', exportAllData));
+document.getElementById('exportExpiredBtn')?.addEventListener('click', ()=> downloadCSV('expirados.csv', expiredItemsData));
+document.getElementById('exportSoonBtn')?.addEventListener('click', ()=> downloadCSV('proximos_validade.csv', soonItemsData));
+document.getElementById('exportZeroBtn')?.addEventListener('click', ()=> downloadCSV('sem_estoque.csv', zeroStockData));
+
+/* --- Charts (Chart.js) --- */
+let chartsInitialized = false;
+let chartInstances = [];
+
+function drawNoDataMessage(canvas, msg) {
+    if (!canvas) return;
+    try {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(0,0,canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        const fontSize = Math.max(12, Math.floor(canvas.height * 0.08));
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
+    } catch (e) { console.warn(e); }
+}
+
+function renderCharts(force=false){
+    if (chartsInitialized && !force) return;
+    if (typeof Chart === 'undefined') {
+        ['chartCategories','chartSuppliers','chartStockStatus','chartLowStock','chartTopProducts'].forEach(id=>{ const c=document.getElementById(id); if(c) drawNoDataMessage(c,'Chart.js ausente');});
+        chartsInitialized = true; return;
+    }
+    requestAnimationFrame(()=>{
+        setTimeout(()=>{
+            if (chartInstances.length) { chartInstances.forEach(c=>{ try{ c.destroy(); } catch(e){} }); chartInstances = []; }
+            function fit(id){ const el=document.getElementById(id); if(!el) return; const w=Math.max(300, Math.round(el.clientWidth)); const h=(el.clientHeight && el.clientHeight>20)?Math.round(el.clientHeight):240; if(el.width!==w||el.height!==h){el.width=w;el.height=h;} }
+            ['chartCategories','chartSuppliers','chartStockStatus','chartLowStock','chartTopProducts'].forEach(fit);
+            const palette = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'];
+
+            // Categories
+            try {
+                const el=document.getElementById('chartCategories');
+                if (el && Array.isArray(catLabels) && catLabels.length) {
+                    const ctx=el.getContext('2d');
+                    const bg = catLabels.map((_,i)=>palette[i%palette.length]);
+                    const chart = new Chart(ctx,{ type:'bar', data:{ labels:catLabels, datasets:[{ label:'Valor (R$)', data:catValues, backgroundColor:bg, borderWidth:1 }] }, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }});
+                    chartInstances.push(chart);
+                } else drawNoDataMessage(el,'Sem dados (categorias)');
+            } catch(e){ console.error(e); }
+
+            // Suppliers
+            try {
+                const el=document.getElementById('chartSuppliers');
+                if (el && Array.isArray(suppliersData) && suppliersData.length) {
+                    const labels = suppliersData.map(s=>s.name);
+                    const values = suppliersData.map(s=>Number(s.v));
+                    const bg = labels.map((_,i)=>palette[i%palette.length]);
+                    const ctx=el.getContext('2d');
+                    const chart = new Chart(ctx,{ type:'bar', data:{ labels, datasets:[{ label:'Valor (R$)', data:values, backgroundColor:bg, borderWidth:1 }] }, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }});
+                    chartInstances.push(chart);
+                } else drawNoDataMessage(el,'Sem dados (fornecedores)');
+            } catch(e){ console.error(e); }
+
+            // Stock status
+            try {
+                const el=document.getElementById('chartStockStatus');
+                if (el && stockStatus) {
+                    const values=[Number(stockStatus.expired||0),Number(stockStatus.soon||0),Number(stockStatus.ok||0),Number(stockStatus.nodate||0)];
+                    const total = values.reduce((a,b)=>a+b,0);
+                    if (total>0) {
+                        const ctx=el.getContext('2d');
+                        const chart = new Chart(ctx,{ type:'pie', data:{ labels:['Expirados','Próx.30d','OK','Sem data'], datasets:[{ data:values, backgroundColor:['#ff6b6b','#f59e0b','#10b981','#64748b'] }] }, options:{ maintainAspectRatio:false }});
+                        chartInstances.push(chart);
+                    } else drawNoDataMessage(el,'Sem dados (status)');
+                }
+            } catch(e){ console.error(e); }
+
+            // Low stock
+            try {
+                const el=document.getElementById('chartLowStock');
+                if (el && Array.isArray(lowStockData) && lowStockData.length) {
+                    const labels=lowStockData.map(p=>p.name);
+                    const values=lowStockData.map(p=>Number(p.q));
+                    const bg=labels.map((_,i)=>palette[i%palette.length]);
+                    const ctx=el.getContext('2d');
+                    const chart=new Chart(ctx,{ type:'bar', data:{ labels, datasets:[{ label:'Quantidade', data:values, backgroundColor:bg, borderWidth:1 }] }, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }});
+                    chartInstances.push(chart);
+                } else drawNoDataMessage(el,'Sem dados (estoque baixo)');
+            } catch(e){ console.error(e); }
+
+            // Top products
+            try {
+                const el=document.getElementById('chartTopProducts');
+                if (el && Array.isArray(prodByVal) && prodByVal.length) {
+                    const labels=prodByVal.map(p=>p.name);
+                    const values=prodByVal.map(p=>Number(p.v));
+                    const bg=labels.map((_,i)=>palette[i%palette.length]);
+                    const ctx=el.getContext('2d');
+                    const chart=new Chart(ctx,{ type:'bar', data:{ labels, datasets:[{ label:'Valor (R$)', data:values, backgroundColor:bg, borderWidth:1 }] }, options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true } } }});
+                    chartInstances.push(chart);
+                } else drawNoDataMessage(el,'Sem dados (top produtos)');
+            } catch(e){ console.error(e); }
+
+            chartsInitialized = true;
         }, 80);
-    } else {
-        // se nenhum gráfico estiver aberto, destruímos os charts para economizar memória;
-        // quando o usuário abrir, os charts serão recriados.
-        resetChartsInitialization();
-    }
-}
-[startDate,endDate,search].forEach(el=>el.addEventListener('input',applyFilters));
-clearFilters.onclick=()=>{startDate.value='';endDate.value='';search.value='';applyFilters();};
-
-// ---------- Gráficos (inicializa a partir da tabela) ----------
-function initChartsFromTable(){
-    // sempre recria com base nas linhas que estão visíveis (não filtradas)
-    // destrói existentes
-    if(window._charts){
-        Object.values(window._charts).forEach(c => { try { c.destroy(); } catch(e){} });
-        window._charts = {};
-    } else {
-        window._charts = {};
-    }
-
-    // pega apenas as linhas que NÃO estão filtradas
-    const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.classList.contains('filtered-hidden'));
-    if(trs.length === 0){
-        // sem dados filtrados => manter charts vazios/destruidos
-        return;
-    }
-
-    const labels = [];
-    const qtys = [];
-    const valores = [];
-    const precos = [];
-    const fornecedores = {};
-    const validadeCounts = { expirados:0, proximos30:0, afastados:0, semData:0 };
-    const today = new Date();
-    const in30 = new Date(); in30.setDate(today.getDate()+30);
-
-    trs.forEach(tr => {
-        const tds = tr.querySelectorAll('td');
-        const nome = tds[1].textContent.trim();
-        const fornecedor = tds[2].textContent.trim() || '---';
-        const qtd = parseBRNumber(tds[5].textContent.trim());
-        const preco = parseBRNumber(tds[6].textContent.trim());
-        const valor = parseBRNumber(tds[7].textContent.trim());
-        const valStr = tds[8].textContent.trim();
-
-        labels.push(nome);
-        qtys.push(qtd);
-        valores.push(valor);
-        precos.push(preco);
-
-        fornecedores[fornecedor] = (fornecedores[fornecedor] || 0) + qtd;
-
-        if(valStr === '---' || valStr === '') {
-            validadeCounts.semData++;
-        } else {
-            const dateISO = brToISO(valStr);
-            const d = new Date(dateISO);
-            if(d < today) validadeCounts.expirados++;
-            else if(d <= in30) validadeCounts.proximos30++;
-            else validadeCounts.afastados++;
-        }
     });
-
-    const maxLabels = 20;
-    const smallLabels = labels.slice(0, maxLabels);
-    const smallQtys = qtys.slice(0, maxLabels);
-    const smallValores = valores.slice(0, maxLabels);
-    const smallPrecos = precos.slice(0, maxLabels);
-    const fornLabels = Object.keys(fornecedores);
-    const fornValues = fornLabels.map(k => fornecedores[k]);
-
-    // cria os charts (sempre recria)
-    try {
-        const ctxQtd = document.getElementById('chartQtd').getContext('2d');
-        window._charts['chartQtd'] = new Chart(ctxQtd, {
-            type:'bar',
-            data:{ labels: smallLabels, datasets:[{ label:'Quantidade', data: smallQtys }]},
-            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}
-        });
-    } catch(e){}
-
-    try {
-        const ctxValor = document.getElementById('chartValor').getContext('2d');
-        window._charts['chartValor'] = new Chart(ctxValor, {
-            type:'bar',
-            data:{ labels: smallLabels, datasets:[{ label:'Valor (R$)', data: smallValores }]},
-            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
-        });
-    } catch(e){}
-
-    try {
-        const ctxForn = document.getElementById('chartForn').getContext('2d');
-        window._charts['chartForn'] = new Chart(ctxForn, {
-            type:'doughnut',
-            data:{ labels: fornLabels, datasets:[{ label:'Fornecedores', data: fornValues }]},
-            options:{ responsive:true, maintainAspectRatio:false }
-        });
-    } catch(e){}
-
-    try {
-        const ctxVal = document.getElementById('chartValidade').getContext('2d');
-        window._charts['chartValidade'] = new Chart(ctxVal, {
-            type:'pie',
-            data:{ labels: ['Expirados','Próx.30 dias','Afastados','Sem Data'], datasets:[{ data: [validadeCounts.expirados, validadeCounts.proximos30, validadeCounts.afastados, validadeCounts.semData] }]},
-            options:{ responsive:true, maintainAspectRatio:false }
-        });
-    } catch(e){}
-
-    try {
-        const ctxPreco = document.getElementById('chartPreco').getContext('2d');
-        window._charts['chartPreco'] = new Chart(ctxPreco, {
-            type:'line',
-            data:{ labels: smallLabels, datasets:[{ label:'Preço Unitário', data: smallPrecos, fill:false }]},
-            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
-        });
-    } catch(e){}
 }
 
-// Caso já tenha sido clicado antes e queira re-renderizar (por ex. após filtro), reseta para permitir reinit:
-function resetChartsInitialization(){
-    if(!window._charts) return;
-    Object.values(window._charts).forEach(c => { try { c.destroy(); } catch(e){} });
-    window._charts = {};
-}
-
-// Se filtros mudarem e o usuário abrir a aba de gráfico, queremos refletir mudanças:
-// (applyFilters já chama init quando a aba estiver ativa, e também reseta charts quando nenhuma aba de gráfico estiver aberta)
-
-// Inicializar comportamento: esconder seções (CSS já faz), aplicar filtros e paginação
-applyFilters();
-displayRows();
+// não inicializa os gráficos automaticamente — só quando o painel abrir
 
 </script>
 </body>
