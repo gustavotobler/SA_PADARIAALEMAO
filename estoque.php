@@ -310,7 +310,6 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
 
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
-    <a href="#" onclick="document.getElementById('tabela').scrollIntoView();return false;"><span class="material-icons icon">table_chart</span><span class="text">Tabela</span></a>
     <a href="#" onclick="openInfoPanel();return false;"><span class="material-icons icon">insights</span><span class="text">Informações</span></a>
     <a href="#" onclick="openChartsPanel();return false;"><span class="material-icons icon">bar_chart</span><span class="text">Gráficos</span></a>
 </nav>

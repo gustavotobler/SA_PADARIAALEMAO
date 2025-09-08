@@ -1,6 +1,6 @@
 <?php
 // comanda_single_styled.php
-// Arquivo atualizado: CSS/Sidebar alinhados; addItemForm via AJAX atualiza tabela sem reload.
+// Arquivo atualizado: Adicionado busca/edição por número de comanda ao lado de "Criar nova comanda".
 session_start();
 
 // -> Em desenvolvimento, útil ativar; em produção comente.
@@ -24,8 +24,9 @@ try {
 }
 
 // ===== CSRF =====
-if (!isset($_SESSION['csrf']))
+if (!isset($_SESSION['csrf'])) {
   $_SESSION['csrf'] = bin2hex(random_bytes(24));
+}
 function check_csrf(array $post)
 {
   if (!isset($post['csrf']) || !hash_equals($_SESSION['csrf'] ?? '', $post['csrf'])) {
@@ -283,6 +284,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ===== Dados para a página =====
 $idParam = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $comanda = $idParam ? carregar_comanda($pdo, $idParam) : null;
+
+// Se veio id via GET, mas não achou, avisar usuário (msg exibida no template)
+if ($idParam && !$comanda && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+  $msg = 'Comanda #' . $idParam . ' não encontrada.';
+}
+
 $produtos = get_products($pdo);
 
 // ===== Impressão: se ?print=1 presente, gerar página de impressão minimalista =====
@@ -775,6 +782,26 @@ if (isset($_GET['print']) && $comanda) {
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #e6f4fb;
     }
+
+    /* layout extra para os formulários iniciais (criar + abrir por número) */
+    .initial-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .initial-actions input[type=number] {
+      width: 160px;
+      min-height: 44px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+    }
+
   </style>
 </head>
 
@@ -832,11 +859,24 @@ if (isset($_GET['print']) && $comanda) {
 
       <?php if (!$comanda): ?>
         <p style="color:var(--muted);margin-bottom:12px">Nenhuma comanda selecionada no momento.</p>
-        <form method="post" style="display:inline-block">
-          <input type="hidden" name="acao" value="nova">
-          <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-          <button class="btn btn-primary" type="submit" title="Criar nova comanda">➕ Criar nova comanda</button>
-        </form>
+
+        <!-- Novos controles iniciais: criar + abrir por número -->
+        <div class="initial-actions">
+          <!-- criar nova comanda (POST) -->
+          <form method="post" style="display:inline-block">
+            <input type="hidden" name="acao" value="nova">
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+            <button class="btn btn-primary" type="submit" title="Criar nova comanda">➕ Criar nova comanda</button>
+          </form>
+
+          <!-- abrir comanda por número (GET) -->
+          <form method="get" action="" style="display:inline-block">
+            <label for="openComandaId" class="sr-only" style="display:none">Número da comanda</label>
+            <input type="number" id="openComandaId" name="id" min="1" placeholder="Número" aria-label="Número da comanda">
+            <button class="btn btn-ghost" type="submit" title="Abrir comanda para edição">✏️ Abrir comanda</button>
+          </form>
+        </div>
+
         <?php if ($msg): ?>
           <div class="message <?= strpos($msg, 'Erro') === 0 ? 'err' : 'ok' ?>"><?= htmlspecialchars($msg) ?></div>
         <?php endif; ?>
