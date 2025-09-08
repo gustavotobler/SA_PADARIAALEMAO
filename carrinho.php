@@ -269,7 +269,7 @@ try {
         if (is_ajax()) {
           send_json(['success'=>true,'msg'=>'Pagamento registrado'.($auto_close?' e comanda fechada.':'').'','total'=>$total,'troco'=>$troco]);
         } else {
-          header('Location: comanda_single_styled.php?id=' . $id_venda);
+          header('Location: comandas_visualizar.php?id=' . $id_venda);
           exit();
         }
       } catch (Exception $e) {
@@ -529,8 +529,8 @@ $nomeFunc = $stmtNome->fetchColumn() ?? ($_SESSION['nome_func'] ?? 'Usuário');
 
               <div class="actions">
                 <button id="btnPay" class="btn btn-primary">💵 Registrar Pagamento</button>
-                <a class="btn btn-ghost" href="comanda_single_styled.php?id=<?= (int)$comanda['ID_vendas'] ?>">↩ Voltar</a>
-                <button id="btnPrint" class="btn btn-ghost" onclick="window.open('comanda_single_styled.php?id=<?= (int)$comanda['ID_vendas'] ?>&print=1','_blank')">🖨 Imprimir</button>
+                <a class="btn btn-ghost" href="comandas_visualizar.php?id=<?= (int)$comanda['ID_vendas'] ?>">↩ Voltar</a>
+                <button id="btnPrint" class="btn btn-ghost" onclick="window.open('comandas_visualizar.php?id=<?= (int)$comanda['ID_vendas'] ?>&print=1','_blank')">🖨 Imprimir</button>
               </div>
 
               <div class="note" id="msgBox" style="display:none;margin-top:8px"></div>
@@ -680,7 +680,7 @@ $nomeFunc = $stmtNome->fetchColumn() ?? ($_SESSION['nome_func'] ?? 'Usuário');
           showMsg(j.msg || 'Pagamento registrado', true);
           if (j.troco !== undefined) document.getElementById('trocoText').textContent = formatBRL(j.troco);
           if (document.getElementById('auto_close').checked) {
-            window.location = 'comanda_single_styled.php?id=' + comandaId;
+            window.location = 'comandas_visualizar.php?id=' + comandaId;
           } else {
             document.getElementById('valor_pago').value = parseFloat(fd.get('valor_pago')).toFixed(2);
             calcTotalsAndTroco();
