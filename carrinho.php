@@ -404,6 +404,8 @@ $nomeFunc = $stmtNome->fetchColumn() ?? ($_SESSION['nome_func'] ?? 'Usuário');
   <nav class="sidebar" id="sidebar" aria-label="Menu lateral">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
     <a href="inicial1.php"><span class="material-icons icon" aria-hidden="true">arrow_back</span><span class="text">Voltar</span></a>
+    <!-- ADICIONEI: link para criar comanda (mesmo ícone/estilo que você pediu) -->
+    <a href="comanda.php"><span class="material-icons icon" aria-hidden="true">receipt</span><span class="text">Criar Comanda</span></a>
     <a href="ver_comandas.php"><span class="material-icons icon" aria-hidden="true">visibility</span><span class="text">Ver Comandas</span></a>
     <a href="carrinho.php"><span class="material-icons icon" aria-hidden="true">shopping_cart</span><span class="text">Carrinho</span></a>
   </nav>
