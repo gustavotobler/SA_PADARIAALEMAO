@@ -53,7 +53,7 @@ function send_json($data, $status = 200)
     exit();
 }
 
-/* ===== Endpoints: details (JSON), print (HTML imprimível), report (HTML) ===== */
+/* ===== Endpoints: details (JSON), print (HTML), report (HTML) ===== */
 if (isset($_GET['action']) && $_GET['action'] === 'details' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
     $sqlV = "SELECT v.ID_vendas, v.venda_data, v.forma_pagamento, v.status, f.Nome_func
@@ -422,17 +422,14 @@ if ($start || $end || $filterFunc || $filterStatus) {
   --primary-text: #f8f9fa;
   --hover-bg: #1e3a5f;
   --highlight: #0077b6;
-  --card-bg: #10161b; /* card mais neutro/acinzentado escuro */
+  --card-bg: #10161b;
   --card-contrast: #17222b;
   --green: #06a34a;
-  --blue: #00b4d8;
   --text: #e6f4fb;
   --muted: #9ab0bf;
   --accent: #0093d0;
-  --success: #16a34a;
   --danger: #ef4444;
   --glass-border: rgba(255,255,255,0.03);
-  --soft-white: rgba(255,255,255,0.06);
 }
 
 /* Reset + base */
@@ -445,7 +442,7 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
-/* Sidebar (mantido sem alterações) */
+/* Sidebar (mantido) */
 .sidebar {
     width: var(--sidebar-width);
     background:var(--sidebar-bg);
@@ -468,17 +465,11 @@ body{
 .sidebar.collapsed .icon{margin-right:0;justify-content:center}
 .toggle-btn{cursor:pointer;text-align:center;margin-bottom:20px;font-size:22px;color:var(--primary-text)}
 
-/* Page container — reserva o espaço da sidebar via variável e centraliza o conteúdo */
+/* Page container */
 .container{margin-left:var(--sidebar-width);padding:32px;display:flex;justify-content:center;min-height:100vh}
-
-/* wrapper central onde o conteúdo realmente fica */
 .main{width:100%;max-width:1200px}
 
-/* Header */
-.header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:18px}
-.h-title{color:#fff;font-size:20px;font-weight:700}
-
-/* Filter panel — mais estilizado */
+/* Filter panel */
 .filter-panel{
   background:linear-gradient(180deg, rgba(28, 42, 58, 0.85), rgba(28, 42, 58, 0.85));
   border-radius:12px;
@@ -498,11 +489,15 @@ body{
   background: rgba(255,255,255,0.03); color:var(--text); min-width:160px;
   outline:none;
 }
-.filter-panel input[type=number]{-moz-appearance: textfield; appearance: none;}
-.filter-panel input[type=number]::-webkit-outer-spin-button,
-.filter-panel input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-/* search comanda area - destaque */
+/* --- Apenas o CSS do status (alteração solicitada) --- */
+/* o select recebe classes via JS: status-open, status-closed, status-canceled */
+#status { transition: background .18s, color .18s, border-color .18s; font-weight:700; }
+#status.status-open { background: linear-gradient(90deg,#fff7e0,#ffefc2); color:#6b3f00; border-color: rgba(0,0,0,0.06); }
+#status.status-closed { background: linear-gradient(90deg,#e6ffef,#c2f7dc); color:#045028; border-color: rgba(0,0,0,0.06); }
+#status.status-canceled { background: linear-gradient(90deg,#ffdfe0,#ffc8c9); color:#5a0e0e; border-color: rgba(0,0,0,0.06); }
+
+/* search comanda area */
 .field-comanda { min-width:220px; flex:0 0 220px; }
 .field-comanda .input-wrap { display:flex; gap:8px; align-items:center; }
 .field-comanda input { flex:1; }
@@ -516,7 +511,6 @@ body{
   box-shadow: 0 8px 24px rgba(6,120,180,0.18);
   border:1px solid rgba(255,255,255,0.04);
 }
-.btn.primary:hover{transform:translateY(-2px);box-shadow: 0 14px 40px rgba(6,120,180,0.22);}
 .btn.ghost{
   background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px 12px;
 }
@@ -525,10 +519,7 @@ body{
   box-shadow: 0 8px 20px rgba(6,150,160,0.12);
 }
 
-/* Results & cards */
-.result-strip{display:flex;justify-content:center;margin-top:14px;color:#cfe9f8}
-
-/* Cards layout: updated look */
+/* Cards layout */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
@@ -550,14 +541,16 @@ body{
 .card .preview{margin-top:10px;font-size:13px;color:var(--muted)}
 .card .total{margin-top:12px;font-weight:800;color:var(--green);text-align:right}
 
-/* improved badge */
+/* right actions: cart icon + badge */
+.right-actions{display:flex;gap:8px;align-items:center}
+.icon-cart{background:transparent;border:none;padding:6px;border-radius:8px;cursor:pointer;font-size:16px}
+.icon-cart:hover{background:rgba(255,255,255,0.02)}
+
+/* status badges in card (keeps original look) */
 .badge{padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px;color:#102029;background:transparent}
 .badge.open{background:linear-gradient(90deg,#fbbf24,#f97316); color:#082022;}
 .badge.closed{background:linear-gradient(90deg,#10b981,#059669); color:#042018;}
 .badge.canceled{background:linear-gradient(90deg,#ef4444,#f97373); color:#fff;}
-
-/* empty state */
-.empty{padding:18px;border-radius:10px;background:rgba(255,255,255,0.02);color:#cfe9f8;text-align:center}
 
 /* modal styling */
 .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:999}
@@ -573,6 +566,7 @@ body{
 .modal .actions button { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
 .modal .actions .print { background: linear-gradient(90deg, var(--accent), #0ea5ff); color:#fff; }
 .modal .actions .report { background: #0ea5a4; color:#012; }
+.modal .actions .to-cart { background: linear-gradient(90deg,#ffb020,#ff7a00); color:#082022; }
 
 /* responsive */
 @media(max-width:980px){
@@ -593,7 +587,6 @@ body{
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
     <a href="comanda.php"><span class="material-icons icon">receipt</span><span class="text">Criar Comanda</span></a>
     <a href="ver_comandas.php"><span class="material-icons icon">visibility</span><span class="text">Ver Comandas</span></a>
-    <!-- Adição solicitada: link do carrinho na sidebar -->
     <a href="carrinho.php"><span class="material-icons icon">shopping_cart</span><span class="text">Carrinho</span></a>
 </nav>
 
@@ -627,14 +620,16 @@ body{
         <input type="text" id="func" name="func" placeholder="Nome ou parte do nome" value="<?= htmlspecialchars($filterFunc) ?>">
       </div>
 
-      <div class="field">
-        <label for="status">Status</label>
-        <select id="status" name="status">
-          <option value="">— Todos —</option>
-          <option value="ABERTA" <?= $filterStatus === 'ABERTA' ? 'selected' : '' ?>>ABERTA</option>
-          <option value="FECHADA" <?= $filterStatus === 'FECHADA' ? 'selected' : '' ?>>FECHADA</option>
-          <option value="CANCELADA" <?= $filterStatus === 'CANCELADA' ? 'selected' : '' ?>>CANCELADA</option>
-        </select>
+      <div class="field" style="display:flex;align-items:center;gap:8px">
+        <div style="flex-direction:column;display:flex">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="">— Todos —</option>
+            <option value="ABERTA" <?= $filterStatus === 'ABERTA' ? 'selected' : '' ?>>ABERTA</option>
+            <option value="FECHADA" <?= $filterStatus === 'FECHADA' ? 'selected' : '' ?>>FECHADA</option>
+            <option value="CANCELADA" <?= $filterStatus === 'CANCELADA' ? 'selected' : '' ?>>CANCELADA</option>
+          </select>
+        </div>
       </div>
 
       <div class="filter-actions">
@@ -660,13 +655,13 @@ body{
         <span style="margin-left:12px;color:#9fb3c8">•</span>
         <span style="margin-left:8px;color:#fff">Resultados: <strong><?= count($comandas) ?></strong></span>
       <?php else: ?>
-        <!-- intentionally left blank as requested -->
+        <!-- intentionally left blank -->
       <?php endif; ?>
     </div>
 
     <div class="cards" id="cards">
       <?php if (!($start || $end || $filterFunc || $filterStatus)): ?>
-        <!-- removed the 'Nenhum filtro selecionado...' empty box as requested -->
+        <!-- empty when no filters -->
       <?php elseif (count($comandas) === 0): ?>
         <div class="empty">Nenhuma comanda encontrada para esse filtro.</div>
       <?php else: ?>
@@ -682,7 +677,11 @@ body{
           <div class="card" tabindex="0" data-id="<?= htmlspecialchars($c['ID_vendas']) ?>" onclick="openDetails(<?= htmlspecialchars($c['ID_vendas']) ?>)">
             <div class="row">
               <div class="id">#<?= htmlspecialchars($c['ID_vendas']) ?></div>
-              <div class="badge <?= $badgeClass ?>"><?= htmlspecialchars($c['status'] ?: '-') ?></div>
+              <div class="right-actions">
+                <!-- small cart button: abre carrinho.php?id=ID sem abrir modal -->
+                <button class="icon-cart" title="Abrir no carrinho" onclick="event.stopPropagation(); goToCart(<?= htmlspecialchars($c['ID_vendas']) ?>)">🛒</button>
+                <div class="badge <?= $badgeClass ?>"><?= htmlspecialchars($c['status'] ?: '-') ?></div>
+              </div>
             </div>
             <div class="meta">Feita por: <strong><?= htmlspecialchars($c['Nome_func'] ?: '—') ?></strong></div>
             <div class="meta">Hora: <?= htmlspecialchars($hora ?: '—') ?></div>
@@ -735,6 +734,8 @@ body{
       <div class="actions" style="margin-top:10px">
         <button class="print" onclick="openPrintTab()">Abrir versão para imprimir</button>
         <button class="report" onclick="openReportSingle()">Gerar relatório</button>
+        <!-- botão que leva ao carrinho (abre carrinho.php?id=...) -->
+        <button class="to-cart" onclick="goToCartFromModal()">Ir para o carrinho</button>
       </div>
 
       <div class="items" id="itemsSection" style="margin-top:12px">
@@ -863,6 +864,26 @@ filterForm.addEventListener('submit', function(e){
     openDetails(val);
   }
 });
+
+/* ===== New: go to cart behavior (usando ?id=...) ===== */
+function goToCart(id){
+  if (!id) return;
+  // redireciona para carrinho.php?id=ID — o seu carrinho.php já abre a comanda via GET id
+  window.location.href = 'carrinho.php?id=' + encodeURIComponent(id);
+}
+function goToCartFromModal(){ if (!currentModalId) return; goToCart(currentModalId); }
+
+/* ===== Apenas JS mínimo para aplicar classes ao select de status (apenas alteração visual) ===== */
+const statusSelect = document.getElementById('status');
+function applyStatusClass() {
+  const v = (statusSelect.value || '').toUpperCase();
+  statusSelect.classList.remove('status-open','status-closed','status-canceled');
+  if (v === 'ABERTA' || v === 'ABERTO') statusSelect.classList.add('status-open');
+  else if (v === 'FECHADA' || v === 'FECHADO') statusSelect.classList.add('status-closed');
+  else if (v === 'CANCELADA' || v === 'CANCELADO') statusSelect.classList.add('status-canceled');
+}
+statusSelect.addEventListener('change', applyStatusClass);
+applyStatusClass(); // init based on server-side selected value
 </script>
 </body>
 </html>
