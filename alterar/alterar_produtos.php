@@ -1,64 +1,143 @@
 <?php
-session_start(); // Inicia a sessão para verificar o login e nível de acesso
-require_once '../conexao.php'; // Inclui a conexão com o banco de dados
-
-// Verifica se o usuário é administrador (nível 1)
-if ($_SESSION['nivel'] != 1) {
-  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
-  exit;
-}
+session_start();
+require_once '../conexao.php'; // manter ../ se o arquivo estiver em alterar/
 
 // Verifica se o usuário está logado
 if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
-  echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
-  exit;
+    echo "<script>alert('Você precisa estar logado!');window.location.href='../inicial1.php';</script>";
+    exit;
 }
 
-// Obtém o ID do produto via GET ou POST, validando como inteiro
+// Verifica se o usuário é administrador (nível 1)
+if (!isset($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
+    exit;
+}
+
+// Função utilitária: converte dd/mm/aaaa -> YYYY-MM-DD, retorna null se vazio
+function brDateToSql($datebr) {
+    $datebr = trim((string)$datebr);
+    if ($datebr === '' || $datebr === '0000-00-00') return null;
+    // aceita dd/mm/yyyy ou dd-mm-yyyy
+    $datebr = str_replace('-', '/', $datebr);
+    $parts = explode('/', $datebr);
+    if (count($parts) !== 3) return null;
+    [$d, $m, $y] = $parts;
+    if (!checkdate((int)$m, (int)$d, (int)$y)) return null;
+    return sprintf('%04d-%02d-%02d', (int)$y, (int)$m, (int)$d);
+}
+
+// Pega ID via GET (abrir a página) ou POST (quando enviar)
 $id = filter_input(INPUT_GET, 'ID_produto', FILTER_VALIDATE_INT);
 if (!$id) {
     $id = filter_input(INPUT_POST, 'ID_produto', FILTER_VALIDATE_INT);
 }
-
 if (!$id) {
-    echo "ID do produto inválido.";
+    echo "<script>alert('ID do produto inválido.');window.location.href='../produtos.php';</script>";
     exit;
 }
 
-// Busca o produto no banco pelo ID
-$stmt = $pdo->prepare("SELECT * FROM produtos WHERE ID_produto = :id");
+// Se for POST, processa atualização
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Recebe e valida campos
+    $ID_forn = filter_input(INPUT_POST, 'ID_forn', FILTER_VALIDATE_INT);
+    $id_categorias = filter_input(INPUT_POST, 'id_categorias', FILTER_VALIDATE_INT);
+    $Nome_prod = trim((string)filter_input(INPUT_POST, 'Nome_prod', FILTER_SANITIZE_STRING));
+    $Preco_unitario_raw = str_replace(',', '.', trim((string)filter_input(INPUT_POST, 'Preco_unitario', FILTER_UNSAFE_RAW)));
+    $Preco_unitario = ($Preco_unitario_raw === '') ? null : filter_var($Preco_unitario_raw, FILTER_VALIDATE_FLOAT);
+    $Unid_medida = trim((string)filter_input(INPUT_POST, 'Unid_medida', FILTER_SANITIZE_STRING));
+    $Validade_raw = trim((string)filter_input(INPUT_POST, 'Validade', FILTER_UNSAFE_RAW));
+    $Validade_sql = brDateToSql($Validade_raw); // null ou yyyy-mm-dd
+    $Qntd_produto_raw = filter_input(INPUT_POST, 'Qntd_produto', FILTER_UNSAFE_RAW);
+    $Qntd_produto = ($Qntd_produto_raw === '') ? 0 : filter_var($Qntd_produto_raw, FILTER_VALIDATE_INT);
+
+    // Validações básicas
+    if ($Nome_prod === '') {
+        echo "<script>alert('O nome do produto não pode ficar vazio.');history.back();</script>";
+        exit;
+    }
+
+    try {
+        // Monta update com parâmetros (inclui somente colunas esperadas)
+        $sql = "UPDATE produtos SET 
+                    ID_forn = :ID_forn,
+                    id_categorias = :id_categorias,
+                    Nome_prod = :Nome_prod,
+                    Preco_unitario = :Preco_unitario,
+                    Unid_medida = :Unid_medida,
+                    Validade = :Validade,
+                    Qntd_produto = :Qntd_produto
+                WHERE ID_produto = :ID_produto
+                LIMIT 1";
+
+        $stmt = $pdo->prepare($sql);
+
+        // Se Preco_unitario for null, bindValue com null; caso contrário float
+        if ($Preco_unitario === false) {
+            // valor inválido
+            echo "<script>alert('Preço unitário inválido. Use números (ex: 5.50 ou 5,50).');history.back();</script>";
+            exit;
+        }
+
+        // Binders
+        $stmt->bindValue(':ID_forn', ($ID_forn ?: null), PDO::PARAM_INT);
+        $stmt->bindValue(':id_categorias', ($id_categorias ?: null), PDO::PARAM_INT);
+        $stmt->bindValue(':Nome_prod', $Nome_prod, PDO::PARAM_STR);
+        if ($Preco_unitario === null) {
+            $stmt->bindValue(':Preco_unitario', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':Preco_unitario', number_format((float)$Preco_unitario, 2, '.', ''), PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':Unid_medida', ($Unid_medida === '' ? null : $Unid_medida), PDO::PARAM_STR);
+        if ($Validade_sql === null) {
+            $stmt->bindValue(':Validade', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':Validade', $Validade_sql, PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':Qntd_produto', ($Qntd_produto === false ? 0 : (int)$Qntd_produto), PDO::PARAM_INT);
+        $stmt->bindValue(':ID_produto', (int)$id, PDO::PARAM_INT);
+
+        $ok = $stmt->execute();
+
+        if ($ok) {
+            echo "<script>alert('Produto alterado com sucesso.');window.location.href='../produtos.php';</script>";
+            exit;
+        } else {
+            $err = $stmt->errorInfo();
+            echo "<script>alert('Falha ao alterar produto: {$err[2]}');history.back();</script>";
+            exit;
+        }
+    } catch (Exception $e) {
+        echo "<script>alert('Erro ao alterar produto: " . addslashes($e->getMessage()) . "');history.back();</script>";
+        exit;
+    }
+}
+
+// Se não foi POST, busca o produto e mostra o formulário
+$stmt = $pdo->prepare("SELECT * FROM produtos WHERE ID_produto = :id LIMIT 1");
 $stmt->execute([':id' => $id]);
 $prod = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Se não encontrou, exibe mensagem
 if (!$prod) {
-    echo "Produto não encontrado.";
+    echo "<script>alert('Produto não encontrado.');window.location.href='../produtos.php';</script>";
     exit;
 }
 
-// Função para formatar datas do banco (YYYY-MM-DD) para DD/MM/YYYY
+// Formata data para dd/mm/yyyy
 function formatarData($data_sql) {
     if (!$data_sql) return '';
     $data_sql = trim($data_sql);
     if ($data_sql === '0000-00-00' || $data_sql === '0000-00-00 00:00:00') return '';
-
     $ts = strtotime($data_sql);
     if ($ts !== false) return date('d/m/Y', $ts);
-
     return '';
 }
-
-// Formata a validade do produto para exibir no formulário
 $validade_formatada = formatarData($prod['Validade'] ?? null);
-
-// Pega a unidade de medida já existente
 $unid_medida = trim($prod['Unid_medida'] ?? '');
 
-// Carrega todos os fornecedores e categorias para os selects
+// Carrega fornecedores e categorias
 $fornecedores = $pdo->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER BY Nome_forn")->fetchAll(PDO::FETCH_ASSOC);
 $categorias = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria")->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -67,139 +146,29 @@ $categorias = $pdo->query("SELECT id_categorias, nome_categoria FROM categorias 
 <title>Editar Produto</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 <style>
-/* Reset e estilo básico */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-  background: rgb(59, 75, 93);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-header {
-  background: rgb(27, 68, 95);
-  padding: 15px 20px;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-}
-header .back-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 24px;
-}
-header h1 {
-  flex: 1;
-  font-weight: 700;
-  font-size: 1.5rem;
-  user-select: none;
-}
-
-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: 25px 15px;
-}
-
-/* Formulário */
-form {
-  background: #fff;
-  padding: 30px 35px;
-  border-radius: 15px;
-  box-shadow: 0 12px 25px rgba(0,0,0,0.12);
-  max-width: 600px;
-  width: 100%;
-}
-form h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #2c3e50;
-  font-size: 1.8rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #34495e;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 12px 15px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-input:focus, select:focus, textarea:focus {
-  border-color: rgb(27, 68, 95);
-  box-shadow: 0 0 8px rgba(52,152,219,0.3);
-  outline: none;
-}
-
-/* Botão */
-button[type="submit"] {
-  width: 100%;
-  padding: 14px;
-  background: rgb(27, 68, 95);
-  border: none;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-button[type="submit"]:hover {
-  background: rgb(0, 153, 255);
-}
-
-/* Grupos flexíveis */
-.flex-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.flex-group > div {
-  flex: 1;
-}
-
-/* Mensagens de erro */
-.erro {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-top: -10px;
-  margin-bottom: 10px;
-  display: block;
-}
-
-/* Responsividade */
-@media(max-width: 600px) {
-  .flex-group {
-    flex-direction: column;
-  }
-}
+/* (mantive seu CSS original — pode colar o seu CSS aqui) */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: rgb(59, 75, 93); min-height: 100vh; display: flex; flex-direction: column; }
+header { background: rgb(27, 68, 95); padding: 15px 20px; color: white; display: flex; align-items: center; gap: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+header .back-btn { background: transparent; border: none; color: white; cursor: pointer; font-size: 24px; }
+header h1 { flex: 1; font-weight: 700; font-size: 1.5rem; user-select: none; }
+main { flex: 1; display: flex; justify-content: center; padding: 25px 15px; }
+form { background: #fff; padding: 30px 35px; border-radius: 15px; box-shadow: 0 12px 25px rgba(0,0,0,0.12); max-width: 600px; width: 100%; }
+form h2 { text-align: center; margin-bottom: 30px; color: #2c3e50; font-size: 1.8rem; }
+label { display: block; margin-bottom: 6px; font-weight: 600; color: #34495e; }
+input, select, textarea { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s ease; }
+input:focus, select:focus, textarea:focus { border-color: rgb(27, 68, 95); box-shadow: 0 0 8px rgba(52,152,219,0.3); outline: none; }
+button[type="submit"] { width: 100%; padding: 14px; background: rgb(27, 68, 95); border: none; color: white; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; transition: background-color 0.3s; }
+button[type="submit"]:hover { background: rgb(0, 153, 255); }
+.flex-group { display: flex; gap: 10px; margin-bottom: 15px; }
+.flex-group > div { flex: 1; }
+.erro { color: #e74c3c; font-size: 0.85rem; margin-top: -10px; margin-bottom: 10px; display: block; }
+@media(max-width: 600px) { .flex-group { flex-direction: column; } }
 </style>
 </head>
 <body>
 
 <header>
-  <!-- Botão de voltar -->
   <button class="back-btn" onclick="window.location.href='../produtos.php'" title="Voltar">
     <span class="material-icons">arrow_back</span>
   </button>
@@ -207,13 +176,10 @@ button[type="submit"]:hover {
 </header>
 
 <main>
-  <!-- Formulário de edição -->
-  <form method="POST" action="alterar_produtos.php" novalidate>
+  <form method="POST" action="" novalidate>
       <h2>Editar Produto</h2>
-      <!-- ID oculto para saber qual produto atualizar -->
       <input type="hidden" name="ID_produto" value="<?= htmlspecialchars($prod['ID_produto'], ENT_QUOTES) ?>" />
 
-      <!-- Select de fornecedores -->
       <label for="ID_forn">Fornecedor:</label>
       <select name="ID_forn" id="ID_forn" required>
           <option value="">-- Nenhum --</option>
@@ -224,7 +190,6 @@ button[type="submit"]:hover {
           <?php endforeach; ?>
       </select>
 
-      <!-- Select de categorias -->
       <label for="id_categorias">Categoria:</label>
       <select name="id_categorias" id="id_categorias" required>
           <option value="">Selecione</option>
@@ -235,15 +200,12 @@ button[type="submit"]:hover {
           <?php endforeach; ?>
       </select>
 
-      <!-- Nome do produto -->
       <label for="Nome_prod">Nome do Produto:</label>
       <input type="text" name="Nome_prod" id="Nome_prod" maxlength="60" required value="<?= htmlspecialchars($prod['Nome_prod'], ENT_QUOTES) ?>" />
 
-      <!-- Preço unitário -->
       <label for="Preco_unitario">Preço Unitário (R$):</label>
-      <input type="number" step="0.01" min="0" name="Preco_unitario" id="Preco_unitario" value="<?= htmlspecialchars($prod['Preco_unitario'], ENT_QUOTES) ?>" />
+      <input type="text" name="Preco_unitario" id="Preco_unitario" value="<?= htmlspecialchars($prod['Preco_unitario'], ENT_QUOTES) ?>" />
 
-      <!-- Unidade de medida -->
       <label for="Unid_medida">Unidade de medida:</label>
       <select name="Unid_medida" id="Unid_medida" required>
         <option value="">Selecione</option>
@@ -252,11 +214,9 @@ button[type="submit"]:hover {
         <option value="g" <?= (strtolower($unid_medida) === 'g') ? 'selected' : '' ?>>g</option>
       </select>
 
-      <!-- Validade -->
       <label for="Validade">Validade (dd/mm/aaaa):</label>
       <input type="text" name="Validade" id="Validade" maxlength="10" placeholder="dd/mm/aaaa" value="<?= htmlspecialchars($validade_formatada, ENT_QUOTES) ?>" />
 
-      <!-- Quantidade -->
       <label for="Qntd_produto">Quantidade em Estoque:</label>
       <input type="number" name="Qntd_produto" id="Qntd_produto" min="0" value="<?= htmlspecialchars($prod['Qntd_produto'], ENT_QUOTES) ?>" />
 
@@ -264,18 +224,17 @@ button[type="submit"]:hover {
   </form>
 </main>
 
-<!-- Script para máscara de data -->
 <script>
 document.addEventListener("DOMContentLoaded", function(){
   const validade = document.getElementById("Validade");
   validade.addEventListener("input", () => {
-    let v = validade.value.replace(/\D/g,"").slice(0,8); // Remove tudo que não é número
+    let v = validade.value.replace(/\D/g,"").slice(0,8);
     if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
     if(v.length > 5) v = v.slice(0,5) + '/' + v.slice(5);
     validade.value = v;
   });
 });
-</script> 
+</script>
 
 </body>
 </html>
