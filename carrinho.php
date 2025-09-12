@@ -226,11 +226,12 @@ try {
       // método vem de um campo (hidden input) ou fallback
       $metodo = substr(trim($_POST['metodo'] ?? 'DINHEIRO'), 0, 50);
       $valor_pago = isset($_POST['valor_pago']) ? (float) $_POST['valor_pago'] : $total;
-      $auto_close = isset($_POST['auto_close']) && ($_POST['auto_close'] === '1' || $_POST['auto_close'] === 'on');
+      // REMARCADO: fechar automaticamente SEM checkbox (sempre true)
+      $auto_close = true;
 
       if ($total <= 0) throw new Exception('Comanda sem itens (total zero).');
       if ($auto_close && $valor_pago < $total) {
-        throw new Exception('Valor pago menor que total. Desmarque "Fechar automaticamente" ou pague o valor integral.');
+        throw new Exception('Valor pago menor que total. Pagamento não registrado.');
       }
 
       try {
@@ -267,7 +268,7 @@ try {
         $pdo->commit();
 
         if (is_ajax()) {
-          send_json(['success'=>true,'msg'=>'Pagamento registrado'.($auto_close?' e comanda fechada.':'').'','total'=>$total,'troco'=>$troco]);
+          send_json(['success'=>true,'msg'=>'Pagamento registrado e comanda fechada.','total'=>$total,'troco'=>$troco]);
         } else {
           header('Location: comandas_visualizar.php?id=' . $id_venda);
           exit();
@@ -525,9 +526,8 @@ $nomeFunc = $stmtNome->fetchColumn() ?? ($_SESSION['nome_func'] ?? 'Usuário');
                 <div id="trocoText" style="margin-left:auto;font-weight:800">R$ 0,00</div>
               </div>
 
-              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-                <label class="muted"><input type="checkbox" id="auto_close"> Fechar automaticamente após pagamento</label>
-              </div>
+              <!-- REMOVIDO: checkbox "Fechar automaticamente". Agora a comanda fecha automaticamente sempre que o pagamento for registrado integralmente. -->
+              <div class="note">A comanda será fechada automaticamente após pagamento integral.</div>
 
               <div class="actions">
                 <button id="btnPay" class="btn btn-primary">💵 Registrar Pagamento</button>
@@ -674,19 +674,17 @@ $nomeFunc = $stmtNome->fetchColumn() ?? ($_SESSION['nome_func'] ?? 'Usuário');
       // método agora vem do input hidden (#metodo)
       fd.append('metodo', document.getElementById('metodo').value || 'DINHEIRO');
       fd.append('valor_pago', Number((document.getElementById('valor_pago').value || totals.total)).toFixed(2));
-      fd.append('auto_close', document.getElementById('auto_close').checked ? '1' : '0');
+      // FORÇAR fechamento automático: sempre 1
+      fd.append('auto_close', '1');
 
       try {
         const j = await postJson(fd);
         if (j.success) {
+          // mostrar mensagem e redirecionar para visualização da comanda fechada
           showMsg(j.msg || 'Pagamento registrado', true);
           if (j.troco !== undefined) document.getElementById('trocoText').textContent = formatBRL(j.troco);
-          if (document.getElementById('auto_close').checked) {
-            window.location = 'comandas_visualizar.php?id=' + comandaId;
-          } else {
-            document.getElementById('valor_pago').value = parseFloat(fd.get('valor_pago')).toFixed(2);
-            calcTotalsAndTroco();
-          }
+          // deixar o usuário ver a mensagem rápida antes de redirecionar
+          setTimeout(()=>{ window.location = 'comandas_visualizar.php?id=' + comandaId; }, 1200);
         } else {
           showMsg(j.msg || 'Erro', false);
         }

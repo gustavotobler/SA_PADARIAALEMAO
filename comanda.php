@@ -1,6 +1,6 @@
 <?php
 // comanda_single_styled.php
-// Arquivo atualizado: Adicionado busca/edição por número de comanda ao lado de "Criar nova comanda".
+// Arquivo atualizado: removido botão "Fechar" da UI conforme solicitado
 session_start();
 
 // -> Em desenvolvimento, útil ativar; em produção comente.
@@ -973,13 +973,6 @@ if (isset($_GET['print']) && $comanda) {
 
         <div class="actions">
           <?php if ($comanda['status'] === 'ABERTA'): ?>
-            <form method="post" style="display:inline">
-              <input type="hidden" name="acao" value="fechar">
-              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-              <button class="btn btn-success" type="submit" onclick="return confirm('Confirma fechar esta comanda?')">✔
-                Fechar</button>
-            </form>
 
             <form method="post" style="display:inline">
               <input type="hidden" name="acao" value="cancelar">
