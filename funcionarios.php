@@ -140,37 +140,14 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
     background: #f1f3f5;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
-
-.icon-btn span {
-    font-size: 20px;
-    color: #1b263b;
-}
-
-.icon-btn:hover {
-    transform: scale(1.1);
-}
-
-/* Editar */
-.icon-btn.edit-btn {
-    background: #0077b6;
-}
-.icon-btn.edit-btn span {
-    color: #fff;
-}
-.icon-btn.edit-btn:hover {
-    background: #023e8a;
-}
-
-/* Excluir */
-.icon-btn.delete-btn {
-    background: #e63946;
-}
-.icon-btn.delete-btn span {
-    color: #fff;
-}
-.icon-btn.delete-btn:hover {
-    background: #c1121f;
-}
+.icon-btn span { font-size: 20px; color: #1b263b; }
+.icon-btn:hover { transform: scale(1.1); }
+.icon-btn.edit-btn { background: #0077b6; }
+.icon-btn.edit-btn span { color: #fff; }
+.icon-btn.edit-btn:hover { background: #023e8a; }
+.icon-btn.delete-btn { background: #e63946; }
+.icon-btn.delete-btn span { color: #fff; }
+.icon-btn.delete-btn:hover { background: #c1121f; }
 
 /* ===== Responsividade ===== */
 @media(max-width:768px){
@@ -182,7 +159,6 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
   .topo { flex-direction: column; gap:10px; align-items: stretch; }
   .actions-top { justify-content:flex-end; }
 }
-
 </style>
 </head>
 <body>
@@ -190,8 +166,7 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
 <nav class="sidebar" id="sidebar">
     <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
     <a href="inicial1.php"><span class="material-icons icon">arrow_back</span><span class="text">Voltar</span></a>
-
-  </nav>
+</nav>
 
 <main class="main-content" id="mainContent">
 <h1>FUNCIONÁRIOS</h1>
@@ -252,12 +227,14 @@ tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
       <?php endforeach; ?>
     </tbody>
 </table>
+
+<!-- Paginação -->
+<div id="pagination" style="margin-top:20px; text-align:center;"></div>
 </main>
 
 <script>
 const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
-
 function toggleSidebar(){
   sidebar.classList.toggle('collapsed');
   mainContent.classList.toggle('collapsed');
@@ -268,30 +245,68 @@ document.addEventListener('DOMContentLoaded', () => {
   const actionHeader = document.querySelector('th.action-header');
   const addButton = document.getElementById('add-button');
   const tableBody = document.getElementById('func-table-body');
-
-  const getActionCells = () => document.querySelectorAll('td.action-cell');
-
-  toggleBtn.addEventListener('click', () => {
-    actionHeader.classList.toggle('hidden');
-    getActionCells().forEach(td => td.classList.toggle('hidden'));
-    addButton.classList.toggle('hidden');
-  });
-
   const searchInput = document.getElementById("search-input");
   const searchBtn = document.getElementById("search-btn");
 
+  const rows = Array.from(tableBody.rows);
+  const rowsPerPage = 10;
+  let currentPage = 1;
+  let filteredRows = [...rows];
+
+  function renderTablePage(page) {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    rows.forEach(r => r.style.display = "none");
+    filteredRows.forEach((row, index) => {
+      row.style.display = (index >= start && index < end) ? "" : "none";
+    });
+  }
+
+  function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+    if (pageCount <= 1) return;
+    for (let i = 1; i <= pageCount; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.style.margin = "0 5px";
+      btn.style.padding = "6px 12px";
+      btn.style.border = "none";
+      btn.style.borderRadius = "6px";
+      btn.style.cursor = "pointer";
+      btn.style.background = (i === currentPage) ? "#0077b6" : "#f1f1f1";
+      btn.style.color = (i === currentPage) ? "#fff" : "#000";
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderTablePage(currentPage);
+        renderPagination();
+      });
+      pagination.appendChild(btn);
+    }
+  }
+
   function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
-    Array.from(tableBody.rows).forEach(row => {
-      const match = Array.from(row.cells).slice(0,5).some(td => td.textContent.toLowerCase().includes(term));
-      row.style.display = match ? '' : 'none';
-      const cell = row.querySelector('td.action-cell');
-      if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
+    filteredRows = rows.filter(row => {
+      return Array.from(row.cells).slice(0,5).some(td => td.textContent.toLowerCase().includes(term));
     });
+    currentPage = 1;
+    renderTablePage(currentPage);
+    renderPagination();
   }
 
   searchBtn.addEventListener('click', doSearch);
   searchInput.addEventListener('input', doSearch);
+
+  toggleBtn.addEventListener('click', () => {
+    actionHeader.classList.toggle('hidden');
+    document.querySelectorAll('td.action-cell').forEach(td => td.classList.toggle('hidden'));
+    addButton.classList.toggle('hidden');
+  });
+
+  renderTablePage(currentPage);
+  renderPagination();
 });
 </script>
 
