@@ -272,12 +272,13 @@ try {
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Produtos — Padaria do Alemão</title>
+<title>Produtos — Padaria do Alemão (Estoque)</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* (Estilos idênticos aos já preparados no projeto para manter consistência) */
 :root{
   --sidebar-bg: linear-gradient(180deg,#0d1b2a,#1b263b);
   --primary-text:#f8f9fa;
@@ -335,6 +336,15 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
 .row-expired td{background:rgba(255,107,107,0.06)}
 .row-soon td{background:rgba(245,158,11,0.06)}
 .row-lowstock td{box-shadow:inset 0 0 0 1px rgba(245,158,11,0.04)}
+
+/* action buttons */
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;background:#f1f3f5;margin-left:6px}
+.icon-btn span{font-size:18px;color:#1b263b}
+.icon-btn.edit{background:#0077b6}
+.icon-btn.edit span{color:#fff}
+.icon-btn.del{background:#e63946}
+.icon-btn.del span{color:#fff}
+.action-col{width:110px;text-align:center}
 
 /* panels */
 .info-panel,.charts-panel,.saidas-panel{position:fixed;top:0;right:0;height:100vh;width:420px;max-width:92%;background:linear-gradient(180deg,#021727,#063749);color:var(--primary-text);box-shadow:-20px 0 40px rgba(0,0,0,.6);transform:translateX(110%);transition:transform .25s ease;z-index:1200;display:flex;flex-direction:column;padding:16px}
@@ -610,6 +620,7 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
         <div class="field search-field"><label for="search">Pesquisar</label><input type="text" id="search" placeholder="Produto / Cat. / Forn."></div>
         <div style="display:flex;gap:8px;align-items:flex-end">
             <button id="clearFilters" class="btn btn-ghost">Limpar</button>
+            <button id="toggleActionsBtn" class="btn btn-ghost" title="Mostrar/Ocultar Ações">Ocultar Ações</button>
             <form method="POST" action="relatorio_estoque_pdf.php" target="_blank" style="display:inline-flex;gap:8px;align-items:end">
                 <input type="hidden" name="startDate" id="pdfStartDate">
                 <input type="hidden" name="endDate" id="pdfEndDate">
@@ -633,6 +644,7 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
                     <th style="text-align:right">Valor Total</th>
                     <th>Validade</th>
                     <th>Status</th>
+                    <th class="action-col" style="text-align:center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -676,11 +688,25 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
                     <td data-label="Valor Total">R$ <?= number_format($row['valor_total'],2,',','.') ?></td>
                     <td data-label="Validade"><?= ($d) ? $d->format('d/m/Y') : '---' ?></td>
                     <td data-label="Status"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
+                    <td class="action-col" style="text-align:center;">
+                        <a href="alterar/alterar_produtos.php?ID_produto=<?= $row['ID_produto'] ?>" class="icon-btn edit" title="Editar">
+                            <span class="material-icons">edit</span>
+                        </a>
+                        <form action="exclusoes/excluir_produtos.php" method="POST" style="display:inline;">
+                            <input type="hidden" name="id" value="<?= htmlspecialchars($row['ID_produto']) ?>">
+                            <button type="submit" class="icon-btn del" onclick="return confirm('Deseja realmente excluir este produto?')" title="Excluir">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
+
+    <!-- Paginação -->
+    <div id="pagination" style="margin-top:16px;text-align:center;"></div>
 </main>
 
 <script>
@@ -699,9 +725,9 @@ function toggleSidebar(){ sidebar.classList.toggle('collapsed'); mainContent.cla
 
 document.querySelectorAll('.toggle-btn').forEach(btn=>{ btn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebar(); } }); });
 
-/* filtros */
+/* filtros, paginação e ações */
 const estoqueTbody = document.querySelector('#estoqueTable tbody');
-const estoqueRows = Array.from(estoqueTbody ? estoqueTbody.querySelectorAll('tr') : []);
+let estoqueRows = Array.from(estoqueTbody ? estoqueTbody.querySelectorAll('tr') : []);
 const startDateEl = document.getElementById('startDate');
 const endDateEl = document.getElementById('endDate');
 const searchEl = document.getElementById('search');
@@ -709,6 +735,12 @@ const clearBtn = document.getElementById('clearFilters');
 const pdfStart = document.getElementById('pdfStartDate');
 const pdfEnd = document.getElementById('pdfEndDate');
 const pdfSearch = document.getElementById('pdfSearch');
+const toggleActionsBtn = document.getElementById('toggleActionsBtn');
+
+// Paginação
+const rowsPerPage = 9; // solicitado
+let currentPage = 1;
+let filteredRows = [...estoqueRows];
 
 function brToISO(dateStr){
     const parts = dateStr.split('/');
@@ -716,33 +748,98 @@ function brToISO(dateStr){
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
 }
 
-function applyFilters(){
+function refreshFilteredRows(){
     const s = startDateEl && startDateEl.value ? new Date(startDateEl.value) : null;
     const e = endDateEl && endDateEl.value ? new Date(endDateEl.value) : null;
     const term = (searchEl && searchEl.value || '').trim().toLowerCase();
 
-    estoqueRows.forEach(tr => {
-        tr.style.display = '';
+    filteredRows = estoqueRows.filter(tr => {
         const cells = tr.querySelectorAll('td');
         const valStr = cells[8] ? cells[8].textContent.trim() : '---';
         const valDate = (valStr === '---') ? null : new Date(brToISO(valStr));
-        let show = true;
-
-        if (s && valDate && valDate < s) show = false;
-        if (e && valDate && valDate > e) show = false;
+        if (s && valDate && valDate < s) return false;
+        if (e && valDate && valDate > e) return false;
         const text = Array.from(cells).slice(1,4).map(c => c.textContent.toLowerCase()).join(' ');
-        if (term && !text.includes(term)) show = false;
+        if (term && !text.includes(term)) return false;
+        return true;
+    });
+    currentPage = 1;
+    renderTablePage(currentPage);
+    renderPagination();
+}
 
-        tr.style.display = show ? '' : 'none';
+function renderTablePage(page){
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    estoqueRows.forEach(row => row.style.display = 'none');
+    filteredRows.forEach((row, index) => {
+        row.style.display = (index >= start && index < end) ? '' : 'none';
     });
 }
 
-if (startDateEl) startDateEl.addEventListener('input', applyFilters);
-if (endDateEl) endDateEl.addEventListener('input', applyFilters);
-if (searchEl) searchEl.addEventListener('input', applyFilters);
-if (clearBtn) clearBtn.addEventListener('click', () => { if (startDateEl) startDateEl.value=''; if (endDateEl) endDateEl.value=''; if (searchEl) searchEl.value=''; if (pdfStart) pdfStart.value=''; if (pdfEnd) pdfEnd.value=''; if (pdfSearch) pdfSearch.value=''; applyFilters(); });
+function renderPagination(){
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+    if (pageCount <= 1) return;
+
+    const prev = document.createElement('button');
+    prev.textContent = '<';
+    prev.style.margin = '0 6px'; prev.style.padding='6px 10px'; prev.disabled = (currentPage===1);
+    prev.addEventListener('click', ()=>{ if(currentPage>1){ currentPage--; renderTablePage(currentPage); renderPagination(); } });
+    pagination.appendChild(prev);
+
+    for (let i = 1; i <= pageCount; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.style.margin = "0 4px";
+      btn.style.padding = "6px 10px";
+      btn.style.border = "none";
+      btn.style.borderRadius = "6px";
+      btn.style.cursor = "pointer";
+      btn.style.background = (i === currentPage) ? "#0077b6" : "#f1f1f1";
+      btn.style.color = (i === currentPage) ? "#fff" : "#000";
+
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderTablePage(currentPage);
+        renderPagination();
+      });
+      pagination.appendChild(btn);
+    }
+
+    const next = document.createElement('button');
+    next.textContent = '>';
+    next.style.margin = '0 6px'; next.style.padding='6px 10px'; next.disabled = (currentPage===pageCount);
+    next.addEventListener('click', ()=>{ if(currentPage<pageCount){ currentPage++; renderTablePage(currentPage); renderPagination(); } });
+    pagination.appendChild(next);
+}
+
+// Eventos
+if (startDateEl) startDateEl.addEventListener('input', refreshFilteredRows);
+if (endDateEl) endDateEl.addEventListener('input', refreshFilteredRows);
+if (searchEl) searchEl.addEventListener('input', refreshFilteredRows);
+if (clearBtn) clearBtn.addEventListener('click', () => { if (startDateEl) startDateEl.value=''; if (endDateEl) endDateEl.value=''; if (searchEl) searchEl.value=''; if (pdfStart) pdfStart.value=''; if (pdfEnd) pdfEnd.value=''; if (pdfSearch) pdfSearch.value=''; refreshFilteredRows(); });
+
 const pdfForm = document.querySelector('form[action="relatorio_estoque_pdf.php"]');
 if (pdfForm) pdfForm.addEventListener('submit', function(){ if (pdfStart) pdfStart.value = startDateEl ? startDateEl.value : ''; if (pdfEnd) pdfEnd.value = endDateEl ? endDateEl.value : ''; if (pdfSearch) pdfSearch.value = searchEl ? searchEl.value : ''; });
+
+// Toggle ações (mostra/oculta coluna de ações)
+let actionsVisible = true;
+function setActionsVisibility(visible){
+    document.querySelectorAll('th.action-col').forEach(h => h.style.display = visible ? '' : 'none');
+    document.querySelectorAll('td.action-col').forEach(td => td.style.display = visible ? '' : 'none');
+}
+toggleActionsBtn?.addEventListener('click', () => {
+    actionsVisible = !actionsVisible;
+    setActionsVisibility(actionsVisible);
+    toggleActionsBtn.textContent = actionsVisible ? 'Ocultar Ações' : 'Mostrar Ações';
+});
+
+// Inicializa: paginar e ajustar ações
+renderTablePage(currentPage);
+renderPagination();
+setActionsVisibility(actionsVisible);
 
 /* --- Dados injetados do PHP (para export e charts) --- */
 const exportAllData = <?php echo $exportRowsJSON ?? '[]'; ?>;
@@ -785,7 +882,6 @@ document.getElementById('exportZeroBtn')?.addEventListener('click', ()=> downloa
 document.getElementById('exportSaidas7')?.addEventListener('click', ()=> downloadCSV('saidas_7dias.csv', saidas7.map(s=>({id:s.id,name:s.name,quantidade:s.qty,valor_total:s.total}))));
 document.getElementById('exportSaidas30')?.addEventListener('click', ()=> downloadCSV('saidas_30dias.csv', saidas30.map(s=>({id:s.id,name:s.name,quantidade:s.qty,valor_total:s.total}))));
 
-/* --- Charts (Chart.js) --- */
 let chartsInitialized = false;
 let chartInstances = [];
 
@@ -803,13 +899,6 @@ function drawNoDataMessage(canvas, msg) {
     } catch (e) { console.warn(e); }
 }
 
-/* ... restante do JS para renderCharts/renderSaidas (mantido sem alterações além das já aplicadas) ... */
-
-/* Para economizar espaço no arquivo aqui, o restante do JS (renderCharts, renderSaidas) já está incluído acima no código PHP/HTML enviado.
-   Se preferir, posso enviar uma versão com todo o JS minificado ou separado em arquivo .js.
-*/
-
-let saidasChartsInitialized=false; let saidasChartInstances=[];
 function renderCharts(force=false){
     if (chartsInitialized && !force) return;
     if (typeof Chart === 'undefined') {
@@ -893,6 +982,7 @@ function renderCharts(force=false){
 }
 
 // --- SAÍDAS: gráfico e lista ---
+let saidasChartsInitialized=false; let saidasChartInstances=[];
 function renderSaidas(force=false){
     if (saidasChartsInitialized && !force) return;
     if (typeof Chart === 'undefined') {
@@ -900,7 +990,7 @@ function renderSaidas(force=false){
     }
     requestAnimationFrame(()=>{
         setTimeout(()=>{
-            if (saidasChartInstances.length) { saidasChartInstances.forEach(c=>{ try{ c.destroy() }catch(e){} }); saidasChartInstances = []; }
+            if (saidasChartInstances.length) { saidasChartInstances.forEach(c=>{ try{ c.destroy(); } catch(e){} }); saidasChartInstances = []; }
             function fit(id){ const el=document.getElementById(id); if(!el) return; const w=Math.max(300, Math.round(el.clientWidth)); const h=(el.clientHeight && el.clientHeight>20)?Math.round(el.clientHeight):240; if(el.width!==w||el.height!==h){el.width=w;el.height=h;} }
             ['chartSaidas7','chartSaidas30'].forEach(fit);
             const palette = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'];
@@ -942,7 +1032,6 @@ function renderSaidas(force=false){
         },80);
     });
 }
-
 </script>
 </body>
 </html>
