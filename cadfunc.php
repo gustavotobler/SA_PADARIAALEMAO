@@ -143,12 +143,12 @@ if ($_SESSION['nivel'] != 1) {
     <div class="flex-group">
       <div>
         <label for="nascimento">Data de Nascimento:</label>
-        <input type="text" id="nascimento" name="Data_nascimento" placeholder="dd/mm/aaaa" />
+        <input type="date" id="nascimento" name="Data_nascimento" max="<?= date('Y-m-d', strtotime('-18 years')) ?>" />
         <span id="erro-nascimento" class="erro"></span>
       </div>
       <div>
         <label for="admissao">Data de Admissão:</label>
-        <input type="text" id="admissao" name="Data_admissao" placeholder="dd/mm/aaaa" />
+        <input type="date" id="admissao" name="Data_admissao" max="<?= date('Y-m-d') ?>" />
         <span id="erro-admissao" class="erro"></span>
       </div>
     </div>
@@ -181,8 +181,6 @@ document.addEventListener("DOMContentLoaded", function(){
   const rg = document.getElementById("rg");
   const cpf = document.getElementById("cpf");
   const cep = document.getElementById("cep");
-  const nascimento = document.getElementById("nascimento");
-  const admissao = document.getElementById("admissao");
 
   telefone.addEventListener("input", ()=> {
     let v = telefone.value.replace(/\D/g,"").slice(0,11);
@@ -210,17 +208,6 @@ document.addEventListener("DOMContentLoaded", function(){
     v=v.replace(/(\d{5})(\d)/,"$1-$2");
     cep.value=v;
   });
-
-  function mascaraData(el){
-    el.addEventListener("input", ()=>{
-      let v=el.value.replace(/\D/g,"").slice(0,8);
-      if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
-      if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
-      el.value=v;
-    });
-  }
-  mascaraData(nascimento);
-  mascaraData(admissao);
 
   // Validação
   form.addEventListener("submit",(e)=>{
@@ -260,32 +247,25 @@ document.addEventListener("DOMContentLoaded", function(){
       document.getElementById("erro-senha").innerText="Senha deve ter no mínimo 8 caracteres."; ok=false;
     }
 
-    // validação datas
-    function validarData(el,id){
-      if(!el.value) return false;
-      const parts=el.value.split("/");
-      if(parts.length!==3) return false;
-      const d=new Date(parts[2],parts[1]-1,parts[0]);
-      return !isNaN(d.getTime());
-    }
+    // Validação datas
+    const hoje = new Date();
+    const nasc = new Date(nascimento.value);
+    const adm = new Date(admissao.value);
 
-    if(!validarData(nascimento)){
-      document.getElementById("erro-nascimento").innerText="Data de nascimento inválida.";
-      ok=false;
+    if(isNaN(nasc.getTime())){
+      document.getElementById("erro-nascimento").innerText="Data de nascimento inválida."; ok=false;
     } else {
-      // idade mínima 18
-      const parts=nascimento.value.split("/");
-      const nasc=new Date(parts[2],parts[1]-1,parts[0]);
-      const hoje=new Date();
-      let idade=hoje.getFullYear()-nasc.getFullYear();
-      const m=hoje.getMonth()-nasc.getMonth();
-      if(m<0||(m===0 && hoje.getDate()<nasc.getDate())) idade--;
+      // idade mínima 18 anos
+      let idade = hoje.getFullYear()-nasc.getFullYear();
+      const m = hoje.getMonth() - nasc.getMonth();
+      if(m<0 || (m===0 && hoje.getDate()<nasc.getDate())) idade--;
       if(idade<18){ document.getElementById("erro-nascimento").innerText="Funcionário deve ter pelo menos 18 anos."; ok=false; }
     }
 
-    if(!validarData(admissao)){
-      document.getElementById("erro-admissao").innerText="Data de admissão inválida.";
-      ok=false;
+    if(isNaN(adm.getTime())){
+      document.getElementById("erro-admissao").innerText="Data de admissão inválida."; ok=false;
+    } else if(adm>hoje){
+      document.getElementById("erro-admissao").innerText="Data de admissão não pode ser futura."; ok=false;
     }
 
     if(ok) form.submit();

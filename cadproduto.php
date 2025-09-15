@@ -101,8 +101,8 @@ try {
 
   <div class="flex-group">
     <div>
-      <label for="Validade">Validade (dd/mm/aaaa):</label>
-      <input type="text" name="Validade" id="Validade" placeholder="dd/mm/aaaa"/>
+      <label for="Validade">Validade:</label>
+      <input type="date" name="Validade" id="Validade"/>
     </div>
     <div>
       <label for="Qntd_produto">Quantidade em Estoque:</label>
@@ -117,13 +117,16 @@ try {
 <script>
 document.addEventListener("DOMContentLoaded", function(){
   const form = document.getElementById("form-produto");
-  const campos = ["ID_forn","id_categorias","Nome_prod","Preco_unitario","Unid_medida","Validade","Qntd_produto"];
+
+  // Campos gerais (sem "Validade", que terá validação própria)
+  const campos = ["ID_forn","id_categorias","Nome_prod","Preco_unitario","Unid_medida","Qntd_produto"];
+
   const Preco_unitario = document.getElementById("Preco_unitario");
   const Validade = document.getElementById("Validade");
   const Qntd_produto = document.getElementById("Qntd_produto");
 
   function limparErros(){
-    campos.forEach(id=>{
+    campos.concat(["Validade"]).forEach(id=>{
       const el=document.getElementById(id);
       if(el) el.style.borderColor="#ccc";
       const span = document.getElementById("erro-"+id);
@@ -140,14 +143,6 @@ document.addEventListener("DOMContentLoaded", function(){
     el.parentNode.insertBefore(span, el.nextSibling);
   }
 
-  // Máscara data dd/mm/aaaa
-  Validade.addEventListener("input", ()=>{
-    let v = Validade.value.replace(/\D/g,"").slice(0,8);
-    if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
-    if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
-    Validade.value=v;
-  });
-
   // Máscara preço
   Preco_unitario.addEventListener("input", function(){
     let valor = this.value.replace(/\D/g,"");
@@ -162,6 +157,7 @@ document.addEventListener("DOMContentLoaded", function(){
     limparErros();
     let ok = true;
 
+    // Validação campos gerais
     campos.forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.value.trim()===""){
@@ -170,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
 
-    // Preço válido
+    // Validação preço
     if(Preco_unitario.value.trim()){
       let num = Preco_unitario.value.replace(/\D/g,"");
       if(isNaN(num) || Number(num)<0){
@@ -179,18 +175,15 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
 
-    // Validade da data
-    if(Validade.value.trim()){
-      const parts = Validade.value.split("/");
-      if(parts.length!==3){
+    // Validação do campo "Validade" (type=date)
+    if(!Validade.value){
+      mostrarErro(Validade,"Campo obrigatório.");
+      ok=false;
+    } else {
+      const d = new Date(Validade.value);
+      if(isNaN(d.getTime())){
         mostrarErro(Validade,"Data inválida.");
         ok=false;
-      } else {
-        const d = new Date(parts[2], parts[1]-1, parts[0]);
-        if(isNaN(d.getTime())){
-          mostrarErro(Validade,"Data inválida.");
-          ok=false;
-        }
       }
     }
 
@@ -205,5 +198,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 </script>
+
 </body>
 </html>

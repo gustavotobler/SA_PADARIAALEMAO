@@ -1,51 +1,28 @@
 <?php
-session_start(); // Inicia a sessão para acessar variáveis de sessão
-require_once '../conexao.php'; // Conecta ao banco de dados
-error_reporting(E_ALL); // Mostra todos os erros
-ini_set('display_errors', 1); // Garante que os erros serão exibidos
+session_start(); 
+require_once '../conexao.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Verifica se o usuário é administrador (nível 1)
 if ($_SESSION['nivel'] != 1) {
   echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../funcionarios.php';</script>";
   exit;
 }
 
-// Verifica se o usuário está logado
 if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
   echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
   exit;
 }
 
-// Verifica se o ID do funcionário foi passado e é numérico
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("Funcionário não encontrado!");
-}
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) die("Funcionário não encontrado!");
 
-$id = intval($_GET['id']); // Converte o ID para inteiro
-
-// Busca os dados do funcionário no banco
+$id = intval($_GET['id']);
 $stmt = $pdo->prepare("SELECT * FROM funcionario WHERE ID_func = :id");
 $stmt->execute(['id' => $id]);
 $func = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$func) die("Funcionário não encontrado!");
 
-// Se não encontrou o funcionário, interrompe
-if (!$func) {
-    die("Funcionário não encontrado!");
-}
-
-// Função para converter datas do formato dd/mm/aaaa para yyyy-mm-dd (banco)
-function formatarDataBanco($data){
-    if(!$data) return null;
-    $partes = explode("/", $data);
-    if(count($partes) == 3){
-        return $partes[2]."-".$partes[1]."-".$partes[0];
-    }
-    return null;
-}
-
-// Processa o formulário quando enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Pega os dados enviados, usando valor padrão vazio se não existir
     $nome        = $_POST['Nome_func'] ?? '';
     $telefone    = $_POST['Telefone'] ?? '';
     $sexo        = $_POST['Sexo'] ?? '';
@@ -61,13 +38,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email       = $_POST['Email'] ?? '';
     $nivel       = $_POST['nivel_de_acesso'] ?? '';
     $cargo       = $_POST['Cargo'] ?? '';
-    $data_nasc   = formatarDataBanco($_POST['Data_nascimento'] ?? null);
-    $data_adm    = formatarDataBanco($_POST['Data_admissao'] ?? null);
+    $data_nasc   = $_POST['Data_nascimento'] ?? '';
+    $data_adm    = $_POST['Data_admissao'] ?? '';
+    $senha       = !empty($_POST['Senha']) ? password_hash($_POST['Senha'], PASSWORD_DEFAULT) : $func['Senha'];
 
-    // Mantém a senha antiga se não for informado uma nova
-    $senha = !empty($_POST['Senha']) ? password_hash($_POST['Senha'], PASSWORD_DEFAULT) : $func['Senha'];
-
-    // Monta o SQL para atualizar o funcionário
     $sql = "UPDATE funcionario SET 
                 Nome_func=:Nome_func,
                 Telefone=:Telefone,
@@ -90,8 +64,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             WHERE ID_func=:id";
 
     $stmt = $pdo->prepare($sql);
-
-    // Executa a query passando os valores
     $executou = $stmt->execute([
         'Nome_func'=>$nome,
         'Telefone'=>$telefone,
@@ -114,7 +86,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'id'=>$id
     ]);
 
-    // Mostra mensagem de sucesso ou erro
     if($executou){
         echo "<script>alert('Funcionário alterado com sucesso!');window.location.href='../funcionarios.php';</script>";
         exit;
@@ -131,7 +102,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <title>Alterar Funcionário</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 <style>
-/* Reset e estilo básico */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
 body{background:rgb(59, 75, 93);min-height:100vh;display:flex;flex-direction:column;}
 header {background:rgb(27, 68, 95);padding: 15px 20px;color: white;display: flex;align-items: center;gap: 15px;box-shadow: 0 3px 10px rgba(0,0,0,0.15);}
@@ -154,7 +124,6 @@ button[type="submit"]:hover {background:rgb(0,153,255);}
 <body>
 
 <header>
-  <!-- Botão de voltar -->
   <button class="back-btn" onclick="window.location.href='../funcionarios.php'" title="Voltar">
     <span class="material-icons">arrow_back</span>
   </button>
@@ -167,7 +136,6 @@ button[type="submit"]:hover {background:rgb(0,153,255);}
 
   <h2>Alterar Funcionário</h2>
 
-  <!-- Campos do formulário -->
   <label>Nome:</label>
   <input type="text" name="Nome_func" required value="<?= htmlspecialchars($func['Nome_func'] ?? '') ?>">
 
@@ -238,12 +206,16 @@ button[type="submit"]:hover {background:rgb(0,153,255);}
   <div class="flex-group">
     <div>
       <label>Data de Nascimento:</label>
-      <input type="text" name="Data_nascimento" id="nascimento" placeholder="dd/mm/aaaa" value="<?= !empty($func['Data_nascimento']) ? date('d/m/Y', strtotime($func['Data_nascimento'])) : '' ?>">
+      <input type="date" name="Data_nascimento" id="nascimento" 
+             max="<?= date('Y-m-d', strtotime('-18 years')) ?>" 
+             value="<?= !empty($func['Data_nascimento']) ? date('Y-m-d', strtotime($func['Data_nascimento'])) : '' ?>">
       <span id="erro-nascimento" class="erro"></span>
     </div>
     <div>
       <label>Data de Admissão:</label>
-      <input type="text" name="Data_admissao" id="admissao" placeholder="dd/mm/aaaa" value="<?= !empty($func['Data_admissao']) ? date('d/m/Y', strtotime($func['Data_admissao'])) : '' ?>">
+      <input type="date" name="Data_admissao" id="admissao" 
+             max="<?= date('Y-m-d') ?>" 
+             value="<?= !empty($func['Data_admissao']) ? date('Y-m-d', strtotime($func['Data_admissao'])) : '' ?>">
     </div>
   </div>
 
@@ -252,17 +224,16 @@ button[type="submit"]:hover {background:rgb(0,153,255);}
 </main>
 
 <script>
-// Aplica máscaras e validações aos campos de entrada
 document.addEventListener("DOMContentLoaded", function(){
   const telefone=document.getElementById("telefone");
   const rg=document.getElementById("rg");
   const cpf=document.getElementById("cpf");
   const cep=document.getElementById("cep");
+  const senha=document.getElementById("senha");
   const nascimento=document.getElementById("nascimento");
   const admissao=document.getElementById("admissao");
-  const senha=document.getElementById("senha");
 
-  // Máscara de telefone
+  // Máscaras
   telefone.addEventListener("input", () => {
     let v=telefone.value.replace(/\D/g,"").slice(0,11);
     if(v.length>10) v=v.replace(/^(\d{2})(\d{5})(\d{4})$/,"($1) $2-$3");
@@ -272,7 +243,6 @@ document.addEventListener("DOMContentLoaded", function(){
     telefone.value=v;
   });
 
-  // Máscara de RG
   rg.addEventListener("input", () => {
     let v=rg.value.replace(/\D/g,"").slice(0,9);
     if(v.length>2) v=v.slice(0,2)+"."+v.slice(2);
@@ -280,7 +250,6 @@ document.addEventListener("DOMContentLoaded", function(){
     rg.value=v;
   });
 
-  // Máscara de CPF
   cpf.addEventListener("input", () => {
     let v=cpf.value.replace(/\D/g,"").slice(0,11);
     v=v.replace(/(\d{3})(\d)/,"$1.$2");
@@ -289,35 +258,44 @@ document.addEventListener("DOMContentLoaded", function(){
     cpf.value=v;
   });
 
-  // Máscara de CEP
   cep.addEventListener("input", () => {
     let v=cep.value.replace(/\D/g,"").slice(0,8);
     v=v.replace(/(\d{5})(\d)/,"$1-$2");
     cep.value=v;
   });
 
-  // Máscara para datas
-  function mascaraData(el){
-    el.addEventListener("input", () => {
-      let v=el.value.replace(/\D/g,"").slice(0,8);
-      if(v.length>2) v=v.slice(0,2)+"/"+v.slice(2);
-      if(v.length>5) v=v.slice(0,5)+"/"+v.slice(5);
-      el.value=v;
-    });
-  }
-  mascaraData(nascimento);
-  mascaraData(admissao);
-
-  // Validação ao enviar formulário
+  // Validação ao enviar
   document.querySelector("form").addEventListener("submit",(e)=>{
     let ok=true;
+
     if(cpf.value.replace(/\D/g,"").length!==11){
       document.getElementById("erro-cpf").innerText="CPF inválido."; ok=false;
     } else document.getElementById("erro-cpf").innerText="";
+
     if(senha.value.length>0 && senha.value.length<8){
       document.getElementById("erro-senha").innerText="Senha deve ter no mínimo 8 caracteres."; ok=false;
     } else document.getElementById("erro-senha").innerText="";
-    if(!ok) e.preventDefault(); // Bloqueia envio se houver erro
+
+    // Data nascimento >= 18 anos
+    if(nascimento.value){
+      const nasc=new Date(nascimento.value);
+      const hoje=new Date();
+      let idade=hoje.getFullYear()-nasc.getFullYear();
+      const m=hoje.getMonth()-nasc.getMonth();
+      if(m<0 || (m===0 && hoje.getDate()<nasc.getDate())) idade--;
+      if(idade<18){ 
+        document.getElementById("erro-nascimento").innerText="Funcionário deve ter pelo menos 18 anos."; 
+        ok=false;
+      } else document.getElementById("erro-nascimento").innerText="";
+    }
+
+    if(admissao.value){
+      const adm=new Date(admissao.value);
+      const hoje=new Date();
+      if(adm>hoje){ alert("Data de admissão não pode ser futura."); ok=false; }
+    }
+
+    if(!ok) e.preventDefault();
   });
 });
 </script>

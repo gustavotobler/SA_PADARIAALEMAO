@@ -44,8 +44,8 @@ button[type="submit"]:hover { background:rgb(0,153,255);}
 
 <main>
   <form id="form-fornecedor" method="POST" action="cadastros/cadastro_fornecedor.php">
-    <h2>Dados da Empresa</h2>
-    <label for="nome_forn">Nome da Empresa</label>
+    <h2>Dados do Fornecedor</h2>
+    <label for="nome_forn">Nome do Fornecedor</label>
     <input type="text" id="nome_forn" name="Nome_forn" maxlength="40" placeholder="Nome da empresa" />
     <span id="erro-nome_forn" class="erro"></span>
 
@@ -54,7 +54,7 @@ button[type="submit"]:hover { background:rgb(0,153,255);}
     <span id="erro-cnpj" class="erro"></span>
 
     <label for="data_fundacao">Data de Fundação</label>
-    <input type="date" id="data_fundacao" name="Data_fundacao" min="1800-01-01"/>
+    <input type="date" id="data_fundacao" name="Data_fundacao" min="1800-01-01" max="<?= date('Y-m-d'); ?>"/>
     <span id="erro-data_fundacao" class="erro"></span>
 
     <h2>Endereço</h2>
@@ -184,10 +184,26 @@ form.addEventListener("submit", e=>{
                 ok=false;
             }
         }
+
+        if(c.tipo==="data"){
+            const inputData = new Date(val);
+            const hoje = new Date();
+            inputData.setHours(0,0,0,0);
+            hoje.setHours(0,0,0,0);
+            if(isNaN(inputData.getTime())){
+                document.getElementById("erro-"+c.id).innerText="Data inválida.";
+                el.style.borderColor="#e74c3c";
+                ok=false;
+            } else if(inputData > hoje){
+                document.getElementById("erro-"+c.id).innerText="A data não pode ser futura.";
+                el.style.borderColor="#e74c3c";
+                ok=false;
+            }
+        }
     });
 
     if(!ok){
-        alert("Por favor, corrija os campos destacados antes de enviar.");
+        alert("Por favor, preencha todos os campos destacados antes de enviar.");
         return;
     }
 
