@@ -52,6 +52,81 @@ try {
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
+    // --- TRATAMENTO DE AÇÕES (CRIAR / ATUALIZAR) ---
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['form_action'])) {
+        $action = $_POST['form_action'];
+        try {
+            if ($action === 'create') {
+                $nome = trim($_POST['nome'] ?? '');
+                $id_forn = !empty($_POST['id_forn']) ? intval($_POST['id_forn']) : null;
+                $id_cat = !empty($_POST['id_cat']) ? intval($_POST['id_cat']) : null;
+                $preco = str_replace(',', '.', trim($_POST['preco'] ?? '0'));
+                $preco = ($preco === '') ? 0 : (float)$preco;
+                $unidade = trim($_POST['unidade'] ?? '');
+                $qnt = str_replace(',', '.', trim($_POST['qnt'] ?? '0'));
+                $qnt = ($qnt === '') ? 0 : (float)$qnt;
+                $validade = trim($_POST['validade'] ?? '');
+                $validadeDb = null;
+                if ($validade !== '') {
+                    $d = parseDateSafe($validade);
+                    if ($d) $validadeDb = $d->format('Y-m-d');
+                }
+
+                $sql = "INSERT INTO produtos (Nome_prod, ID_forn, id_categorias, Preco_unitario, Unid_medida, Validade, Qntd_produto)
+                        VALUES (:nome, :id_forn, :id_cat, :preco, :unidade, :validade, :qnt)";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    ':nome'=>$nome,
+                    ':id_forn'=>$id_forn,
+                    ':id_cat'=>$id_cat,
+                    ':preco'=>$preco,
+                    ':unidade'=>$unidade,
+                    ':validade'=>$validadeDb,
+                    ':qnt'=>$qnt
+                ]);
+                $_SESSION['flash'] = 'Produto cadastrado com sucesso.';
+                header('Location: '.$_SERVER['PHP_SELF']); exit;
+            }
+
+            if ($action === 'update' && !empty($_POST['ID_produto'])) {
+                $id = intval($_POST['ID_produto']);
+                $nome = trim($_POST['nome'] ?? '');
+                $id_forn = !empty($_POST['id_forn']) ? intval($_POST['id_forn']) : null;
+                $id_cat = !empty($_POST['id_cat']) ? intval($_POST['id_cat']) : null;
+                $preco = str_replace(',', '.', trim($_POST['preco'] ?? '0'));
+                $preco = ($preco === '') ? 0 : (float)$preco;
+                $unidade = trim($_POST['unidade'] ?? '');
+                $qnt = str_replace(',', '.', trim($_POST['qnt'] ?? '0'));
+                $qnt = ($qnt === '') ? 0 : (float)$qnt;
+                $validade = trim($_POST['validade'] ?? '');
+                $validadeDb = null;
+                if ($validade !== '') {
+                    $d = parseDateSafe($validade);
+                    if ($d) $validadeDb = $d->format('Y-m-d');
+                }
+
+                $sql = "UPDATE produtos SET Nome_prod=:nome, ID_forn=:id_forn, id_categorias=:id_cat,
+                        Preco_unitario=:preco, Unid_medida=:unidade, Validade=:validade, Qntd_produto=:qnt
+                        WHERE ID_produto = :id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    ':nome'=>$nome, ':id_forn'=>$id_forn, ':id_cat'=>$id_cat,
+                    ':preco'=>$preco, ':unidade'=>$unidade, ':validade'=>$validadeDb, ':qnt'=>$qnt, ':id'=>$id
+                ]);
+                $_SESSION['flash'] = 'Produto atualizado.';
+                header('Location: '.$_SERVER['PHP_SELF']); exit;
+            }
+
+        } catch (Exception $e) {
+            $_SESSION['flash_err'] = 'Erro: ' . $e->getMessage();
+            header('Location: '.$_SERVER['PHP_SELF']); exit;
+        }
+    }
+
+    // --- Buscar fornecedores e categorias (para selects do formulário) ---
+    $fornecedores = $conn->query("SELECT ID_forn, Nome_forn FROM fornecedores ORDER BY Nome_forn")->fetchAll(PDO::FETCH_ASSOC);
+    $categorias = $conn->query("SELECT id_categorias, nome_categoria FROM categorias ORDER BY nome_categoria")->fetchAll(PDO::FETCH_ASSOC);
+
     // ---------- Consulta produtos (usando prepare/execute com verificação) ----------
     $sql = "
     SELECT 
@@ -165,7 +240,7 @@ try {
         $categoriesTotals[$cat] += $v;
 
         $productByQty[] = ['name'=>$name,'q'=>$q,'v'=>$v];
-        $productByValue[] = ['name'=>$name,'v'=>$v,'q'=>$q];
+        $productByValue[] = ['name'=>$name,'v'=>floatval($v),'q'=>$q];
 
         if (isset($r['Preco_unitario']) && $r['Preco_unitario'] !== null && $r['Preco_unitario'] !== '') { $sumUnitPrice += floatval($r['Preco_unitario']); $unitCount++; }
         if ($q <= 0) $zeroStock[] = ['id'=>$r['ID_produto'],'nome'=>$name,'q'=>$q];
@@ -234,7 +309,6 @@ try {
     $exportRowsJSON = json_encode($exportRows);
 
     // --- Saídas (vendas) — últimos períodos (7 e 30 dias)
-    // OBS: evito INTERVAL :days em placeholder — calculo a data em PHP.
     $date7 = (new DateTime())->modify('-7 days')->format('Y-m-d H:i:s');
     $date30 = (new DateTime())->modify('-30 days')->format('Y-m-d H:i:s');
 
@@ -257,13 +331,10 @@ try {
     $stmt30->execute([':date' => $date30]);
     $saidas30 = $stmt30->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-    // Formata arrays para JSON (garantindo tipos)
     $saidas7JSON = json_encode(array_map(function($r){ return ['id'=>intval($r['ID_produto']),'name'=>$r['Nome_prod'],'qty'=>floatval($r['qty']),'total'=>floatval($r['total'])]; }, $saidas7));
     $saidas30JSON = json_encode(array_map(function($r){ return ['id'=>intval($r['ID_produto']),'name'=>$r['Nome_prod'],'qty'=>floatval($r['qty']),'total'=>floatval($r['total'])]; }, $saidas30));
 
 } catch (PDOException $e) {
-    // Em ambiente de desenvolvimento é útil ver a mensagem.
-    // Em produção, troque por um log e mensagem genérica.
     die("Erro na conexão/consulta: " . $e->getMessage());
 }
 ?>
@@ -311,9 +382,11 @@ h1{color:#fff;text-align:center;margin-bottom:12px}
 .filter-row label{color:var(--primary-text);font-size:13px;margin-bottom:6px}
 input[type="date"], input[type="text"]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,0.03);color:var(--primary-text)}
 
-/* buttons */
-.btn{padding:8px 12px;border-radius:8px;border:none;background:var(--highlight);color:#fff;cursor:pointer;font-weight:700}
+/* buttons -- anchor and button parity */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:8px;border:none;background:var(--highlight);color:#fff;cursor:pointer;font-weight:700;height:36px;line-height:1;font-size:14px;text-decoration:none}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.06)}
+
+/* action-row remains */
 .action-row{display:flex;gap:8px;align-items:center}
 
 /* table */
@@ -337,13 +410,11 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
 .row-soon td{background:rgba(245,158,11,0.06)}
 .row-lowstock td{box-shadow:inset 0 0 0 1px rgba(245,158,11,0.04)}
 
-/* action buttons */
-.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;background:#f1f3f5;margin-left:6px}
-.icon-btn span{font-size:18px;color:#1b263b}
+/* action buttons (links styled as buttons) */
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;background:#f1f3f5;margin-left:6px;text-decoration:none}
+.icon-btn span{font-size:18px;color:#1b263b;display:inline-block;line-height:1}
 .icon-btn.edit{background:#0077b6}
 .icon-btn.edit span{color:#fff}
-.icon-btn.del{background:#e63946}
-.icon-btn.del span{color:#fff}
 .action-col{width:110px;text-align:center}
 
 /* panels */
@@ -621,6 +692,7 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
         <div style="display:flex;gap:8px;align-items:flex-end">
             <button id="clearFilters" class="btn btn-ghost">Limpar</button>
             <button id="toggleActionsBtn" class="btn btn-ghost" title="Mostrar/Ocultar Ações">Ocultar Ações</button>
+            <a href="cadproduto.php" class="btn" id="openCreateBtn">+ Cadastrar</a>
             <form method="POST" action="relatorio_estoque_pdf.php" target="_blank" style="display:inline-flex;gap:8px;align-items:end">
                 <input type="hidden" name="startDate" id="pdfStartDate">
                 <input type="hidden" name="endDate" id="pdfEndDate">
@@ -648,7 +720,7 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
                 </tr>
             </thead>
             <tbody>
-                <?php
+<?php
                 foreach ($rows as $row):
                     $statusClass = 'status-ok';
                     $statusText = 'OK';
@@ -676,8 +748,20 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
                     }
                     $q = floatval($row['Qntd_produto'] ?? 0);
                     if ($q <= $lowStockThreshold) $rowClass .= ' row-lowstock';
+                    $data_validade = '';
+                    $draw = parseDateSafe($row['Validade'] ?? '');
+                    if ($draw) $data_validade = $draw->format('Y-m-d');
                 ?>
-                <tr class="<?= $rowClass ?>">
+                <tr class="<?= $rowClass ?>"
+                    data-id="<?= $row['ID_produto'] ?>"
+                    data-nome="<?= htmlspecialchars($row['Nome_prod'], ENT_QUOTES) ?>"
+                    data-id_forn="<?= htmlspecialchars($row['id_categorias'] ? ($row['id_categorias']) : '') ?>"
+                    data-id_cat="<?= htmlspecialchars($row['id_categorias'] ? ($row['id_categorias']) : '') ?>"
+                    data-preco="<?= htmlspecialchars($row['Preco_unitario']) ?>"
+                    data-unidade="<?= htmlspecialchars($row['Unid_medida']) ?>"
+                    data-validade="<?= $data_validade ?>"
+                    data-qnt="<?= htmlspecialchars($row['Qntd_produto']) ?>"
+                >
                     <td data-label="ID"><?= $row['ID_produto'] ?></td>
                     <td data-label="Nome"><?= htmlspecialchars($row['Nome_prod']) ?></td>
                     <td data-label="Fornecedor"><?= htmlspecialchars($row['Nome_forn'] ?? '---') ?></td>
@@ -689,15 +773,7 @@ td[data-label="Quantidade"], td[data-label="Preço Unit."], td[data-label="Valor
                     <td data-label="Validade"><?= ($d) ? $d->format('d/m/Y') : '---' ?></td>
                     <td data-label="Status"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
                     <td class="action-col" style="text-align:center;">
-                        <a href="alterar/alterar_produtos.php?ID_produto=<?= $row['ID_produto'] ?>" class="icon-btn edit" title="Editar">
-                            <span class="material-icons">edit</span>
-                        </a>
-                        <form action="exclusoes/excluir_produtos.php" method="POST" style="display:inline;">
-                            <input type="hidden" name="id" value="<?= htmlspecialchars($row['ID_produto']) ?>">
-                            <button type="submit" class="icon-btn del" onclick="return confirm('Deseja realmente excluir este produto?')" title="Excluir">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </form>
+                        <a href="alterar/alterar_produtos.php?id=<?= urlencode($row['ID_produto']) ?>" class="icon-btn edit-btn" title="Alterar"><span class="material-icons">edit</span></a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -725,6 +801,7 @@ function toggleSidebar(){ sidebar.classList.toggle('collapsed'); mainContent.cla
 
 document.querySelectorAll('.toggle-btn').forEach(btn=>{ btn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebar(); } }); });
 
+// 
 /* filtros, paginação e ações */
 const estoqueTbody = document.querySelector('#estoqueTable tbody');
 let estoqueRows = Array.from(estoqueTbody ? estoqueTbody.querySelectorAll('tr') : []);
@@ -736,13 +813,14 @@ const pdfStart = document.getElementById('pdfStartDate');
 const pdfEnd = document.getElementById('pdfEndDate');
 const pdfSearch = document.getElementById('pdfSearch');
 const toggleActionsBtn = document.getElementById('toggleActionsBtn');
+const openCreateBtn = document.getElementById('openCreateBtn');
 
-// Paginação
-const rowsPerPage = 9; // solicitado
+let rowsPerPage = 9; // solicitado
 let currentPage = 1;
 let filteredRows = [...estoqueRows];
 
 function brToISO(dateStr){
+    if (!dateStr) return null;
     const parts = dateStr.split('/');
     if(parts.length !== 3) return null;
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
@@ -873,18 +951,18 @@ function downloadCSV(filename, rows) {
 }
 
 /* hook dos botões de export */
+/* export buttons */
 document.getElementById('exportAllBtn')?.addEventListener('click', ()=> downloadCSV('estoque_todos.csv', exportAllData));
 document.getElementById('exportExpiredBtn')?.addEventListener('click', ()=> downloadCSV('expirados.csv', expiredItemsData));
 document.getElementById('exportSoonBtn')?.addEventListener('click', ()=> downloadCSV('proximos_validade.csv', soonItemsData));
 document.getElementById('exportZeroBtn')?.addEventListener('click', ()=> downloadCSV('sem_estoque.csv', zeroStockData));
-
-// export das saídas
 document.getElementById('exportSaidas7')?.addEventListener('click', ()=> downloadCSV('saidas_7dias.csv', saidas7.map(s=>({id:s.id,name:s.name,quantidade:s.qty,valor_total:s.total}))));
 document.getElementById('exportSaidas30')?.addEventListener('click', ()=> downloadCSV('saidas_30dias.csv', saidas30.map(s=>({id:s.id,name:s.name,quantidade:s.qty,valor_total:s.total}))));
 
 let chartsInitialized = false;
 let chartInstances = [];
 
+/* Chart rendering functions */
 function drawNoDataMessage(canvas, msg) {
     if (!canvas) return;
     try {
@@ -990,7 +1068,7 @@ function renderSaidas(force=false){
     }
     requestAnimationFrame(()=>{
         setTimeout(()=>{
-            if (saidasChartInstances.length) { saidasChartInstances.forEach(c=>{ try{ c.destroy(); } catch(e){} }); saidasChartInstances = []; }
+            if (saidasChartInstances.length) { saidasChartInstances.forEach(c=>{ try{ c.destroy() } catch(e){} }); saidasChartInstances = []; }
             function fit(id){ const el=document.getElementById(id); if(!el) return; const w=Math.max(300, Math.round(el.clientWidth)); const h=(el.clientHeight && el.clientHeight>20)?Math.round(el.clientHeight):240; if(el.width!==w||el.height!==h){el.width=w;el.height=h;} }
             ['chartSaidas7','chartSaidas30'].forEach(fit);
             const palette = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'];
@@ -1032,6 +1110,17 @@ function renderSaidas(force=false){
         },80);
     });
 }
+
+/* Exibe flash messages se houver (vindo do PHP) */
+<?php if (!empty($_SESSION['flash'])): ?>
+    alert("<?= addslashes($_SESSION['flash']) ?>");
+    <?php unset($_SESSION['flash']); ?>
+<?php endif; ?>
+<?php if (!empty($_SESSION['flash_err'])): ?>
+    alert("<?= addslashes($_SESSION['flash_err']) ?>");
+    <?php unset($_SESSION['flash_err']); ?>
+<?php endif; ?>
+
 </script>
 </body>
 </html>
