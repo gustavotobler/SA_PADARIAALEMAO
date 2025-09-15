@@ -10,7 +10,7 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
 
 // Verifica se o usuário é administrador (nível 1)
 if (!isset($_SESSION['nivel']) || $_SESSION['nivel'] != 1) {
-    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../estoque.php';</script>";
     exit;
 }
 
@@ -28,12 +28,20 @@ function brDateToSql($datebr) {
 }
 
 // Pega ID via GET (abrir a página) ou POST (quando enviar)
-$id = filter_input(INPUT_GET, 'ID_produto', FILTER_VALIDATE_INT);
+// Aceita tanto 'id' quanto 'ID_produto' para compatibilidade com links antigos
+$id = null;
+$g1 = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$g2 = filter_input(INPUT_GET, 'ID_produto', FILTER_VALIDATE_INT);
+$p1 = filter_input(INPUT_POST, 'ID_produto', FILTER_VALIDATE_INT);
+$p2 = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+
+if ($g1 !== null && $g1 !== false) $id = $g1;
+elseif ($g2 !== null && $g2 !== false) $id = $g2;
+elseif ($p1 !== null && $p1 !== false) $id = $p1;
+elseif ($p2 !== null && $p2 !== false) $id = $p2;
+
 if (!$id) {
-    $id = filter_input(INPUT_POST, 'ID_produto', FILTER_VALIDATE_INT);
-}
-if (!$id) {
-    echo "<script>alert('ID do produto inválido.');window.location.href='../produtos.php';</script>";
+    echo "<script>alert('ID do produto inválido.');window.location.href='../estoque.php';</script>";
     exit;
 }
 
@@ -42,18 +50,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Recebe e valida campos
     $ID_forn = filter_input(INPUT_POST, 'ID_forn', FILTER_VALIDATE_INT);
     $id_categorias = filter_input(INPUT_POST, 'id_categorias', FILTER_VALIDATE_INT);
-    $Nome_prod = trim((string)filter_input(INPUT_POST, 'Nome_prod', FILTER_SANITIZE_STRING));
+    $Nome_prod = trim((string)filter_input(INPUT_POST, 'Nome_prod', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
     $Preco_unitario_raw = str_replace(',', '.', trim((string)filter_input(INPUT_POST, 'Preco_unitario', FILTER_UNSAFE_RAW)));
-    $Preco_unitario = ($Preco_unitario_raw === '') ? null : filter_var($Preco_unitario_raw, FILTER_VALIDATE_FLOAT);
-    $Unid_medida = trim((string)filter_input(INPUT_POST, 'Unid_medida', FILTER_SANITIZE_STRING));
+    $Preco_unitario = ($Preco_unitario_raw === '') ? null : (is_numeric($Preco_unitario_raw) ? (float)$Preco_unitario_raw : false);
+    $Unid_medida = trim((string)filter_input(INPUT_POST, 'Unid_medida', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
     $Validade_raw = trim((string)filter_input(INPUT_POST, 'Validade', FILTER_UNSAFE_RAW));
     $Validade_sql = brDateToSql($Validade_raw); // null ou yyyy-mm-dd
-    $Qntd_produto_raw = filter_input(INPUT_POST, 'Qntd_produto', FILTER_UNSAFE_RAW);
-    $Qntd_produto = ($Qntd_produto_raw === '') ? 0 : filter_var($Qntd_produto_raw, FILTER_VALIDATE_INT);
+    $Qntd_produto_raw = trim((string)filter_input(INPUT_POST, 'Qntd_produto', FILTER_UNSAFE_RAW));
+    // aceita ponto ou vírgula e numeros decimais
+    $Qntd_produto_raw = str_replace(',', '.', $Qntd_produto_raw);
+    $Qntd_produto = ($Qntd_produto_raw === '') ? 0 : (is_numeric($Qntd_produto_raw) ? (float)$Qntd_produto_raw : false);
 
     // Validações básicas
     if ($Nome_prod === '') {
         echo "<script>alert('O nome do produto não pode ficar vazio.');history.back();</script>";
+        exit;
+    }
+    if ($Preco_unitario === false) {
+        echo "<script>alert('Preço unitário inválido. Use números (ex: 5.50 ou 5,50).');history.back();</script>";
+        exit;
+    }
+    if ($Qntd_produto === false) {
+        echo "<script>alert('Quantidade inválida.');history.back();</script>";
         exit;
     }
 
@@ -72,39 +90,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $pdo->prepare($sql);
 
-        // Se Preco_unitario for null, bindValue com null; caso contrário float
-        if ($Preco_unitario === false) {
-            // valor inválido
-            echo "<script>alert('Preço unitário inválido. Use números (ex: 5.50 ou 5,50).');history.back();</script>";
-            exit;
+        // Binds com tratamento de NULL corretamente
+        if ($ID_forn !== null && $ID_forn !== false) {
+            $stmt->bindValue(':ID_forn', (int)$ID_forn, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(':ID_forn', null, PDO::PARAM_NULL);
         }
 
-        // Binders
-        $stmt->bindValue(':ID_forn', ($ID_forn ?: null), PDO::PARAM_INT);
-        $stmt->bindValue(':id_categorias', ($id_categorias ?: null), PDO::PARAM_INT);
+        if ($id_categorias !== null && $id_categorias !== false) {
+            $stmt->bindValue(':id_categorias', (int)$id_categorias, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(':id_categorias', null, PDO::PARAM_NULL);
+        }
+
         $stmt->bindValue(':Nome_prod', $Nome_prod, PDO::PARAM_STR);
+
         if ($Preco_unitario === null) {
             $stmt->bindValue(':Preco_unitario', null, PDO::PARAM_NULL);
         } else {
+            // armazena como string com ponto decimal (formato SQL)
             $stmt->bindValue(':Preco_unitario', number_format((float)$Preco_unitario, 2, '.', ''), PDO::PARAM_STR);
         }
+
         $stmt->bindValue(':Unid_medida', ($Unid_medida === '' ? null : $Unid_medida), PDO::PARAM_STR);
+
         if ($Validade_sql === null) {
             $stmt->bindValue(':Validade', null, PDO::PARAM_NULL);
         } else {
             $stmt->bindValue(':Validade', $Validade_sql, PDO::PARAM_STR);
         }
-        $stmt->bindValue(':Qntd_produto', ($Qntd_produto === false ? 0 : (int)$Qntd_produto), PDO::PARAM_INT);
+
+        $stmt->bindValue(':Qntd_produto', (int)$Qntd_produto, PDO::PARAM_INT);
         $stmt->bindValue(':ID_produto', (int)$id, PDO::PARAM_INT);
 
         $ok = $stmt->execute();
 
         if ($ok) {
-            echo "<script>alert('Produto alterado com sucesso.');window.location.href='../produtos.php';</script>";
+            echo "<script>alert('Produto alterado com sucesso.');window.location.href='../estoque.php';</script>";
             exit;
         } else {
             $err = $stmt->errorInfo();
-            echo "<script>alert('Falha ao alterar produto: {$err[2]}');history.back();</script>";
+            echo "<script>alert('Falha ao alterar produto: " . addslashes($err[2] ?? 'erro desconhecido') . "');history.back();</script>";
             exit;
         }
     } catch (Exception $e) {
@@ -118,7 +144,7 @@ $stmt = $pdo->prepare("SELECT * FROM produtos WHERE ID_produto = :id LIMIT 1");
 $stmt->execute([':id' => $id]);
 $prod = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$prod) {
-    echo "<script>alert('Produto não encontrado.');window.location.href='../produtos.php';</script>";
+    echo "<script>alert('Produto não encontrado.');window.location.href='../estoque.php';</script>";
     exit;
 }
 
@@ -169,7 +195,7 @@ button[type="submit"]:hover { background: rgb(0, 153, 255); }
 <body>
 
 <header>
-  <button class="back-btn" onclick="window.location.href='../produtos.php'" title="Voltar">
+  <button class="back-btn" onclick="window.location.href='../estoque.php'" title="Voltar">
     <span class="material-icons">arrow_back</span>
   </button>
   <h1>Editar Produto</h1>
@@ -210,7 +236,7 @@ button[type="submit"]:hover { background: rgb(0, 153, 255); }
       <select name="Unid_medida" id="Unid_medida" required>
         <option value="">Selecione</option>
         <option value="kg" <?= (strtolower($unid_medida) === 'kg') ? 'selected' : '' ?>>kg</option>
-        <option value="mL" <?= (strtolower($unid_medida) === 'ml') ? 'selected' : '' ?>>mL</option>
+        <option value="ml" <?= (strtolower($unid_medida) === 'ml') ? 'selected' : '' ?>>mL</option>
         <option value="g" <?= (strtolower($unid_medida) === 'g') ? 'selected' : '' ?>>g</option>
       </select>
 
@@ -218,7 +244,7 @@ button[type="submit"]:hover { background: rgb(0, 153, 255); }
       <input type="text" name="Validade" id="Validade" maxlength="10" placeholder="dd/mm/aaaa" value="<?= htmlspecialchars($validade_formatada, ENT_QUOTES) ?>" />
 
       <label for="Qntd_produto">Quantidade em Estoque:</label>
-      <input type="number" name="Qntd_produto" id="Qntd_produto" min="0" value="<?= htmlspecialchars($prod['Qntd_produto'], ENT_QUOTES) ?>" />
+      <input type="number" name="Qntd_produto" id="Qntd_produto" min="0" step="0.01" value="<?= htmlspecialchars($prod['Qntd_produto'], ENT_QUOTES) ?>" />
 
       <button type="submit">Alterar Produto</button>
   </form>

@@ -8,7 +8,7 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
   exit;
 }
 if ($_SESSION['nivel'] != 1) {
-  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='produtos.php';</script>";
+  echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='estoque.php';</script>";
   exit;
 }
 
@@ -153,7 +153,7 @@ try {
 </head>
 <body>
   <header>
-    <button class="back-btn" onclick="window.location.href='produtos.php'">←</button>
+    <button class="back-btn" onclick="window.location.href='estoque.php'">←</button>
     <h1>Cadastro de Produto</h1>
   </header>
 
