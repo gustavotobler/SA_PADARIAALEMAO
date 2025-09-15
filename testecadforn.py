@@ -37,7 +37,7 @@ def gerar_data_fundacao():
     ano = random.randint(1920, 2025)
     mes = random.randint(1, 12)
     dia = random.randint(1, 30)
-    return f"{ano:04d}-{mes:02d}-{dia:02d}"
+    return f"{ano:03d}-{mes:02d}-{dia:02d}"
 
 # --- Configuração Selenium ---
 driver = webdriver.Chrome()
@@ -49,7 +49,7 @@ try:
     time.sleep(2)
     wait.until(EC.presence_of_element_located((By.ID, "Email"))).send_keys("kerryking@padaria.com")
     time.sleep(1)
-    driver.find_element(By.ID, "Senha").send_keys("admin123")
+    driver.find_element(By.ID, "Senha").send_keys("12345678")
     time.sleep(1)
     driver.find_element(By.XPATH, "//button[text()='Entrar']").click()
     time.sleep(3)  # esperar página inicial carregar completamente
