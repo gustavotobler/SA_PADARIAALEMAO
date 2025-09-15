@@ -55,7 +55,7 @@ button[type="submit"]:hover { background:rgb(0,153,255);}
     <input type="text" id="cnpj" name="CNPJ" maxlength="18" placeholder="99.999.999/9999-99" required />
 
     <label for="data_fundacao">Data de Fundação</label>
-    <input type="date" id="data_fundacao" name="Data_fundacao" min="1800-01-01" required />
+    <input type="date" id="data_fundacao" name="Data_fundacao" placeholder="AAAA-MM-DD" required />
 
     <h2>Endereço</h2>
     <label for="logradouro">Logradouro</label>
@@ -130,6 +130,44 @@ document.getElementById("telefone").addEventListener("input", function(e){
     }
     e.target.value = v;
 });
+
+const form = document.getElementById("form-fornecedor");
+const dataInput = document.getElementById("data_fundacao");
+
+form.addEventListener("submit", function(e) {
+    const valor = dataInput.value;
+    if (!valor) return; // deixa o required cuidar de vazio
+
+    const [ano, mes, dia] = valor.split("-").map(Number);
+
+    // Ano inválido
+    if (ano < 1000 || ano > 9999) {
+        alert("Ano inválido (deve ter 4 dígitos).");
+        dataInput.focus();
+        e.preventDefault();
+        return;
+    }
+
+    // Mês inválido
+    if (mes < 1 || mes > 12) {
+        alert("Mês inválido (deve ser entre 01 e 12).");
+        dataInput.focus();
+        e.preventDefault();
+        return;
+    }
+
+    // Último dia do mês (considera fevereiro bissexto)
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+
+    // Dia inválido
+    if (dia < 1 || dia > ultimoDia) {
+        alert(`Dia inválido (esse mês vai até ${ultimoDia}).`);
+        dataInput.focus();
+        e.preventDefault();
+        return;
+    }
+});
+
 </script>
 
 </body>
