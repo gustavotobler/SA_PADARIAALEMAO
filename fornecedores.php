@@ -30,31 +30,17 @@ if ($_SESSION['nivel'] != 1) {
     --accent: #1b263b;
     --highlight: #0077b6;
 }
-
-/* Reset e corpo */
 * { box-sizing: border-box; margin:0; padding:0; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
 body { background-color: var(--main-bg); display: flex; }
-
-/* Sidebar */
 .sidebar {
-    width: 240px;
-    background: var(--sidebar-bg);
-    height: 100vh;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    padding-top: 20px;
-    transition: width 0.3s;
+    width: 240px; background: var(--sidebar-bg); height: 100vh; position: fixed;
+    display: flex; flex-direction: column; padding-top: 20px; transition: width 0.3s;
     box-shadow: 3px 0 10px rgba(0,0,0,0.3);
 }
 .sidebar.collapsed { width: 60px; }
 .sidebar a {
-    display: flex;
-    align-items: center;
-    color: var(--primary-text);
-    text-decoration: none;
-    padding: 15px 20px;
-    white-space: nowrap;
+    display: flex; align-items: center; color: var(--primary-text);
+    text-decoration: none; padding: 15px 20px; white-space: nowrap;
     transition: background 0.2s, padding 0.3s;
 }
 .sidebar a:hover { background: var(--hover-bg); border-left: 4px solid var(--highlight); padding-left: 16px; }
@@ -62,58 +48,30 @@ body { background-color: var(--main-bg); display: flex; }
 .sidebar.collapsed .text { display: none; }
 .sidebar.collapsed .icon { margin-right: 0; justify-content: center; }
 .toggle-btn { cursor: pointer; text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--primary-text); }
-
-/* Main Content */
 .main-content { margin-left: 240px; padding: 20px 30px; width: 100%; transition: margin-left 0.3s; }
 .main-content.collapsed { margin-left: 60px; }
-
-/* Título */
 h1 { text-align: center; margin-bottom: 20px; color:#ffffff; }
-
-/* Topo (pesquisa + ações) */
-.topo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 10px;
-}
+.topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
 .topo > div:first-child { flex:1; display:flex; justify-content:center; }
 .search-container {
-    background:#fff;
-    display:flex;
-    align-items:center;
-    border-radius:25px;
-    padding:0 10px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.2);
-    max-width:500px;
-    flex:1;
+    background:#fff; display:flex; align-items:center; border-radius:25px; padding:0 10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.2); max-width:500px; flex:1;
 }
 .search-container input { border:none; outline:none; padding:0.5rem; flex:1; }
 .search-container button {
-    background:#0077b6;
-    border:none;
-    padding:6px 14px;
-    border-radius:20px;
-    color:#fff;
-    cursor:pointer;
-    font-weight:500;
-    margin-left:6px;
+    background:#0077b6; border:none; padding:6px 14px; border-radius:20px; color:#fff;
+    cursor:pointer; font-weight:500; margin-left:6px;
 }
 .search-container button:hover { background:#023e8a; }
-
-.actions-top {
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
+.actions-top { display:flex; align-items:center; gap:10px; }
 .add-btn { background:#2ecc71; border-radius:50%; padding:8px; color:#fff; display:inline-block; transition:0.3s; }
 .add-btn:hover { background:#27ae60; }
 .edit-toggle { color:#0d1b2a; cursor:pointer; font-size:26px; transition:0.2s; }
 .edit-toggle:hover { transform:rotate(20deg); }
-
-/* Tabela */
-table { width:100%; border-collapse:collapse; background: var(--card-bg); border-radius:12px; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
+table {
+    width:100%; border-collapse:collapse; background: var(--card-bg);
+    border-radius:12px; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.15);
+}
 thead { background: var(--accent); color: var(--primary-text); }
 thead th { padding:14px 10px; text-align:left; font-size:0.9rem; font-weight:600; letter-spacing:0.5px; }
 tbody td { padding:12px 10px; border-bottom:1px solid #eee; font-size:0.9rem; }
@@ -121,35 +79,25 @@ tbody tr:nth-child(even) { background:#f9fbfd; }
 tbody tr:hover { background: var(--highlight); color:#fff; transition:0.2s; }
 .action-cell { text-align:center; }
 .hidden { display:none; }
-
-/* Botões de ação */
 .icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: #f1f3f5;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%; border: none;
+    cursor: pointer; transition: all 0.3s ease; background: #f1f3f5;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 .icon-btn span { font-size: 20px; color: #1b263b; }
 .icon-btn:hover { transform: scale(1.1); }
-
-/* Editar */
 .icon-btn.edit-btn { background: #0077b6; }
 .icon-btn.edit-btn span { color:#fff; }
 .icon-btn.edit-btn:hover { background:#023e8a; }
-
-/* Excluir */
 .icon-btn.delete-btn { background:#e63946; }
 .icon-btn.delete-btn span { color:#fff; }
 .icon-btn.delete-btn:hover { background:#c1121f; }
-
-/* Responsividade */
+#pagination button {
+    margin: 0 5px; padding: 6px 12px; border: none;
+    border-radius: 6px; cursor: pointer;
+}
+#pagination button.active { background:#0077b6; color:#fff; }
 @media(max-width:768px){
   .main-content { margin-left:0; padding:1rem; }
   table { font-size:0.8rem; }
@@ -225,12 +173,14 @@ foreach ($fornecedores as $forn): ?>
 <?php endforeach; ?>
 </tbody>
 </table>
+
+<!-- Paginação -->
+<div id="pagination" style="margin-top:20px; text-align:center;"></div>
 </main>
 
 <script>
 const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
-
 function toggleSidebar(){
   sidebar.classList.toggle('collapsed');
   mainContent.classList.toggle('collapsed');
@@ -241,26 +191,59 @@ document.addEventListener('DOMContentLoaded', () => {
   const actionHeader = document.querySelector('th.action-header');
   const addButton = document.getElementById('add-button');
   const tableBody = document.getElementById('forn-table-body');
+  const rows = Array.from(tableBody.rows);
+  const rowsPerPage = 10;
+  let currentPage = 1;
 
+  // === Paginação ===
+  function renderTablePage(page, filteredRows = rows) {
+    filteredRows.forEach(r => r.style.display = "none");
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    filteredRows.slice(start, end).forEach(r => r.style.display = "");
+  }
+
+  function renderPagination(filteredRows = rows) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+    for (let i = 1; i <= pageCount; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.classList.toggle('active', i === currentPage);
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderTablePage(currentPage, filteredRows);
+        renderPagination(filteredRows);
+      });
+      pagination.appendChild(btn);
+    }
+  }
+
+  // Inicial
+  renderTablePage(currentPage);
+  renderPagination();
+
+  // === Mostrar/Ocultar botões ===
   const getActionCells = () => document.querySelectorAll('td.action-cell');
-
   toggleBtn.addEventListener('click', () => {
     actionHeader.classList.toggle('hidden');
     getActionCells().forEach(td => td.classList.toggle('hidden'));
     addButton.classList.toggle('hidden');
   });
 
+  // === Busca + paginação ===
   const searchInput = document.getElementById("search-input");
   const searchBtn = document.getElementById("search-btn");
 
   function doSearch() {
     const term = searchInput.value.trim().toLowerCase();
-    Array.from(tableBody.rows).forEach(row => {
-      const match = Array.from(row.cells).slice(0,5).some(td => td.textContent.toLowerCase().includes(term));
-      row.style.display = match ? '' : 'none';
-      const cell = row.querySelector('td.action-cell');
-      if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
+    const visibleRows = rows.filter(row => {
+      return Array.from(row.cells).slice(0,5).some(td => td.textContent.toLowerCase().includes(term));
     });
+    currentPage = 1;
+    renderTablePage(currentPage, visibleRows);
+    renderPagination(visibleRows);
   }
 
   searchBtn.addEventListener('click', doSearch);

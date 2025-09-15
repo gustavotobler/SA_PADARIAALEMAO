@@ -7,8 +7,6 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     echo "<script>alert('Você precisa estar logado!');window.location.href='inicial1.php';</script>";
     exit;
 }
-
-// Se não for administrador
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -228,6 +226,10 @@ foreach ($produtos as $prod): ?>
 <?php endforeach; ?>
 </tbody>
 </table>
+
+<!-- Área de paginação -->
+<div id="pagination" style="margin-top:20px; text-align:center;"></div>
+
 </main>
 
 <script>
@@ -244,7 +246,68 @@ document.addEventListener('DOMContentLoaded', () => {
   const actionHeader = document.querySelector('th.action-header');
   const addButton = document.getElementById('add-button');
   const tableBody = document.getElementById('prod-table-body');
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
 
+  const rows = Array.from(tableBody.rows);
+  const rowsPerPage = 10; // quantidade máxima de itens por página
+  let currentPage = 1;
+  let filteredRows = [...rows]; // lista que pode mudar com busca
+
+  // Função para renderizar uma página
+  function renderTablePage(page) {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    rows.forEach(row => row.style.display = "none"); // esconde todos
+    filteredRows.forEach((row, index) => {
+      row.style.display = (index >= start && index < end) ? '' : 'none';
+    });
+  }
+
+  // Criar botões de paginação
+  function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+
+    if (pageCount <= 1) return; // não mostra se só 1 página
+
+    for (let i = 1; i <= pageCount; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.style.margin = "0 5px";
+      btn.style.padding = "6px 12px";
+      btn.style.border = "none";
+      btn.style.borderRadius = "6px";
+      btn.style.cursor = "pointer";
+      btn.style.background = (i === currentPage) ? "#0077b6" : "#f1f1f1";
+      btn.style.color = (i === currentPage) ? "#fff" : "#000";
+
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderTablePage(currentPage);
+        renderPagination();
+      });
+      pagination.appendChild(btn);
+    }
+  }
+
+  // Função de busca integrada
+  function doSearch() {
+    const term = searchInput.value.trim().toLowerCase();
+    filteredRows = rows.filter(row => {
+      return Array.from(row.cells).slice(0,8).some(td => td.textContent.toLowerCase().includes(term));
+    });
+    currentPage = 1;
+    renderTablePage(currentPage);
+    renderPagination();
+  }
+
+  searchBtn.addEventListener('click', doSearch);
+  searchInput.addEventListener('input', doSearch);
+
+  // Toggle botões de edição
   const getActionCells = () => document.querySelectorAll('td.action-cell');
 
   toggleBtn.addEventListener('click', () => {
@@ -253,21 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
     addButton.classList.toggle('hidden');
   });
 
-  const searchInput = document.getElementById("search-input");
-  const searchBtn = document.getElementById("search-btn");
-
-  function doSearch() {
-    const term = searchInput.value.trim().toLowerCase();
-    Array.from(tableBody.rows).forEach(row => {
-      const match = Array.from(row.cells).slice(0,8).some(td => td.textContent.toLowerCase().includes(term));
-      row.style.display = match ? '' : 'none';
-      const cell = row.querySelector('td.action-cell');
-      if (cell) cell.classList.toggle('hidden', !match || actionHeader.classList.contains('hidden'));
-    });
-  }
-
-  searchBtn.addEventListener('click', doSearch);
-  searchInput.addEventListener('input', doSearch);
+  // Inicializa
+  renderTablePage(currentPage);
+  renderPagination();
 });
 </script>
 
