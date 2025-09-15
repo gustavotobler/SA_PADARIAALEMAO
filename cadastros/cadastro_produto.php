@@ -8,7 +8,7 @@ if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     exit;
 }
 if ($_SESSION['nivel'] != 1) {
-    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../produtos.php';</script>";
+    echo "<script>alert('Erro, você não possui o nível de acesso');window.location.href='../estoque.php';</script>";
     exit;
 }
 
@@ -30,16 +30,16 @@ if ($preco) {
 }
 
 // ✅ VALIDAÇÕES BÁSICAS
-if (!$nome || strlen($nome) < 3) {
+if (!$nome || mb_strlen($nome) < 3) {
     exit("<script>alert('Nome inválido');window.history.back();</script>");
 }
-if (!$preco || $preco < 0.10) {
+if (!is_numeric($preco) || $preco < 0.10) {
     exit("<script>alert('Preço inválido');window.history.back();</script>");
 }
 if (!$unidade) {
     exit("<script>alert('Unidade de medida não selecionada');window.history.back();</script>");
 }
-if (!$quantidade || $quantidade < 1) {
+if (!is_numeric($quantidade) || $quantidade < 0) {
     exit("<script>alert('Quantidade inválida');window.history.back();</script>");
 }
 if (!$fornecedor) {
@@ -90,7 +90,7 @@ try {
         ':categoria'  => $categoria
     ]);
 
-    echo "<script>alert('Produto cadastrado com sucesso!');window.location.href='../produtos.php'</script>";
+    echo "<script>alert('Produto cadastrado com sucesso!');window.location.href='../estoque.php'</script>";
 } catch (PDOException $e) {
-    echo "<script>alert('Erro ao cadastrar: ".$e->getMessage()."');window.history.back();</script>";
+    echo "<script>alert('Erro ao cadastrar: ".addslashes($e->getMessage())."');window.history.back();</script>";
 }

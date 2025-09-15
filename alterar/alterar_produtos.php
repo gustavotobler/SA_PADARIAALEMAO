@@ -2,6 +2,25 @@
 session_start();
 require_once '../conexao.php'; // manter ../ se o arquivo estiver em alterar/
 
+// força internal encoding
+if (function_exists('mb_internal_encoding')) mb_internal_encoding('UTF-8');
+
+// Se por alguma razão a conexão em ../conexao.php não setou corretamente o charset,
+// tentar garantir que a sessão de conexão use utf8mb4 (não quebra se já estiver).
+try {
+    if (isset($pdo) && $pdo instanceof PDO) {
+        // define atributos recomendados
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        // força nomes (se já estiver ok, isto não faz mal)
+        $pdo->exec("SET NAMES 'utf8mb4'");
+        $pdo->exec("SET sql_mode=''");
+    }
+} catch (Exception $e) {
+    // se der problema aqui, não interromperemos com erro técnico; exibiremos alerta mais à frente se for necessário
+}
+
 // Verifica se o usuário está logado
 if (!isset($_SESSION['funcionario']) || !isset($_SESSION['nivel'])) {
     echo "<script>alert('Você precisa estar logado!');window.location.href='../inicial1.php';</script>";
@@ -47,17 +66,16 @@ if (!$id) {
 
 // Se for POST, processa atualização
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recebe e valida campos
+    // === leitura das entradas: usar FILTER_UNSAFE_RAW para não mutilar acentos ===
     $ID_forn = filter_input(INPUT_POST, 'ID_forn', FILTER_VALIDATE_INT);
     $id_categorias = filter_input(INPUT_POST, 'id_categorias', FILTER_VALIDATE_INT);
-    $Nome_prod = trim((string)filter_input(INPUT_POST, 'Nome_prod', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+    $Nome_prod = trim((string)filter_input(INPUT_POST, 'Nome_prod', FILTER_UNSAFE_RAW)); // NÃO sanitizar aqui (preserva acentos)
     $Preco_unitario_raw = str_replace(',', '.', trim((string)filter_input(INPUT_POST, 'Preco_unitario', FILTER_UNSAFE_RAW)));
     $Preco_unitario = ($Preco_unitario_raw === '') ? null : (is_numeric($Preco_unitario_raw) ? (float)$Preco_unitario_raw : false);
-    $Unid_medida = trim((string)filter_input(INPUT_POST, 'Unid_medida', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+    $Unid_medida = trim((string)filter_input(INPUT_POST, 'Unid_medida', FILTER_UNSAFE_RAW));
     $Validade_raw = trim((string)filter_input(INPUT_POST, 'Validade', FILTER_UNSAFE_RAW));
     $Validade_sql = brDateToSql($Validade_raw); // null ou yyyy-mm-dd
     $Qntd_produto_raw = trim((string)filter_input(INPUT_POST, 'Qntd_produto', FILTER_UNSAFE_RAW));
-    // aceita ponto ou vírgula e numeros decimais
     $Qntd_produto_raw = str_replace(',', '.', $Qntd_produto_raw);
     $Qntd_produto = ($Qntd_produto_raw === '') ? 0 : (is_numeric($Qntd_produto_raw) ? (float)$Qntd_produto_raw : false);
 
@@ -103,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindValue(':id_categorias', null, PDO::PARAM_NULL);
         }
 
+        // Importante: Nome_prod salvamos direto (acentos mantidos). Apenas escapamos na saída.
         $stmt->bindValue(':Nome_prod', $Nome_prod, PDO::PARAM_STR);
 
         if ($Preco_unitario === null) {
@@ -120,7 +139,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindValue(':Validade', $Validade_sql, PDO::PARAM_STR);
         }
 
-        $stmt->bindValue(':Qntd_produto', (int)$Qntd_produto, PDO::PARAM_INT);
+        // se seu campo Qntd_produto no banco aceita decimal, ajuste o bind para STR ou DECIMAL conforme schema.
+        // Aqui convertemos para int se o campo for inteiro. Se for DECIMAL, envie como string com ponto.
+        // Usarei bind como string formatada com 2 casas se for float:
+        if (is_float($Qntd_produto) || strpos((string)$Qntd_produto, '.') !== false) {
+            // se o campo no DB é DECIMAL/DOUBLE, isto é safer:
+            $stmt->bindValue(':Qntd_produto', number_format((float)$Qntd_produto, 2, '.', ''), PDO::PARAM_STR);
+        } else {
+            $stmt->bindValue(':Qntd_produto', (int)$Qntd_produto, PDO::PARAM_INT);
+        }
+
         $stmt->bindValue(':ID_produto', (int)$id, PDO::PARAM_INT);
 
         $ok = $stmt->execute();
@@ -204,14 +232,14 @@ button[type="submit"]:hover { background: rgb(0, 153, 255); }
 <main>
   <form method="POST" action="" novalidate>
       <h2>Editar Produto</h2>
-      <input type="hidden" name="ID_produto" value="<?= htmlspecialchars($prod['ID_produto'], ENT_QUOTES) ?>" />
+      <input type="hidden" name="ID_produto" value="<?= htmlspecialchars($prod['ID_produto'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" />
 
       <label for="ID_forn">Fornecedor:</label>
       <select name="ID_forn" id="ID_forn" required>
           <option value="">-- Nenhum --</option>
           <?php foreach ($fornecedores as $forn): ?>
               <option value="<?= $forn['ID_forn'] ?>" <?= ($prod['ID_forn'] == $forn['ID_forn']) ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($forn['Nome_forn'], ENT_QUOTES) ?>
+                  <?= htmlspecialchars($forn['Nome_forn'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
               </option>
           <?php endforeach; ?>
       </select>
@@ -221,16 +249,18 @@ button[type="submit"]:hover { background: rgb(0, 153, 255); }
           <option value="">Selecione</option>
           <?php foreach ($categorias as $cat): ?>
               <option value="<?= $cat['id_categorias'] ?>" <?= ($prod['id_categorias'] == $cat['id_categorias']) ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($cat['nome_categoria'], ENT_QUOTES) ?>
+                  <?= htmlspecialchars($cat['nome_categoria'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
               </option>
           <?php endforeach; ?>
       </select>
 
       <label for="Nome_prod">Nome do Produto:</label>
-      <input type="text" name="Nome_prod" id="Nome_prod" maxlength="60" required value="<?= htmlspecialchars($prod['Nome_prod'], ENT_QUOTES) ?>" />
+      <input type="text" name="Nome_prod" id="Nome_prod" maxlength="60" required
+             value="<?= htmlspecialchars($prod['Nome_prod'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" />
 
       <label for="Preco_unitario">Preço Unitário (R$):</label>
-      <input type="text" name="Preco_unitario" id="Preco_unitario" value="<?= htmlspecialchars($prod['Preco_unitario'], ENT_QUOTES) ?>" />
+      <input type="text" name="Preco_unitario" id="Preco_unitario"
+             value="<?= htmlspecialchars($prod['Preco_unitario'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" />
 
       <label for="Unid_medida">Unidade de medida:</label>
       <select name="Unid_medida" id="Unid_medida" required>
@@ -241,10 +271,12 @@ button[type="submit"]:hover { background: rgb(0, 153, 255); }
       </select>
 
       <label for="Validade">Validade (dd/mm/aaaa):</label>
-      <input type="text" name="Validade" id="Validade" maxlength="10" placeholder="dd/mm/aaaa" value="<?= htmlspecialchars($validade_formatada, ENT_QUOTES) ?>" />
+      <input type="text" name="Validade" id="Validade" maxlength="10" placeholder="dd/mm/aaaa"
+             value="<?= htmlspecialchars($validade_formatada, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" />
 
       <label for="Qntd_produto">Quantidade em Estoque:</label>
-      <input type="number" name="Qntd_produto" id="Qntd_produto" min="0" step="0.01" value="<?= htmlspecialchars($prod['Qntd_produto'], ENT_QUOTES) ?>" />
+      <input type="number" name="Qntd_produto" id="Qntd_produto" min="0" step="0.01"
+             value="<?= htmlspecialchars($prod['Qntd_produto'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" />
 
       <button type="submit">Alterar Produto</button>
   </form>
