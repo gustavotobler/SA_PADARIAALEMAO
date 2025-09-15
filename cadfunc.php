@@ -257,6 +257,7 @@ document.addEventListener("DOMContentLoaded", function(){
   const nascimento = document.getElementById("nascimento");
   const admissao = document.getElementById("admissao");
   const senha = document.getElementById("senha");
+  const email = document.getElementById("email");
 
   // Máscara telefone (99) 99999-9999
   telefone.addEventListener("input", () => {
@@ -308,11 +309,36 @@ document.addEventListener("DOMContentLoaded", function(){
   document.querySelector("form").addEventListener("submit",(e)=>{
     let ok = true;
 
+    // Telefone
+    if(telefone.value.replace(/\D/g,"").length < 10){
+      document.getElementById("erro-telefone").innerText = "Telefone inválido.";
+      ok = false;
+    } else document.getElementById("erro-telefone").innerText = "";
+
+    // RG
+    if(rg.value.replace(/\D/g,"").length < 7){
+      document.getElementById("erro-rg").innerText = "RG inválido.";
+      ok = false;
+    } else document.getElementById("erro-rg").innerText = "";
+
     // CPF
     if(cpf.value.replace(/\D/g,"").length !== 11){
       document.getElementById("erro-cpf").innerText = "CPF inválido.";
       ok = false;
     } else document.getElementById("erro-cpf").innerText = "";
+
+    // CEP
+    if(cep.value && cep.value.replace(/\D/g,"").length !== 8){
+      document.getElementById("erro-cep").innerText = "CEP inválido.";
+      ok = false;
+    } else document.getElementById("erro-cep").innerText = "";
+
+    // Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(email.value)){
+      document.getElementById("erro-email").innerText = "Email inválido.";
+      ok = false;
+    } else document.getElementById("erro-email").innerText = "";
 
     // Senha
     if(senha.value.length > 0 && senha.value.length < 8){
@@ -327,7 +353,8 @@ document.addEventListener("DOMContentLoaded", function(){
         const nasc = new Date(p[2], p[1]-1, p[0]);
         const hoje = new Date();
         let idade = hoje.getFullYear() - nasc.getFullYear();
-        if(hoje < new Date(nasc.setFullYear(hoje.getFullYear()))) idade--;
+        const m = hoje.getMonth() - nasc.getMonth();
+        if(m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
         if(idade < 18){
           document.getElementById("erro-nascimento").innerText = "Funcionário deve ter pelo menos 18 anos.";
           ok = false;
@@ -339,6 +366,7 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 </script>
+
 
 </body>
 </html>
