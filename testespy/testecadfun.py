@@ -96,7 +96,7 @@ wait = WebDriverWait(driver, 15)
 try:
     # --- LOGIN ---
     wait.until(EC.visibility_of_element_located((By.ID, "Email"))).send_keys("kerryking@padaria.com")
-    wait.until(EC.visibility_of_element_located((By.ID, "Senha"))).send_keys("admin123")
+    wait.until(EC.visibility_of_element_located((By.ID, "Senha"))).send_keys("12345678")
     driver.find_element(By.XPATH, "//button[normalize-space()='Entrar']").click()
     print("[Login] Realizado com sucesso")
 
