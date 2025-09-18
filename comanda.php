@@ -1,6 +1,6 @@
 <?php
 // comanda_single_styled.php
-// Arquivo atualizado: removido botão "Fechar" da UI conforme solicitado
+// Arquivo atualizado: removido botão "Salvar" conforme solicitado
 session_start();
 
 // -> Em desenvolvimento, útil ativar; em produção comente.
@@ -90,7 +90,7 @@ function carregar_comanda($pdo, $id)
   return $cab;
 }
 
-// ===== POST actions (criar, add_item, fechar, cancelar, reabrir, salvar, pagar) =====
+// ===== POST actions (criar, add_item, fechar, cancelar, reabrir, pagar) =====
 $msg = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   try {
@@ -234,20 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         send_json(['success' => true, 'redirect' => '?id=' . $id_venda]);
       header('Location:?id=' . $id_venda);
       exit();
-    }
-
-    // --- Salvar comanda (mantém aberta, apenas atualiza timestamp) ---
-    if ($acao === 'salvar') {
-      $id_venda = isset($_POST['id_venda']) ? (int) $_POST['id_venda'] : 0;
-      if ($id_venda <= 0) {
-        if (is_ajax())
-          send_json(['success' => false, 'msg' => 'ID inválido'], 400);
-        throw new Exception('ID inválido');
-      }
-      $pdo->prepare("UPDATE vendas SET venda_data=NOW() WHERE ID_vendas=?")->execute([$id_venda]);
-      if (is_ajax())
-        send_json(['success' => true, 'msg' => 'Comanda salva com sucesso!']);
-      $msg = 'Comanda salva com sucesso!';
     }
 
     if ($acao === 'pagar') {
@@ -980,14 +966,6 @@ if (isset($_GET['print']) && $comanda) {
               <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
               <button class="btn btn-danger" type="submit" onclick="return confirm('Confirma cancelar esta comanda?')">✖
                 Cancelar</button>
-            </form>
-
-            <!-- SALVAR: permanece disponível -->
-            <form method="post" style="display:inline">
-              <input type="hidden" name="acao" value="salvar">
-              <input type="hidden" name="id_venda" value="<?= (int) $comanda['ID_vendas'] ?>">
-              <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-              <button class="btn btn-ghost" type="submit">💾 Salvar</button>
             </form>
 
             <!-- Botão que abre a tela de carrinho (substitui 'Confirmar Pagamento') -->
